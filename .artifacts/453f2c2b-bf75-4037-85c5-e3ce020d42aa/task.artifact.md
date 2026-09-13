@@ -1,0 +1,8 @@
+- `[x]` Define `reset_password_view` in `RoutesName`
+- `[x]` Implement `ResetPasswordViewModel`
+- `[x]` Implement `ResetPasswordScreen` UI
+- `[x]` Register `ResetPasswordScreen` in `AppRoutes`
+- `[x]` Update `OtpVerificationViewModel` to navigate to `ResetPasswordScreen`
+- `[x]` Cleanup `ForgotPasswordViewModel` (remove password update logic)
+- `[x]` Cleanup `ForgotPasswordScreen` (remove password update steps)
+- `[x]` Verify the complete flow

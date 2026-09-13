@@ -1,0 +1,8 @@
+- [x] Create ForgotPasswordRequest model
+- [x] Create ForgotPasswordResponse model
+- [x] Update AuthApiService with the new API endpoint
+- [x] Update AuthRepository and AuthRepositoryImpl with the new signature and implementation
+- [x] Update ForgotPasswordUseCase signature and implementation
+- [x] Update ForgotPasswordViewModel to include Tenant Code, validation, and API handling
+- [x] Update ForgotPasswordScreen to add Tenant Code field and handle success state display
+- [x] Verify compilation and functionality

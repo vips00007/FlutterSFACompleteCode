@@ -1,0 +1,4 @@
+- `[x]` Update `LoginViewModel` to remove internal controllers and update `login` method
+- `[x]` Convert `LoginScreen` to `StatefulWidget` and manage controllers locally
+- `[x]` Verify credential loading (Remember Me)
+- `[x]` Test navigation flow to ensure no "disposed" crashes

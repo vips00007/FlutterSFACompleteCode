@@ -1,0 +1,7 @@
+- `[x]` Update Data Models (`forgot_password_request.dart`, `forgot_password_response.dart`)
+- `[x]` Update `AuthApiService` with new endpoints and logic
+- `[x]` Update `AuthRepository` and `AuthRepositoryImpl`
+- `[x]` Update Use Cases (`ForgotPasswordUseCase`, `VerifyOtpUseCase`, `UpdatePasswordUseCase`)
+- `[x]` Update `ForgotPasswordViewModel` and `ForgotPasswordScreen` UI
+- `[x]` Update `OtpVerificationViewModel` and `OtpVerificationScreen` UI
+- `[x]` Verify the complete flow and cleanup temporary state
