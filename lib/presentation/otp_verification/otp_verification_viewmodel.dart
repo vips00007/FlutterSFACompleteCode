@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter_practice_sr_level/domain/usecases/verify_otp_usecase.dart';
 import 'package:flutter_practice_sr_level/domain/usecases/verify_login_otp_usecase.dart';
 import 'package:flutter_practice_sr_level/domain/usecases/forgot_password_usecase.dart';
+import 'package:flutter_practice_sr_level/domain/usecases/login_usecase.dart';
 import 'package:flutter_practice_sr_level/routes/route_names.dart';
 import 'package:flutter_practice_sr_level/core/utils/shared_prefs_manager.dart';
 import 'package:flutter_practice_sr_level/domain/entities/user.dart';
@@ -14,11 +15,13 @@ class OtpVerificationViewModel extends GetxController {
   final VerifyOtpUseCase verifyOtpUseCase;
   final VerifyLoginOtpUseCase verifyLoginOtpUseCase;
   final ForgotPasswordUseCase forgotPasswordUseCase;
+  final LoginUseCase loginUseCase;
 
   OtpVerificationViewModel({
     required this.verifyOtpUseCase,
     required this.verifyLoginOtpUseCase,
     required this.forgotPasswordUseCase,
+    required this.loginUseCase,
   });
 
   late OtpFlowType flowType;
@@ -26,6 +29,7 @@ class OtpVerificationViewModel extends GetxController {
   late String maskedIdentifier;
   late String tenantCode; // Optional, used for legacy resend if needed
   User? loginUser; // Store user data passed from login screen
+  String? challengeId;
 
   final otpControllers = List.generate(5, (index) => TextEditingController());
   final otpFocusNodes = List.generate(5, (index) => FocusNode());
@@ -44,6 +48,7 @@ class OtpVerificationViewModel extends GetxController {
     maskedIdentifier = args['maskedIdentifier'] ?? identifier;
     tenantCode = args['tenantCode'] ?? '';
     loginUser = args['user'] as User?;
+    challengeId = args['challengeId'];
     
     int expirySec = args['otpExpiresInSeconds'] ?? 60;
     int resendSec = args['resendAfterSeconds'] ?? 60;
@@ -91,14 +96,11 @@ class OtpVerificationViewModel extends GetxController {
           'resetToken': data.resetToken,
         });
       } else {
-        // Verify Login OTP
-        await verifyLoginOtpUseCase.execute(identifier, otp);
-        
-        final user = loginUser;
-        
-        if (user == null) {
-          throw Exception("User data lost. Please login again.");
+        if (challengeId == null || challengeId!.isEmpty) {
+          throw Exception("Challenge session expired or missing. Please try again.");
         }
+        // Verify Login OTP using challengeId
+        final user = await verifyLoginOtpUseCase.execute(challengeId!, otp);
 
         // Save Session & User Data
         await SharedPrefsManager.saveSessionData(
@@ -145,9 +147,10 @@ class OtpVerificationViewModel extends GetxController {
         final data = await forgotPasswordUseCase.execute(identifier);
         _startTimer(data.otpExpiresInSeconds, data.resendAfterSeconds);
       } else {
-        // Mock resend for login
-        await Future.delayed(const Duration(seconds: 1));
-        _startTimer(60, 60);
+        // Real resend for login flow
+        final otpData = await loginUseCase.execute(identifier);
+        challengeId = otpData.challengeId;
+        _startTimer(otpData.otpExpiresInSeconds, otpData.resendAfterSeconds);
       }
       
       isLoading.value = false;
@@ -157,7 +160,11 @@ class OtpVerificationViewModel extends GetxController {
       );
     } catch (e) {
       isLoading.value = false;
-      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+      String errorMsg = e.toString();
+      if (errorMsg.startsWith("Exception: ")) {
+        errorMsg = errorMsg.substring(11);
+      }
+      Get.snackbar("Error", errorMsg, snackPosition: SnackPosition.BOTTOM);
     }
   }
 

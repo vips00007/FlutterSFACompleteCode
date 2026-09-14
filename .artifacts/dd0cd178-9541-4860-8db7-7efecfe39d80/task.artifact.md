@@ -1,0 +1,6 @@
+- [x] Add `image` package to `pubspec.yaml`
+- [x] Run `flutter pub get` to install dependencies
+- [x] Implement image resizing and JPEG compression logic in `HomeViewModel.performAttendance`
+- [x] Update debug logging to show original vs. compressed image metrics
+- [x] Verify that the changes apply to both Check-In and Check-Out flows
+- [ ] Manual verification by the user (API success check)

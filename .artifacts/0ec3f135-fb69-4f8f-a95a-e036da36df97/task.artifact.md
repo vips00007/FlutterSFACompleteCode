@@ -1,0 +1,9 @@
+- `[x]` Update `pubspec.yaml` with `geolocator`
+- `[x]` Create `AttendanceRequest` and `AttendanceResponse` models
+- `[x]` Create `AttendanceApiService`
+- `[x]` Create `AttendanceRepository` and its implementation
+- `[x]` Update `HomeViewModel` with attendance logic
+- `[x]` Update `AttendanceCameraScreen` to handle Check-In/Check-Out
+- `[x]` Update `HomeTabContent` UI for attendance states
+- `[x]` Debug Server Error (Logging & Data normalization)
+- `[ ]` Verify functionality and error handling

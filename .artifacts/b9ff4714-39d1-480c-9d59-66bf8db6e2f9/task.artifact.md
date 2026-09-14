@@ -1,0 +1,5 @@
+- [x] Prepend Data URI prefix to selfie in `HomeViewModel`
+- [x] Add field aliases (`accuracy`, `locationCapturedAt`) in `AttendanceRequest`
+- [x] Simplify timestamp format in `HomeViewModel`
+- [x] Round accuracy to integer in `HomeViewModel`
+- [x] Verify changes and analyze logs

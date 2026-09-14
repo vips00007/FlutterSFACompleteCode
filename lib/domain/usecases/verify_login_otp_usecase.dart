@@ -6,7 +6,7 @@ class VerifyLoginOtpUseCase {
 
   VerifyLoginOtpUseCase(this.repository);
 
-  Future<User> execute(String phone, String otp) {
-    return repository.verifyLoginOtp(phone, otp);
+  Future<User> execute(String challengeId, String otp) {
+    return repository.verifyLoginOtp(challengeId, otp);
   }
 }
