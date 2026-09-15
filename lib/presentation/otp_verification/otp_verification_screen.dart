@@ -122,10 +122,10 @@ class OtpVerificationScreen extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 8),
           width: 42,
           height: 42,
-          child: RawKeyboardListener(
+          child: KeyboardListener(
             focusNode: FocusNode(), // Temporary focus node for keyboard events
-            onKey: (RawKeyEvent event) {
-              if (event is RawKeyDownEvent &&
+            onKeyEvent: (KeyEvent event) {
+              if (event is KeyDownEvent &&
                   event.logicalKey == LogicalKeyboardKey.backspace &&
                   viewModel.otpControllers[index].text.isEmpty &&
                   index > 0) {
