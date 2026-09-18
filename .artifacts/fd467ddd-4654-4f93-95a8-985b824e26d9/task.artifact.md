@@ -1,0 +1,19 @@
+- [x] Domain Layer: Update `AuthRepository` and create new UseCases
+    - [x] Add `verifyOtp` and `updatePassword` to `AuthRepository`
+    - [x] Create `VerifyOtpUseCase`
+    - [x] Create `UpdatePasswordUseCase`
+- [x] Data Layer: Update `AuthRepositoryImpl`
+    - [x] Implement `verifyOtp` and `updatePassword` (mocked)
+- [x] Routes Layer: Update DI in `routes.dart`
+    - [x] Inject new UseCases into `ForgotPasswordViewModel`
+- [x] Presentation Layer: Update `ForgotPasswordViewModel`
+    - [x] Add `currentStep` RxInt
+    - [x] Add controllers for Phone, OTP, Passwords
+    - [x] Implement flow logic and validation
+- [x] Presentation Layer: Update `ForgotPasswordScreen`
+    - [x] Implement Step 1 UI (Forgot Password)
+    - [x] Implement Step 2 UI (Code Verification)
+    - [x] Implement Step 3 UI (New Credentials)
+    - [x] Implement Step 4 UI (Password Updated)
+- [x] Verification
+    - [x] Manual test of the full flow

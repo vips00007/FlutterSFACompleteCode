@@ -1,0 +1,4 @@
+- `[x]` Create `CreateTourPlanViewModel` to manage bottom sheet state.
+- `[x]` Create `CreateTourPlanBottomSheet` widget with tabs and input fields.
+- `[x]` Integrate bottom sheet into `MonthlyJourneyPlanScreen`.
+- `[x]` Verify UI styling and tab switching functionality.

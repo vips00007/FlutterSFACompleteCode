@@ -1,0 +1,11 @@
+- [x] Register "My Performance" route
+    - [x] Add constant to `route_names.dart`
+    - [x] Add binding and page to `routes.dart`
+- [x] Implement My Performance feature
+    - [x] Create `MyPerformanceViewModel`
+    - [x] Create `MyPerformanceScreen` UI
+- [x] Connect side menu navigation
+    - [x] Add `onTap` in `favorites_screen.dart`
+- [x] Verify implementation
+    - [x] Check direct navigation (no splash)
+    - [x] Verify UI match with reference

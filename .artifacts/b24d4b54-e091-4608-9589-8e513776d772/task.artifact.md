@@ -1,0 +1,7 @@
+- [x] Update `SharedPrefsManager` with additional user data keys and methods
+- [x] Update `LoginViewModel` to save complete user data after successful login
+- [x] Make `HomeViewModel` dynamic (name, roles)
+- [x] Make `ProfileViewModel` dynamic (name, role, email, etc.)
+- [x] Make `FavoritesViewModel` dynamic (name, role)
+- [x] Search and replace remaining hardcoded demo user data in other ViewModels
+- [x] Verify dynamic data reflected in UI

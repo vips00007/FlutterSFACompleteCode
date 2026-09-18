@@ -1,0 +1,10 @@
+- [ ] Compact `tickets_screen.dart` layout
+    - [ ] Optimize AppBar and Create Plan button
+    - [ ] Compact Tab selector
+    - [ ] Reduce Search bar and Status text spacing
+    - [ ] Compact Warning Banner
+- [ ] Compact `ticket_card.dart` layout
+    - [ ] Reduce card margins and padding
+    - [ ] Tighten text row gaps
+    - [ ] Adjust button and summary link spacing
+- [ ] Verify build and layout responsiveness

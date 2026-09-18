@@ -1,0 +1,11 @@
+- [x] Add `customer_profile_view` to `route_names.dart`
+- [x] Add `CustomerProfileScreen` route to `routes.dart`
+- [x] Update "View Profile" button in `customer_summary_screen.dart`
+- [x] Create `customer_profile_screen.dart`
+    - [x] Implement AppBar and layout
+    - [x] Implement Profile Header card
+    - [x] Implement Business Info card
+    - [x] Implement Contact Info card
+    - [x] Implement Address card
+    - [x] Implement Location card
+- [x] Verify navigation and UI

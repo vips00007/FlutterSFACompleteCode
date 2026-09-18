@@ -1,0 +1,6 @@
+- [x] Add route names for Event Planner and Create Event
+- [x] Create `EventPlannerViewModel` and `EventPlannerScreen`
+- [x] Create `CreateEventViewModel` and `CreateEventScreen`
+- [x] Update side menu (Favorites) navigation
+- [x] Register routes and bindings in `AppRoutes`
+- [x] Verify navigation and UI fidelity

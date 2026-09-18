@@ -1,0 +1,7 @@
+- [x] Update `compileSdk` and `targetSdk` to 36 in `android/app/build.gradle.kts`
+- [x] Update `ndkVersion` to "28.2.13676358"
+- [x] Remove monolithic `com.google.android.play:core` dependency
+- [x] Resolve environment conflicts and verify Gradle health (`gradlew help`)
+- [x] Remove custom build directory logic in `android/build.gradle.kts`
+- [x] Fixed Dart syntax error in `forgot_password_screen.dart`
+- [x] Verify Gradle configuration with `gradlew :app:tasks`

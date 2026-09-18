@@ -1,0 +1,9 @@
+- `[ ]` Re-apply Compact Login UI Refinements
+    - `[ ]` Restore standard vertical scrolling (Remove NeverScrollableScrollPhysics)
+    - `[ ]` Optimize padding and spacing for a more compact layout
+    - `[ ]` Verify original logo usage in header (`assets/images/logo.png`)
+    - `[ ]` Final check on Purple theme color consistency
+- `[ ]` Verification
+    - `[ ]` Run `dart format lib/presentation/login/login_screen.dart`
+    - `[ ]` Verify logic preservation (ViewModel connections)
+    - `[ ]` Create walkthrough artifact

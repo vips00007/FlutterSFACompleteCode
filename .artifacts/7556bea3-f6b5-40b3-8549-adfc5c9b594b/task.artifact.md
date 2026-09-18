@@ -1,0 +1,4 @@
+- `[x]` Update Gradle Wrapper version to 8.10.2
+- `[x]` Update AGP version to 8.7.0 in `settings.gradle.kts`
+- `[x]` Update Kotlin version to 2.0.21 in `settings.gradle.kts`
+- `[x]` Verify build configuration consistency

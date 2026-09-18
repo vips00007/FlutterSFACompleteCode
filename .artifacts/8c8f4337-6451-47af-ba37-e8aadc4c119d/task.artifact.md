@@ -1,0 +1,6 @@
+- `[x]` Define route name for Profile screen
+- `[x]` Create Profile ViewModel
+- `[x]` Create Profile Screen UI matching design
+- `[x]` Register Profile route in AppRoutes
+- `[x]` Integrate navigation in FavoritesScreen header
+- `[x]` Verify navigation and UI layout

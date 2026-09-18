@@ -1,0 +1,13 @@
+- [x] Create `FavoritesViewModel`
+- [x] Update `AppRoutes` binding for Dashboard
+- [x] Implement `FavoritesScreen` UI
+    - [x] Blue Header with Profile Info
+    - [x] Stats Grid Card
+    - [x] Detail Cards (Region/EMP ID)
+    - [x] Menu Category Sections
+    - [x] Logout Button & Version Footer
+- [ ] Refine Layout Spacing & Alignment
+    - [ ] Increase top padding for notch clearance
+    - [ ] Center text and icons in `_buildInfoCard`
+    - [ ] Center text and icons in `_buildMenuItem`
+- [ ] Verify with `flutter analyze`

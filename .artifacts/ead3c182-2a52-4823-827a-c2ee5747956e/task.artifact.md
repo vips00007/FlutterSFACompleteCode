@@ -1,0 +1,5 @@
+- [x] Add `flutter_native_splash` dependency and configuration in `pubspec.yaml`
+- [x] Update `main.dart` to move initialization logic
+- [x] Create `SplashLoaderScreen` in `lib/presentation/splash/splash_loader_screen.dart`
+- [x] Update `AppRoutes` to use `SplashLoaderScreen`
+- [x] Verify changes and provide instructions

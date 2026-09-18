@@ -32,12 +32,6 @@ class AttendanceApiService {
       throw Exception("Authentication token not found. Please login again.");
     }
 
-    if (kDebugMode) {
-      debugPrint("--- [ATTENDANCE HISTORY REQUEST DEBUG (DIO)] ---");
-      debugPrint("API URL: $baseUrl$endpoint?page=$page&size=$size");
-      debugPrint("HTTP Method: GET");
-    }
-
     try {
       final response = await _dio.get(
         endpoint,
@@ -53,11 +47,6 @@ class AttendanceApiService {
       );
 
       try {
-        if (kDebugMode) {
-          debugPrint("--- [ATTENDANCE HISTORY RESPONSE RECEIVED] ---");
-          debugPrint("HTTP Status Code: ${response.statusCode}");
-        }
-
         final data = response.data;
         if (data == null) {
           throw Exception("Server returned empty body (Status: ${response.statusCode})");
@@ -101,12 +90,6 @@ class AttendanceApiService {
       throw Exception("Authentication token not found. Please login again.");
     }
 
-    if (kDebugMode) {
-      debugPrint("--- [TODAY ATTENDANCE REQUEST DEBUG (DIO)] ---");
-      debugPrint("API URL: $baseUrl$endpoint");
-      debugPrint("HTTP Method: GET");
-    }
-
     try {
       final response = await _dio.get(
         endpoint,
@@ -118,12 +101,6 @@ class AttendanceApiService {
       );
 
       try {
-        if (kDebugMode) {
-          debugPrint("--- [TODAY ATTENDANCE RESPONSE RECEIVED] ---");
-          debugPrint("HTTP Status Code: ${response.statusCode}");
-          debugPrint("Response Data: ${response.data}");
-        }
-
         final data = response.data;
         if (data == null) {
           throw Exception("Server returned empty body (Status: ${response.statusCode})");
@@ -177,20 +154,6 @@ class AttendanceApiService {
       "capturedAt": request.capturedAt,
     });
 
-    if (kDebugMode) {
-      debugPrint("--- [ATTENDANCE REQUEST DEBUG (DIO)] ---");
-      debugPrint("API URL: $baseUrl$endpoint");
-      debugPrint("HTTP Method: POST");
-      debugPrint("Authorization token present: ${token.isNotEmpty}");
-      debugPrint("Token Preview: Bearer ${token.substring(0, token.length > 10 ? 10 : token.length)}...");
-      debugPrint("Request parameter names: selfie (file), latitude, longitude, accuracyMeters, capturedAt");
-      debugPrint("Selfie File Path: ${request.selfie}");
-      debugPrint("Latitude: ${request.latitude}");
-      debugPrint("Longitude: ${request.longitude}");
-      debugPrint("Accuracy: ${request.accuracyMeters.round()}");
-      debugPrint("CapturedAt: ${request.capturedAt}");
-    }
-
     try {
       final response = await _dio.post(
         endpoint,
@@ -212,12 +175,6 @@ class AttendanceApiService {
 
   Future<AttendanceResponse> _handleResponse(Response response) async {
     try {
-      if (kDebugMode) {
-        debugPrint("--- [ATTENDANCE RESPONSE RECEIVED (DIO)] ---");
-        debugPrint("HTTP Status Code: ${response.statusCode}");
-        debugPrint("Response Body: ${response.data}");
-      }
-
       final data = response.data;
       if (data == null) {
         throw Exception("Server returned empty body (Status: ${response.statusCode})");
@@ -233,25 +190,12 @@ class AttendanceApiService {
         if (attendanceResponse.success && (attendanceResponse.code == "SUCCESS" || attendanceResponse.code == "200")) {
           return attendanceResponse;
         } else {
-          debugPrint("--- [ATTENDANCE API ERROR] ---");
-          debugPrint("API Error Code: ${attendanceResponse.code}");
-          debugPrint("API Error Message: ${attendanceResponse.message}");
-          debugPrint("API Errors: ${attendanceResponse.errors}");
-          
           String msg = attendanceResponse.message.isNotEmpty
               ? attendanceResponse.message
               : "Attendance action failed (Code: ${attendanceResponse.code})";
           throw Exception(msg);
         }
       } else {
-        debugPrint("--- [ATTENDANCE BACKEND ERROR] ---");
-        debugPrint("HTTP Status Code: ${response.statusCode}");
-        debugPrint("Backend Error Code: ${attendanceResponse.code}");
-        debugPrint("Backend Error Message: ${attendanceResponse.message}");
-        debugPrint("Backend Errors: ${attendanceResponse.errors}");
-        debugPrint("Correlation ID: ${attendanceResponse.correlationId ?? 'N/A'}");
-        debugPrint("Full Response: ${response.data}");
-
         String errorMessage = attendanceResponse.message.isNotEmpty
             ? attendanceResponse.message
             : "Server Error: ${response.statusCode}";

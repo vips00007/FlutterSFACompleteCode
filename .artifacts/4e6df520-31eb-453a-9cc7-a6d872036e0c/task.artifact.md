@@ -1,0 +1,3 @@
+- `[x]` Update `android/app/src/main/res/values/styles.xml` to make `LaunchTheme` transparent
+- `[x]` Update `android/app/src/main/res/values-night/styles.xml` to make `LaunchTheme` transparent
+- `[x]` Update `android/app/src/main/res/values-v31/styles.xml` for Android 12+ transparency

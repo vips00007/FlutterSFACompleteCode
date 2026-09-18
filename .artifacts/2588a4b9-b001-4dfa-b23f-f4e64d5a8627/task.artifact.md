@@ -1,0 +1,3 @@
+- [x] Adjust vertical spacing in `_buildForgetPasswordStep`
+- [x] Update `_buildOtpInput` layout (center and add spacing)
+- [x] Verify changes in `forgot_password_screen.dart`

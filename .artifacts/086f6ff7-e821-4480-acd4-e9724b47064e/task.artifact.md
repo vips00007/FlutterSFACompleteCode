@@ -1,0 +1,6 @@
+- [x] Update colors.xml with background color
+- [x] Modify launch_background.xml (v21 and default)
+- [x] Create/Update styles.xml for API 31+ (Android 12)
+- [x] Update values/styles.xml
+- [x] Update values-night/styles.xml
+- [x] Verification
