@@ -195,7 +195,9 @@ class DailyVisitPlansScreen extends StatelessWidget {
             Text(
               day,
               style: TextStyle(
-                color: isSelected ? Colors.white.withValues(alpha: 0.8) : Colors.grey,
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : Colors.grey,
                 fontSize: 10,
               ),
             ),

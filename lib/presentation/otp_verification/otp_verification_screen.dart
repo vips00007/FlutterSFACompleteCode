@@ -9,7 +9,8 @@ class OtpVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final OtpVerificationViewModel viewModel = Get.find<OtpVerificationViewModel>();
+    final OtpVerificationViewModel viewModel =
+        Get.find<OtpVerificationViewModel>();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -62,7 +63,10 @@ class OtpVerificationScreen extends StatelessWidget {
                 Text(
                   'OTP sent to ${viewModel.maskedIdentifier}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, color: AppColors.sfaTextGray),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.sfaTextGray,
+                  ),
                 ),
                 const SizedBox(height: 35),
                 _buildOtpInput(viewModel),
@@ -72,16 +76,21 @@ class OtpVerificationScreen extends StatelessWidget {
                   return expirySec > 0
                       ? Text(
                           'OTP expires in ${expirySec}s',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         )
                       : const SizedBox.shrink();
                 }),
                 const SizedBox(height: 25),
-                Obx(() => _buildPrimaryButton(
-                  text: 'VERIFY CODE',
-                  onPressed: viewModel.verifyOtp,
-                  isLoading: viewModel.isLoading.value,
-                )),
+                Obx(
+                  () => _buildPrimaryButton(
+                    text: 'VERIFY CODE',
+                    onPressed: viewModel.verifyOtp,
+                    isLoading: viewModel.isLoading.value,
+                  ),
+                ),
                 const SizedBox(height: 20),
                 Obx(() {
                   final resendSec = viewModel.resendCountdown.value;
@@ -90,16 +99,25 @@ class OtpVerificationScreen extends StatelessWidget {
                     children: [
                       const Text(
                         "Didn't receive code? ",
-                        style: TextStyle(fontSize: 13, color: AppColors.sfaTextGray),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.sfaTextGray,
+                        ),
                       ),
                       TextButton(
-                        onPressed: resendSec > 0 || viewModel.isLoading.value ? null : viewModel.resendOtp,
+                        onPressed: resendSec > 0 || viewModel.isLoading.value
+                            ? null
+                            : viewModel.resendOtp,
                         child: Text(
-                          resendSec > 0 ? 'Resend in ${resendSec}s' : 'Resend OTP',
+                          resendSec > 0
+                              ? 'Resend in ${resendSec}s'
+                              : 'Resend OTP',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: resendSec > 0 ? Colors.grey : const Color(0xFF0081C9),
+                            color: resendSec > 0
+                                ? Colors.grey
+                                : const Color(0xFF0081C9),
                           ),
                         ),
                       ),
@@ -137,20 +155,24 @@ class OtpVerificationScreen extends StatelessWidget {
               focusNode: viewModel.otpFocusNodes[index],
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 contentPadding: EdgeInsets.zero,
                 filled: true,
                 fillColor: AppColors.fieldBackground,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.sfaBlue, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: AppColors.sfaBlue,
+                    width: 1.5,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.sfaBlue, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.sfaBlue,
+                    width: 2,
+                  ),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

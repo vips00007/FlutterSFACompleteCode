@@ -50,15 +50,17 @@ class LoginViewModel extends GetxController {
       }
 
       isLoading.value = false;
-      
-      Get.toNamed(RoutesName.otp_view, arguments: {
-        'flowType': OtpFlowType.login,
-        'identifier': identifier,
-        'challengeId': otpData.challengeId,
-        'otpExpiresInSeconds': otpData.otpExpiresInSeconds,
-        'resendAfterSeconds': otpData.resendAfterSeconds,
-      });
-      
+
+      Get.toNamed(
+        RoutesName.otp_view,
+        arguments: {
+          'flowType': OtpFlowType.login,
+          'identifier': identifier,
+          'challengeId': otpData.challengeId,
+          'otpExpiresInSeconds': otpData.otpExpiresInSeconds,
+          'resendAfterSeconds': otpData.resendAfterSeconds,
+        },
+      );
     } catch (e) {
       isLoading.value = false;
       String errorMsg = e.toString();

@@ -16,12 +16,14 @@ class ResetPasswordScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Obx(() => !viewModel.isSuccess.value
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => Get.back(),
-              )
-            : const SizedBox.shrink()),
+        leading: Obx(
+          () => !viewModel.isSuccess.value
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  onPressed: () => Get.back(),
+                )
+              : const SizedBox.shrink(),
+        ),
       ),
       body: Container(
         width: double.infinity,

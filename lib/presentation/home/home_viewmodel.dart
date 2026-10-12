@@ -182,11 +182,14 @@ class HomeViewModel extends GetxController {
       }
 
       final Uint8List originalBytes = await imageFile.readAsBytes();
-      
+
       // Get original dimensions
       try {
-        final ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(originalBytes);
-        final ui.ImageDescriptor descriptor = await ui.ImageDescriptor.encoded(buffer);
+        final ui.ImmutableBuffer buffer =
+            await ui.ImmutableBuffer.fromUint8List(originalBytes);
+        final ui.ImageDescriptor descriptor = await ui.ImageDescriptor.encoded(
+          buffer,
+        );
         descriptor.dispose();
       } catch (e) {
         // Error handling removed from debugPrint
@@ -202,16 +205,28 @@ class HomeViewModel extends GetxController {
       img.Image resizedImage = decodedImage;
       if (decodedImage.width > 1280 || decodedImage.height > 1280) {
         if (decodedImage.width > decodedImage.height) {
-          resizedImage = img.copyResize(decodedImage, width: 1280, interpolation: img.Interpolation.linear);
+          resizedImage = img.copyResize(
+            decodedImage,
+            width: 1280,
+            interpolation: img.Interpolation.linear,
+          );
         } else {
-          resizedImage = img.copyResize(decodedImage, height: 1280, interpolation: img.Interpolation.linear);
+          resizedImage = img.copyResize(
+            decodedImage,
+            height: 1280,
+            interpolation: img.Interpolation.linear,
+          );
         }
       }
 
       // Compress as JPEG with quality 75 and save to temp file
-      final Uint8List compressedBytes = img.encodeJpg(resizedImage, quality: 75);
+      final Uint8List compressedBytes = img.encodeJpg(
+        resizedImage,
+        quality: 75,
+      );
       final tempDir = await getTemporaryDirectory();
-      final targetPath = '${tempDir.path}/selfie_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final targetPath =
+          '${tempDir.path}/selfie_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final compressedFile = File(targetPath);
       await compressedFile.writeAsBytes(compressedBytes);
 
@@ -225,7 +240,7 @@ class HomeViewModel extends GetxController {
 
       // Pre-validation check
       bool hasError = false;
-      
+
       if (targetPath.isEmpty) {
         hasError = true;
       }
@@ -243,7 +258,9 @@ class HomeViewModel extends GetxController {
       }
 
       if (hasError) {
-        throw Exception("Required attendance parameters are missing. Check logs for details.");
+        throw Exception(
+          "Required attendance parameters are missing. Check logs for details.",
+        );
       }
 
       final request = AttendanceRequest(
@@ -255,7 +272,7 @@ class HomeViewModel extends GetxController {
       );
 
       // 5. Call API
-      if(isCheckIn) {
+      if (isCheckIn) {
         final response = await _attendanceRepository.checkIn(request);
         if (response.success && response.data != null) {
           attendanceUuid.value = response.data!.attendanceUuid;

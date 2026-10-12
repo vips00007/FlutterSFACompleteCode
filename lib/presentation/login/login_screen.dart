@@ -175,8 +175,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: viewModel.isLoading.value
                             ? null
                             : () => viewModel.login(
-                                  usernameController.text.trim(),
-                                ),
+                                usernameController.text.trim(),
+                              ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.loginButtonBlue,
                           foregroundColor: Colors.white,

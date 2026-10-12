@@ -1,8 +1,17 @@
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val paths = listOf(
+    "ANDROID_PREFS_ROOT" to System.getenv("ANDROID_PREFS_ROOT"),
+    "ANDROID_USER_HOME" to System.getenv("ANDROID_USER_HOME")
+)
+val distinct = paths.mapNotNull { it.second }.map { File(it).absolutePath }.distinct()
+println("PATHS: $paths")
+println("DISTINCT SIZE: ${distinct.size}")
+println("DISTINCT PATHS: $distinct")
 
 android {
     namespace = "com.example.flutter_practice_sr_level"
@@ -15,25 +24,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.flutter_practice_sr_level"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
-    }
-
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
     }
 }
 

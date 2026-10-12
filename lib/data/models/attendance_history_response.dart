@@ -25,7 +25,9 @@ class AttendanceHistoryResponse {
       code: json['code'] ?? '',
       message: json['message'] ?? '',
       correlationId: json['correlationId'],
-      data: json['data'] != null ? AttendanceHistoryData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? AttendanceHistoryData.fromJson(json['data'])
+          : null,
       timestamp: json['timestamp'] ?? '',
       errors: json['errors'] ?? [],
     );
@@ -49,7 +51,9 @@ class AttendanceHistoryData {
 
   factory AttendanceHistoryData.fromJson(Map<String, dynamic> json) {
     var list = json['content'] as List? ?? [];
-    List<AttendanceData> contentList = list.map((i) => AttendanceData.fromJson(i)).toList();
+    List<AttendanceData> contentList = list
+        .map((i) => AttendanceData.fromJson(i))
+        .toList();
 
     return AttendanceHistoryData(
       content: contentList,

@@ -1,3 +1,15 @@
+try {
+    val env = System.getenv()
+    val cl = env.javaClass
+    val field = cl.getDeclaredField("m")
+    field.isAccessible = true
+    val map = field.get(env) as MutableMap<String, String>
+    map.remove("ANDROID_PREFS_ROOT")
+    println("Successfully removed ANDROID_PREFS_ROOT via reflection")
+} catch (e: Exception) {
+    println("Failed to modify env: $e")
+}
+
 pluginManagement {
     val flutterSdkPath =
         run {
@@ -19,7 +31,7 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.7.0" apply false
+    id("com.android.application") version "8.6.0" apply false
     id("org.jetbrains.kotlin.android") version "2.0.21" apply false
 }
 

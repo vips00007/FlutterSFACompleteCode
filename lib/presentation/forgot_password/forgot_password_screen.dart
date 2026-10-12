@@ -33,9 +33,7 @@ class ForgotPasswordScreen extends StatelessWidget {
             stops: [0.0, 0.6],
           ),
         ),
-        child: SafeArea(
-          child: _buildForgetPasswordStep(viewModel),
-        ),
+        child: SafeArea(child: _buildForgetPasswordStep(viewModel)),
       ),
     );
   }
@@ -76,24 +74,28 @@ class ForgotPasswordScreen extends StatelessWidget {
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
           ),
-          Obx(() => viewModel.phoneError.value.isNotEmpty
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      viewModel.phoneError.value,
-                      style: const TextStyle(color: Colors.red, fontSize: 11),
+          Obx(
+            () => viewModel.phoneError.value.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        viewModel.phoneError.value,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
                     ),
-                  ),
-                )
-              : const SizedBox.shrink()),
+                  )
+                : const SizedBox.shrink(),
+          ),
           const SizedBox(height: 30),
-          Obx(() => _buildPrimaryButton(
-            text: 'NEXT',
-            onPressed: viewModel.sendOtp,
-            isLoading: viewModel.isLoading.value,
-          )),
+          Obx(
+            () => _buildPrimaryButton(
+              text: 'NEXT',
+              onPressed: viewModel.sendOtp,
+              isLoading: viewModel.isLoading.value,
+            ),
+          ),
         ],
       ),
     );

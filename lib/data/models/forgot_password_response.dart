@@ -21,7 +21,9 @@ class ForgotPasswordResponse {
       code: json['code'] ?? '',
       message: json['message'] ?? '',
       correlationId: json['correlationId'] ?? '',
-      data: json['data'] != null ? ForgotPasswordData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? ForgotPasswordData.fromJson(json['data'])
+          : null,
       timestamp: json['timestamp'] ?? '',
     );
   }
@@ -116,7 +118,9 @@ class ResetPasswordResponse {
       code: json['code'] ?? '',
       message: json['message'] ?? '',
       correlationId: json['correlationId'] ?? '',
-      data: json['data'] != null ? ResetPasswordData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? ResetPasswordData.fromJson(json['data'])
+          : null,
       timestamp: json['timestamp'] ?? '',
     );
   }
@@ -125,13 +129,9 @@ class ResetPasswordResponse {
 class ResetPasswordData {
   final bool passwordReset;
 
-  ResetPasswordData({
-    required this.passwordReset,
-  });
+  ResetPasswordData({required this.passwordReset});
 
   factory ResetPasswordData.fromJson(Map<String, dynamic> json) {
-    return ResetPasswordData(
-      passwordReset: json['passwordReset'] ?? false,
-    );
+    return ResetPasswordData(passwordReset: json['passwordReset'] ?? false);
   }
 }

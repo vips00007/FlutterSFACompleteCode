@@ -4,9 +4,7 @@ class SendLoginOtpRequest {
   SendLoginOtpRequest({required this.identifier});
 
   Map<String, dynamic> toJson() {
-    return {
-      'identifier': identifier,
-    };
+    return {'identifier': identifier};
   }
 }
 
@@ -33,7 +31,9 @@ class SendLoginOtpResponse {
       code: json['code'] ?? '',
       message: json['message'] ?? '',
       correlationId: json['correlationId'] ?? '',
-      data: json['data'] != null ? SendLoginOtpData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? SendLoginOtpData.fromJson(json['data'])
+          : null,
       timestamp: json['timestamp'] ?? '',
     );
   }
@@ -63,15 +63,9 @@ class VerifyLoginOtpRequest {
   final String challengeId;
   final String otp;
 
-  VerifyLoginOtpRequest({
-    required this.challengeId,
-    required this.otp,
-  });
+  VerifyLoginOtpRequest({required this.challengeId, required this.otp});
 
   Map<String, dynamic> toJson() {
-    return {
-      'challengeId': challengeId,
-      'otp': otp,
-    };
+    return {'challengeId': challengeId, 'otp': otp};
   }
 }

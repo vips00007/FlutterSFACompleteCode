@@ -57,7 +57,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> updatePassword(String resetToken, String newPassword) async {
-    final request = ResetPasswordRequest(resetToken: resetToken, newPassword: newPassword);
+    final request = ResetPasswordRequest(
+      resetToken: resetToken,
+      newPassword: newPassword,
+    );
     final response = await apiService.resetPassword(request);
     if (response.data == null || !response.data!.passwordReset) {
       throw Exception("Failed to reset password");

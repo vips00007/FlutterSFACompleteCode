@@ -8,11 +8,7 @@ class GeocodingService {
     try {
       final response = await _dio.get(
         'https://nominatim.openstreetmap.org/reverse',
-        queryParameters: {
-          'lat': lat,
-          'lon': lon,
-          'format': 'json',
-        },
+        queryParameters: {'lat': lat, 'lon': lon, 'format': 'json'},
         options: Options(
           headers: {
             'User-Agent': 'FlutterPracticeSrLevel/1.0',

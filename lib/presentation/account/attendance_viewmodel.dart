@@ -13,7 +13,7 @@ class AttendanceRecord {
   final String status;
   final bool isPresent;
   final String? photoUrl;
-  
+
   // Locations can be observable to update asynchronously
   final RxString checkInLocation;
   final RxString checkOutLocation;
@@ -28,28 +28,28 @@ class AttendanceRecord {
     required this.status,
     this.isPresent = true,
     this.photoUrl,
-  })  : checkInLocation = checkInLocation.obs,
-        checkOutLocation = checkOutLocation.obs;
+  }) : checkInLocation = checkInLocation.obs,
+       checkOutLocation = checkOutLocation.obs;
 }
 
 class AttendanceViewModel extends GetxController {
   final AttendanceRepository _repository;
   final GeocodingService _geocodingService = GeocodingService();
-  
+
   AttendanceViewModel(this._repository);
 
   final attendanceRecords = <AttendanceRecord>[].obs;
-  
+
   final isLoading = false.obs;
   final isPaginating = false.obs;
   final errorMessage = ''.obs;
 
   int _currentPage = 0;
   final int _pageSize = 20;
-  
+
   final totalElements = 0.obs;
   int _totalPages = 1;
-  
+
   bool get hasMoreData => _currentPage < _totalPages;
 
   @override
@@ -57,7 +57,7 @@ class AttendanceViewModel extends GetxController {
     super.onInit();
     fetchHistory();
   }
-  
+
   Future<void> fetchHistory({bool isRefresh = false}) async {
     if (isRefresh) {
       _currentPage = 0;
@@ -74,12 +74,12 @@ class AttendanceViewModel extends GetxController {
       }
 
       final response = await _repository.getHistory(_currentPage, _pageSize);
-      
+
       if (response.data != null) {
         final data = response.data!;
         totalElements.value = data.totalElements;
         _totalPages = data.totalPages;
-        
+
         final List<AttendanceRecord> newRecords = data.content.map((item) {
           return _mapToRecord(item);
         }).toList();
@@ -89,7 +89,7 @@ class AttendanceViewModel extends GetxController {
         } else {
           attendanceRecords.addAll(newRecords);
         }
-        
+
         _currentPage++;
       }
     } catch (e) {
@@ -110,15 +110,15 @@ class AttendanceViewModel extends GetxController {
     String displayDate = '';
     String checkInStr = '';
     String checkOutStr = 'Not Checked Out';
-    
+
     if (data.checkInAt != null) {
       try {
         DateTime checkInUtc = DateTime.parse(data.checkInAt!).toUtc();
         DateTime checkInLocal = checkInUtc.toLocal();
-        
+
         displayDate = DateFormat('dd MMM yyyy').format(checkInLocal);
         checkInStr = DateFormat('hh:mm a').format(checkInLocal);
-        
+
         if (data.checkOutAt != null) {
           DateTime checkOutUtc = DateTime.parse(data.checkOutAt!).toUtc();
           DateTime checkOutLocal = checkOutUtc.toLocal();
@@ -138,17 +138,22 @@ class AttendanceViewModel extends GetxController {
     }
 
     // 2. Resolve locations
-    String initialCheckInLoc = data.checkInLatitude != null && data.checkInLongitude != null
+    String initialCheckInLoc =
+        data.checkInLatitude != null && data.checkInLongitude != null
         ? "${data.checkInLatitude}, ${data.checkInLongitude}"
         : "Unknown Location";
-        
-    String initialCheckOutLoc = data.checkOutLatitude != null && data.checkOutLongitude != null
+
+    String initialCheckOutLoc =
+        data.checkOutLatitude != null && data.checkOutLongitude != null
         ? "${data.checkOutLatitude}, ${data.checkOutLongitude}"
         : "Unknown Location";
 
     // 3. Status mapping
-    bool isPresent = data.status == 'CHECKED_IN' || data.status == 'CHECKED_OUT';
-    String displayStatus = isPresent ? 'Present' : (data.status.isNotEmpty ? data.status : 'Absent');
+    bool isPresent =
+        data.status == 'CHECKED_IN' || data.status == 'CHECKED_OUT';
+    String displayStatus = isPresent
+        ? 'Present'
+        : (data.status.isNotEmpty ? data.status : 'Absent');
 
     final record = AttendanceRecord(
       date: displayDate,
@@ -164,12 +169,20 @@ class AttendanceViewModel extends GetxController {
 
     // Asynchronously update locations using Reverse Geocoding
     if (data.checkInLatitude != null && data.checkInLongitude != null) {
-      _geocodingService.getAddressFromCoordinates(data.checkInLatitude!, data.checkInLongitude!)
+      _geocodingService
+          .getAddressFromCoordinates(
+            data.checkInLatitude!,
+            data.checkInLongitude!,
+          )
           .then((address) => record.checkInLocation.value = address);
     }
-    
+
     if (data.checkOutLatitude != null && data.checkOutLongitude != null) {
-      _geocodingService.getAddressFromCoordinates(data.checkOutLatitude!, data.checkOutLongitude!)
+      _geocodingService
+          .getAddressFromCoordinates(
+            data.checkOutLatitude!,
+            data.checkOutLongitude!,
+          )
           .then((address) => record.checkOutLocation.value = address);
     }
 

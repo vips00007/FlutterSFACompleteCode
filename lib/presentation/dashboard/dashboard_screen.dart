@@ -33,50 +33,54 @@ class DashboardScreen extends StatelessWidget {
               FavoritesScreen(),
             ],
           ),
-          bottomNavigationBar: Container(
-            height: 85,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  index: 0,
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
-                  label: 'Home',
-                  viewModel: viewModel,
-                ),
-                _buildNavItem(
-                  index: 1,
-                  icon: Icons.add,
-                  activeIcon: Icons.add,
-                  label: 'Add Outlet',
-                  viewModel: viewModel,
-                ),
-                _buildNavItem(
-                  index: 2,
-                  icon: Icons.calendar_month_outlined,
-                  activeIcon: Icons.calendar_month,
-                  label: 'Visits',
-                  viewModel: viewModel,
-                ),
-                _buildNavItem(
-                  index: 3,
-                  icon: Icons.menu,
-                  activeIcon: Icons.menu,
-                  label: 'Menu',
-                  viewModel: viewModel,
-                ),
-              ],
+          bottomNavigationBar: SafeArea(
+            child: Container(
+              height: 70,
+              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(35),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNavItem(
+                    index: 0,
+                    icon: Icons.grid_view_rounded,
+                    activeIcon: Icons.grid_view_rounded,
+                    label: 'Home',
+                    viewModel: viewModel,
+                  ),
+                  _buildNavItem(
+                    index: 1,
+                    icon: Icons.add_business_outlined,
+                    activeIcon: Icons.add_business,
+                    label: 'Add Outlet',
+                    viewModel: viewModel,
+                  ),
+                  _buildNavItem(
+                    index: 2,
+                    icon: Icons.shopping_bag_outlined,
+                    activeIcon: Icons.shopping_bag,
+                    label: 'Visit',
+                    viewModel: viewModel,
+                  ),
+                  _buildNavItem(
+                    index: 3,
+                    icon: Icons.more_horiz,
+                    activeIcon: Icons.more_horiz,
+                    label: 'More',
+                    viewModel: viewModel,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -99,34 +103,22 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.sfaBlue : Colors.transparent,
-                shape: BoxShape.circle,
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: AppColors.sfaBlue.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Icon(
-                isSelected ? activeIcon : icon,
-                color: isSelected ? Colors.white : Colors.grey.shade400,
-                size: 24,
-              ),
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected
+                  ? const Color(0xFF8B5CF6)
+                  : Colors.grey.shade500,
+              size: 24,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.sfaBlue : Colors.grey.shade500,
+                color: isSelected
+                    ? const Color(0xFF8B5CF6)
+                    : Colors.grey.shade500,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                fontSize: 11,
+                fontSize: 10,
               ),
             ),
           ],

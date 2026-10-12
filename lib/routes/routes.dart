@@ -96,15 +96,21 @@ class AppRoutes {
         Get.lazyPut(() => AuthApiService());
         Get.lazyPut(() => AuthRepositoryImpl(Get.find<AuthApiService>()));
         Get.lazyPut(() => VerifyOtpUseCase(Get.find<AuthRepositoryImpl>()));
-        Get.lazyPut(() => VerifyLoginOtpUseCase(Get.find<AuthRepositoryImpl>()));
-        Get.lazyPut(() => ForgotPasswordUseCase(Get.find<AuthRepositoryImpl>()));
+        Get.lazyPut(
+          () => VerifyLoginOtpUseCase(Get.find<AuthRepositoryImpl>()),
+        );
+        Get.lazyPut(
+          () => ForgotPasswordUseCase(Get.find<AuthRepositoryImpl>()),
+        );
         Get.lazyPut(() => LoginUseCase(Get.find<AuthRepositoryImpl>()));
-        Get.lazyPut(() => OtpVerificationViewModel(
-              verifyOtpUseCase: Get.find<VerifyOtpUseCase>(),
-              verifyLoginOtpUseCase: Get.find<VerifyLoginOtpUseCase>(),
-              forgotPasswordUseCase: Get.find<ForgotPasswordUseCase>(),
-              loginUseCase: Get.find<LoginUseCase>(),
-            ));
+        Get.lazyPut(
+          () => OtpVerificationViewModel(
+            verifyOtpUseCase: Get.find<VerifyOtpUseCase>(),
+            verifyLoginOtpUseCase: Get.find<VerifyLoginOtpUseCase>(),
+            forgotPasswordUseCase: Get.find<ForgotPasswordUseCase>(),
+            loginUseCase: Get.find<LoginUseCase>(),
+          ),
+        );
       }),
     ),
     GetPage(name: RoutesName.home_view, page: () => const HomeScreen()),
@@ -121,9 +127,7 @@ class AppRoutes {
         Get.lazyPut<AttendanceRepository>(
           () => AttendanceRepositoryImpl(Get.find<AttendanceApiService>()),
         );
-        Get.lazyPut(
-          () => HomeViewModel(Get.find<AttendanceRepository>()),
-        );
+        Get.lazyPut(() => HomeViewModel(Get.find<AttendanceRepository>()));
 
         // Tickets (Visits) Dependencies
         Get.lazyPut(() => TicketRepositoryImpl());

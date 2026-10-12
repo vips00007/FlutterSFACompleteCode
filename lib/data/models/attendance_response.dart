@@ -72,13 +72,16 @@ class AttendanceData {
       checkOutAt: json['checkOutAt'],
       checkInLatitude: (json['checkInLatitude'] as num?)?.toDouble(),
       checkInLongitude: (json['checkInLongitude'] as num?)?.toDouble(),
-      checkInAccuracyMeters: (json['checkInAccuracyMeters'] as num?)?.toDouble(),
+      checkInAccuracyMeters: (json['checkInAccuracyMeters'] as num?)
+          ?.toDouble(),
       checkInLocationCapturedAt: json['checkInLocationCapturedAt'],
       checkOutLatitude: (json['checkOutLatitude'] as num?)?.toDouble(),
       checkOutLongitude: (json['checkOutLongitude'] as num?)?.toDouble(),
-      checkOutAccuracyMeters: (json['checkOutAccuracyMeters'] as num?)?.toDouble(),
+      checkOutAccuracyMeters: (json['checkOutAccuracyMeters'] as num?)
+          ?.toDouble(),
       checkOutLocationCapturedAt: json['checkOutLocationCapturedAt'],
-      carriedFromPreviousBusinessDate: json['carriedFromPreviousBusinessDate'] ?? false,
+      carriedFromPreviousBusinessDate:
+          json['carriedFromPreviousBusinessDate'] ?? false,
     );
   }
 }

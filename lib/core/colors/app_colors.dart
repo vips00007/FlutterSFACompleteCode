@@ -9,7 +9,8 @@ class AppColors {
   // Design Specific Colors
   static const Color loginBackground = Color(0xFFFAFBFD);
   static const Color loginAccent = Color(0xFFC9DDE7);
-  static const Color loginButtonBlue = Color(0xFF0081C9,
+  static const Color loginButtonBlue = Color(
+    0xFF0081C9,
   ); // Brighter blue from latest design
   static const Color loginBadgeBlue = Color(0xFF74A4D1);
 

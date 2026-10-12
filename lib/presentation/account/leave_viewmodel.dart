@@ -34,7 +34,6 @@ class LeaveViewModel extends GetxController {
     'Casual Leave',
   ];
 
-
   void changeTab(int index) {
     selectedTabIndex.value = index;
   }

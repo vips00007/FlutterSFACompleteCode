@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../core/colors/app_colors.dart';
+import '../../data/models/product_catalog_response.dart';
 import 'product_catalogue_viewmodel.dart';
 
 class ProductCatalogueScreen extends StatelessWidget {
@@ -9,6 +11,11 @@ class ProductCatalogueScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = Get.find<ProductCatalogueViewModel>();
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '₹',
+      decimalDigits: 0,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -68,21 +75,96 @@ class ProductCatalogueScreen extends StatelessWidget {
           // Product List
           Expanded(
             child: Obx(() {
-              if (viewModel.products.isEmpty) {
-                return const Center(child: Text('No products found'));
+              if (viewModel.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: 159,
+              if (viewModel.errorMessage.value.isNotEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          viewModel.errorMessage.value,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => viewModel.fetchProducts(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.sfaBlue,
+                        ),
+                        child: const Text(
+                          'Retry',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final products = viewModel.filteredProducts;
+
+              if (products.isEmpty) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        color: Colors.grey,
+                        size: 64,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No Products Found',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: viewModel.refreshProducts,
+                child: ListView.builder(
+                  controller: viewModel.scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: 20,
+                  ),
+                  itemCount:
+                      products.length +
+                      (viewModel.isFetchingMore.value ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == products.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final product = products[index];
+                    return _buildProductCard(product, currencyFormatter);
+                  },
                 ),
-                itemCount: viewModel.products.length,
-                itemBuilder: (context, index) {
-                  final product = viewModel.products[index];
-                  return _buildProductCard(product);
-                },
               );
             }),
           ),
@@ -91,7 +173,10 @@ class ProductCatalogueScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(ProductItem product) {
+  Widget _buildProductCard(
+    ProductItemModel product,
+    NumberFormat currencyFormatter,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -134,21 +219,54 @@ class ProductCatalogueScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        product.title,
+                        product.name,
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                           height: 1.3,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        product.code,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade400,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.code,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (product.brandName.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.sfaLightBlue.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                product.brandName,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.sfaBlue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -167,35 +285,68 @@ class ProductCatalogueScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _buildDetailItem('Size', product.size),
+                _buildDetailItem(
+                  'Size',
+                  (product.size != null && product.size!.isNotEmpty)
+                      ? product.size!
+                      : '-',
+                ),
                 _buildVerticalDivider(),
-                _buildDetailItem('Rate', product.rate),
+                _buildDetailItem(
+                  'Rate',
+                  currencyFormatter.format(product.rate),
+                ),
                 _buildVerticalDivider(),
-                _buildDetailItem('Category', product.category),
+                _buildDetailItem(
+                  'MRP',
+                  currencyFormatter.format(product.mrp),
+                  isSecondary: true,
+                ),
+                _buildVerticalDivider(),
+                _buildDetailItem(
+                  'Category',
+                  product.categoryName.isNotEmpty ? product.categoryName : '-',
+                ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem(String label, String value) {
+  Widget _buildDetailItem(
+    String label,
+    String value, {
+    bool isSecondary = false,
+  }) {
     return Expanded(
       child: Column(
         children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: isSecondary ? 13 : 14,
+                fontWeight: isSecondary ? FontWeight.normal : FontWeight.bold,
+                color: isSecondary
+                    ? Colors.grey.shade600
+                    : AppColors.textPrimary,
+                decoration: isSecondary ? TextDecoration.lineThrough : null,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

@@ -19,7 +19,9 @@ class AuthApiService {
     if (response.statusCode == 200 ||
         response.statusCode == 401 ||
         response.statusCode == 400) {
-      final sfaResponse = SendLoginOtpResponse.fromJson(jsonDecode(response.body));
+      final sfaResponse = SendLoginOtpResponse.fromJson(
+        jsonDecode(response.body),
+      );
       if (sfaResponse.success && sfaResponse.code == "SUCCESS") {
         return sfaResponse;
       } else {
@@ -66,7 +68,7 @@ class AuthApiService {
       body: jsonEncode(request.toJson()),
     );
 
-    if(response.statusCode == 200 ||
+    if (response.statusCode == 200 ||
         response.statusCode == 401 ||
         response.statusCode == 400) {
       final loginResponse = LoginResponse.fromJson(jsonDecode(response.body));
@@ -84,7 +86,9 @@ class AuthApiService {
     }
   }
 
-  Future<ForgotPasswordResponse> forgotPasswordSendOtp(ForgotPasswordRequest request) async {
+  Future<ForgotPasswordResponse> forgotPasswordSendOtp(
+    ForgotPasswordRequest request,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/api/v1/auth/forgot-password/send-otp"),
       headers: {"Content-Type": "application/json"},
@@ -94,7 +98,9 @@ class AuthApiService {
     if (response.statusCode == 200 ||
         response.statusCode == 401 ||
         response.statusCode == 400) {
-      final forgotResponse = ForgotPasswordResponse.fromJson(jsonDecode(response.body));
+      final forgotResponse = ForgotPasswordResponse.fromJson(
+        jsonDecode(response.body),
+      );
       if (forgotResponse.success && forgotResponse.code == "SUCCESS") {
         return forgotResponse;
       } else {
@@ -109,7 +115,9 @@ class AuthApiService {
     }
   }
 
-  Future<VerifyOtpResponse> verifyForgotPasswordOtp(VerifyOtpRequest request) async {
+  Future<VerifyOtpResponse> verifyForgotPasswordOtp(
+    VerifyOtpRequest request,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/api/v1/auth/forgot-password/verify-otp"),
       headers: {"Content-Type": "application/json"},
@@ -119,7 +127,9 @@ class AuthApiService {
     if (response.statusCode == 200 ||
         response.statusCode == 401 ||
         response.statusCode == 400) {
-      final verifyResponse = VerifyOtpResponse.fromJson(jsonDecode(response.body));
+      final verifyResponse = VerifyOtpResponse.fromJson(
+        jsonDecode(response.body),
+      );
       if (verifyResponse.success && verifyResponse.code == "SUCCESS") {
         return verifyResponse;
       } else {
@@ -134,7 +144,9 @@ class AuthApiService {
     }
   }
 
-  Future<ResetPasswordResponse> resetPassword(ResetPasswordRequest request) async {
+  Future<ResetPasswordResponse> resetPassword(
+    ResetPasswordRequest request,
+  ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/api/v1/auth/forgot-password/reset-password"),
       headers: {"Content-Type": "application/json"},
@@ -144,7 +156,9 @@ class AuthApiService {
     if (response.statusCode == 200 ||
         response.statusCode == 401 ||
         response.statusCode == 400) {
-      final resetResponse = ResetPasswordResponse.fromJson(jsonDecode(response.body));
+      final resetResponse = ResetPasswordResponse.fromJson(
+        jsonDecode(response.body),
+      );
       if (resetResponse.success && resetResponse.code == "SUCCESS") {
         return resetResponse;
       } else {

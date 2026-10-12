@@ -6,13 +6,11 @@ import 'package:flutter_practice_sr_level/routes/route_names.dart';
 class ResetPasswordViewModel extends GetxController {
   final UpdatePasswordUseCase updatePasswordUseCase;
 
-  ResetPasswordViewModel({
-    required this.updatePasswordUseCase,
-  });
+  ResetPasswordViewModel({required this.updatePasswordUseCase});
 
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  
+
   final isPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
   final isLoading = false.obs;
@@ -29,8 +27,10 @@ class ResetPasswordViewModel extends GetxController {
     identifier = args['identifier'] ?? '';
   }
 
-  void togglePasswordVisibility() => isPasswordVisible.value = !isPasswordVisible.value;
-  void toggleConfirmPasswordVisibility() => isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
+  void togglePasswordVisibility() =>
+      isPasswordVisible.value = !isPasswordVisible.value;
+  void toggleConfirmPasswordVisibility() =>
+      isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
 
   Future<void> updatePassword() async {
     final pass = passwordController.text;

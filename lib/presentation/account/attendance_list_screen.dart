@@ -39,7 +39,8 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       viewModel.fetchHistory();
     }
   }
@@ -70,21 +71,23 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Obx(() => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${viewModel.totalElements}',
-                style: TextStyle(
-                  color: Colors.teal.shade600,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+            Obx(
+              () => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${viewModel.totalElements}',
+                  style: TextStyle(
+                    color: Colors.teal.shade600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            )),
+            ),
           ],
         ),
         bottom: PreferredSize(
@@ -131,7 +134,9 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(16),
-            itemCount: viewModel.attendanceRecords.length + (viewModel.hasMoreData ? 1 : 0),
+            itemCount:
+                viewModel.attendanceRecords.length +
+                (viewModel.hasMoreData ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == viewModel.attendanceRecords.length) {
                 return const Padding(
@@ -150,7 +155,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
 
   Widget _buildAttendanceCard(AttendanceRecord record) {
     final statusColor = record.isPresent ? Colors.green : Colors.red;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -215,20 +220,24 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Obx(() => _buildLogItem(
-                      icon: Icons.login_rounded,
-                      iconColor: Colors.green,
-                      time: record.checkInTime,
-                      location: record.checkInLocation.value,
-                      photoUrl: record.photoUrl,
-                    )),
+                    Obx(
+                      () => _buildLogItem(
+                        icon: Icons.login_rounded,
+                        iconColor: Colors.green,
+                        time: record.checkInTime,
+                        location: record.checkInLocation.value,
+                        photoUrl: record.photoUrl,
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    Obx(() => _buildLogItem(
-                      icon: Icons.logout_rounded,
-                      iconColor: Colors.red,
-                      time: record.checkOutTime,
-                      location: record.checkOutLocation.value,
-                    )),
+                    Obx(
+                      () => _buildLogItem(
+                        icon: Icons.logout_rounded,
+                        iconColor: Colors.red,
+                        time: record.checkOutTime,
+                        location: record.checkOutLocation.value,
+                      ),
+                    ),
                     if (record.duration.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Row(

@@ -35,7 +35,7 @@ class OtpVerificationViewModel extends GetxController {
   final otpFocusNodes = List.generate(5, (index) => FocusNode());
 
   final isLoading = false.obs;
-  final expiryCountdown = 60.obs; 
+  final expiryCountdown = 60.obs;
   final resendCountdown = 60.obs;
   Timer? _timer;
 
@@ -49,7 +49,7 @@ class OtpVerificationViewModel extends GetxController {
     tenantCode = args['tenantCode'] ?? '';
     loginUser = args['user'] as User?;
     challengeId = args['challengeId'];
-    
+
     int expirySec = args['otpExpiresInSeconds'] ?? 60;
     int resendSec = args['resendAfterSeconds'] ?? 60;
 
@@ -91,13 +91,15 @@ class OtpVerificationViewModel extends GetxController {
       if (flowType == OtpFlowType.forgotPassword) {
         final data = await verifyOtpUseCase.execute(identifier, otp);
         isLoading.value = false;
-        Get.toNamed(RoutesName.reset_password_view, arguments: {
-          'identifier': identifier,
-          'resetToken': data.resetToken,
-        });
+        Get.toNamed(
+          RoutesName.reset_password_view,
+          arguments: {'identifier': identifier, 'resetToken': data.resetToken},
+        );
       } else {
         if (challengeId == null || challengeId!.isEmpty) {
-          throw Exception("Challenge session expired or missing. Please try again.");
+          throw Exception(
+            "Challenge session expired or missing. Please try again.",
+          );
         }
         // Verify Login OTP using challengeId
         final user = await verifyLoginOtpUseCase.execute(challengeId!, otp);
@@ -152,9 +154,12 @@ class OtpVerificationViewModel extends GetxController {
         challengeId = otpData.challengeId;
         _startTimer(otpData.otpExpiresInSeconds, otpData.resendAfterSeconds);
       }
-      
+
       isLoading.value = false;
-      Get.snackbar("Success", "OTP has been resent successfully", snackPosition: SnackPosition.BOTTOM,
+      Get.snackbar(
+        "Success",
+        "OTP has been resent successfully",
+        snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.shade50,
         colorText: Colors.green.shade900,
       );

@@ -89,16 +89,19 @@ class ForgotPasswordViewModel extends GetxController {
     isLoading.value = true;
     try {
       final data = await forgotPasswordUseCase.execute(phone);
-      
+
       isLoading.value = false;
       // Navigate to reusable OTP screen
-      Get.toNamed(RoutesName.otp_view, arguments: {
-        'flowType': OtpFlowType.forgotPassword,
-        'identifier': phone,
-        'maskedIdentifier': data.maskedIdentifier,
-        'otpExpiresInSeconds': data.otpExpiresInSeconds,
-        'resendAfterSeconds': data.resendAfterSeconds,
-      });
+      Get.toNamed(
+        RoutesName.otp_view,
+        arguments: {
+          'flowType': OtpFlowType.forgotPassword,
+          'identifier': phone,
+          'maskedIdentifier': data.maskedIdentifier,
+          'otpExpiresInSeconds': data.otpExpiresInSeconds,
+          'resendAfterSeconds': data.resendAfterSeconds,
+        },
+      );
     } catch (e) {
       isLoading.value = false;
       String errorMsg = e.toString();

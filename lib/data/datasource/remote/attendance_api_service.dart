@@ -9,13 +9,13 @@ import '../../models/today_attendance_response.dart';
 
 class AttendanceApiService {
   final String baseUrl = "https://api-staging.rahulpatel.online";
-  late final Dio _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    headers: {
-      "Accept": "application/json",
-    },
-    validateStatus: (status) => status != null,
-  ));
+  late final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      headers: {"Accept": "application/json"},
+      validateStatus: (status) => status != null,
+    ),
+  );
 
   Future<AttendanceResponse> checkIn(AttendanceRequest request) async {
     return _sendRequest("/api/v1/sfa/attendance/check-in", request);
@@ -35,31 +35,32 @@ class AttendanceApiService {
     try {
       final response = await _dio.get(
         endpoint,
-        queryParameters: {
-          'page': page,
-          'size': size,
-        },
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-          },
-        ),
+        queryParameters: {'page': page, 'size': size},
+        options: Options(headers: {"Authorization": "Bearer $token"}),
       );
 
       try {
         final data = response.data;
         if (data == null) {
-          throw Exception("Server returned empty body (Status: ${response.statusCode})");
+          throw Exception(
+            "Server returned empty body (Status: ${response.statusCode})",
+          );
         }
 
         final Map<String, dynamic> json = data is String
             ? Map<String, dynamic>.from(jsonDecode(data))
             : Map<String, dynamic>.from(data);
 
-        final attendanceHistoryResponse = AttendanceHistoryResponse.fromJson(json);
+        final attendanceHistoryResponse = AttendanceHistoryResponse.fromJson(
+          json,
+        );
 
-        if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
-          if (attendanceHistoryResponse.success && (attendanceHistoryResponse.code == "SUCCESS" || attendanceHistoryResponse.code == "200")) {
+        if (response.statusCode != null &&
+            response.statusCode! >= 200 &&
+            response.statusCode! < 300) {
+          if (attendanceHistoryResponse.success &&
+              (attendanceHistoryResponse.code == "SUCCESS" ||
+                  attendanceHistoryResponse.code == "200")) {
             return attendanceHistoryResponse;
           } else {
             String msg = attendanceHistoryResponse.message.isNotEmpty
@@ -75,7 +76,9 @@ class AttendanceApiService {
         }
       } catch (e) {
         if (e is Exception) rethrow;
-        throw Exception("Failed to process server response: ${response.statusCode}");
+        throw Exception(
+          "Failed to process server response: ${response.statusCode}",
+        );
       }
     } catch (e) {
       if (e is Exception) rethrow;
@@ -93,17 +96,15 @@ class AttendanceApiService {
     try {
       final response = await _dio.get(
         endpoint,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-          },
-        ),
+        options: Options(headers: {"Authorization": "Bearer $token"}),
       );
 
       try {
         final data = response.data;
         if (data == null) {
-          throw Exception("Server returned empty body (Status: ${response.statusCode})");
+          throw Exception(
+            "Server returned empty body (Status: ${response.statusCode})",
+          );
         }
 
         final Map<String, dynamic> json = data is String
@@ -112,8 +113,12 @@ class AttendanceApiService {
 
         final todayAttendanceResponse = TodayAttendanceResponse.fromJson(json);
 
-        if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
-          if (todayAttendanceResponse.success && (todayAttendanceResponse.code == "SUCCESS" || todayAttendanceResponse.code == "200")) {
+        if (response.statusCode != null &&
+            response.statusCode! >= 200 &&
+            response.statusCode! < 300) {
+          if (todayAttendanceResponse.success &&
+              (todayAttendanceResponse.code == "SUCCESS" ||
+                  todayAttendanceResponse.code == "200")) {
             return todayAttendanceResponse;
           } else {
             String msg = todayAttendanceResponse.message.isNotEmpty
@@ -129,7 +134,9 @@ class AttendanceApiService {
         }
       } catch (e) {
         if (e is Exception) rethrow;
-        throw Exception("Failed to process server response: ${response.statusCode}");
+        throw Exception(
+          "Failed to process server response: ${response.statusCode}",
+        );
       }
     } catch (e) {
       if (e is Exception) rethrow;
@@ -137,7 +144,10 @@ class AttendanceApiService {
     }
   }
 
-  Future<AttendanceResponse> _sendRequest(String endpoint, AttendanceRequest request) async {
+  Future<AttendanceResponse> _sendRequest(
+    String endpoint,
+    AttendanceRequest request,
+  ) async {
     final token = SharedPrefsManager.getToken();
     if (token == null || token.isEmpty) {
       throw Exception("Authentication token not found. Please login again.");
@@ -158,11 +168,7 @@ class AttendanceApiService {
       final response = await _dio.post(
         endpoint,
         data: formData,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-          },
-        ),
+        options: Options(headers: {"Authorization": "Bearer $token"}),
       );
 
       return _handleResponse(response);
@@ -177,17 +183,23 @@ class AttendanceApiService {
     try {
       final data = response.data;
       if (data == null) {
-        throw Exception("Server returned empty body (Status: ${response.statusCode})");
+        throw Exception(
+          "Server returned empty body (Status: ${response.statusCode})",
+        );
       }
 
-      final Map<String, dynamic> json = data is String 
-          ? Map<String, dynamic>.from(jsonDecode(data)) 
+      final Map<String, dynamic> json = data is String
+          ? Map<String, dynamic>.from(jsonDecode(data))
           : Map<String, dynamic>.from(data);
-          
+
       final attendanceResponse = AttendanceResponse.fromJson(json);
 
-      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
-        if (attendanceResponse.success && (attendanceResponse.code == "SUCCESS" || attendanceResponse.code == "200")) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        if (attendanceResponse.success &&
+            (attendanceResponse.code == "SUCCESS" ||
+                attendanceResponse.code == "200")) {
           return attendanceResponse;
         } else {
           String msg = attendanceResponse.message.isNotEmpty
@@ -199,17 +211,19 @@ class AttendanceApiService {
         String errorMessage = attendanceResponse.message.isNotEmpty
             ? attendanceResponse.message
             : "Server Error: ${response.statusCode}";
-        
+
         if (attendanceResponse.correlationId != null) {
           errorMessage += " (Ref: ${attendanceResponse.correlationId})";
         }
-        
+
         throw Exception(errorMessage);
       }
     } catch (e) {
       if (e is Exception) rethrow;
       debugPrint("Parsing Error: $e");
-      throw Exception("Failed to process server response: ${response.statusCode}");
+      throw Exception(
+        "Failed to process server response: ${response.statusCode}",
+      );
     }
   }
 }

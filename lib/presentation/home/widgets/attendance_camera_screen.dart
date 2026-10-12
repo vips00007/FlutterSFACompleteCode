@@ -161,7 +161,10 @@ class _AttendanceCameraScreenState extends State<AttendanceCameraScreen>
   void _confirmAttendance() {
     if (_capturedImage != null) {
       final isCheckIn = Get.arguments?['isCheckIn'] ?? true;
-      Get.find<HomeViewModel>().performAttendance(_capturedImage!.path, isCheckIn);
+      Get.find<HomeViewModel>().performAttendance(
+        _capturedImage!.path,
+        isCheckIn,
+      );
       Get.back();
     }
   }
@@ -195,7 +198,10 @@ class _AttendanceCameraScreenState extends State<AttendanceCameraScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.transparent,
+                  ],
                 ),
               ),
               child: SafeArea(
@@ -244,7 +250,10 @@ class _AttendanceCameraScreenState extends State<AttendanceCameraScreen>
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.transparent,
+                  ],
                 ),
               ),
               child: SafeArea(
