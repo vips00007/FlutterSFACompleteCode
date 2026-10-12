@@ -114,7 +114,7 @@ class _HomeTabContentState extends State<HomeTabContent>
     return Expanded(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -136,12 +136,19 @@ class _HomeTabContentState extends State<HomeTabContent>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                    color: Color(0xFDECE9FA),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: Icon(icon, color: color, size: 24),
+                  child: Icon(icon, color: Color(0xFF6D28D9), size: 24),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   title,
                   style: const TextStyle(
@@ -632,7 +639,7 @@ class _HomeTabContentState extends State<HomeTabContent>
 
   Widget _buildTodaysJourney(HomeViewModel viewModel) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFCF9FF),
@@ -655,7 +662,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
@@ -879,9 +886,17 @@ class _HomeTabContentState extends State<HomeTabContent>
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.track_changes_outlined,
-                      color: Color(0xFF6D28D9),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6D28D9).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.track_changes_outlined,
+                        color: Color(0xFF6D28D9),
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1378,7 +1393,7 @@ class _HomeTabContentState extends State<HomeTabContent>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
@@ -1391,52 +1406,62 @@ class _HomeTabContentState extends State<HomeTabContent>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 12,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                'MY PERFORMANCE',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+              const Expanded(
+                child: Text(
+                  'MY PERFORMANCE',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 4),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.emoji_events,
-                    color: Color(0xFF8B5CF6),
-                    size: 18,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F5FF),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.emoji_events,
+                      color: Color(0xFF8B5CF6),
+                      size: 16,
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
                         'Rank',
-                        style: TextStyle(fontSize: 8, color: Colors.black54),
+                        style: TextStyle(fontSize: 9, color: Colors.black54),
                       ),
                       Text(
                         '#3',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      color: const Color(0xFFF9F5FF),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.bar_chart,
                       color: Color(0xFF8B5CF6),
-                      size: 14,
+                      size: 16,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -1446,14 +1471,14 @@ class _HomeTabContentState extends State<HomeTabContent>
                       Text(
                         '6%',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: Color(0xFF16A34A),
                         ),
                       ),
                       Text(
-                        'Growth vs Last Month',
-                        style: TextStyle(fontSize: 7, color: Colors.black54),
+                        'Growth vs Last\nMonth',
+                        style: TextStyle(fontSize: 8, color: Colors.black54, height: 1.15),
                       ),
                     ],
                   ),
@@ -1461,55 +1486,63 @@ class _HomeTabContentState extends State<HomeTabContent>
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             children: [
               Stack(
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 80,
-                    height: 80,
+                    width: 110,
+                    height: 110,
                     child: CircularProgressIndicator(
                       value: 0.86,
-                      strokeWidth: 8,
+                      strokeWidth: 10,
+                      strokeCap: StrokeCap.round,
                       backgroundColor: Colors.grey.shade100,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF6D28D9),
+                        Color(0xFF8B5CF6),
                       ),
                     ),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         '86',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 32,
                           fontWeight: FontWeight.w900,
+                          color: Color(0xFF1E1033),
                         ),
                       ),
-                      Text(
+                      Container(
+                        width: 40,
+                        height: 1,
+                        color: Colors.grey.shade300,
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                      ),
+                      const Text(
                         '/100',
-                        style: TextStyle(fontSize: 10, color: Colors.black54),
+                        style: TextStyle(fontSize: 12, color: Colors.black45),
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 32),
               Expanded(
                 child: Column(
                   children: [
-                    _buildPerformanceBar('Sales', 0.92, '92%'),
-                    const SizedBox(height: 6),
-                    _buildPerformanceBar('Coverage', 0.88, '88%'),
-                    const SizedBox(height: 6),
-                    _buildPerformanceBar('Productivity', 0.81, '81%'),
-                    const SizedBox(height: 6),
-                    _buildPerformanceBar('Collection', 0.90, '90%'),
-                    const SizedBox(height: 6),
-                    _buildPerformanceBar('New Business', 0.78, '78%'),
+                    _buildPerformanceBar('Sales', 0.92, '92%', Icons.domain),
+                    const SizedBox(height: 12),
+                    _buildPerformanceBar('Coverage', 0.88, '88%', Icons.check_circle),
+                    const SizedBox(height: 12),
+                    _buildPerformanceBar('Productivity', 0.81, '81%', Icons.pie_chart),
+                    const SizedBox(height: 12),
+                    _buildPerformanceBar('Collection', 0.90, '90%', Icons.account_balance_wallet),
+                    const SizedBox(height: 12),
+                    _buildPerformanceBar('New Business', 0.78, '78%', Icons.trending_up),
                   ],
                 ),
               ),
@@ -1520,46 +1553,48 @@ class _HomeTabContentState extends State<HomeTabContent>
     );
   }
 
-  Widget _buildPerformanceBar(String label, double value, String percent) {
-    return Row(
+  Widget _buildPerformanceBar(String label, double value, String percent, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 4,
-          child: Row(
-            children: [
-              const Icon(
-                Icons.check_circle,
-                size: 12,
-                color: Color(0xFF8B5CF6),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(fontSize: 9, color: Colors.black87),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: const Color(0xFF8B5CF6),
                 ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12, 
+                    color: Color(0xFF475569),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              percent,
+              style: const TextStyle(
+                fontSize: 12, 
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        Expanded(
-          flex: 5,
-          child: LinearProgressIndicator(
-            value: value,
-            backgroundColor: Colors.grey.shade200,
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 28,
-          child: Text(
-            percent,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.right,
-          ),
+        const SizedBox(height: 6),
+        LinearProgressIndicator(
+          value: value,
+          backgroundColor: Colors.grey.shade100,
+          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+          minHeight: 6,
+          borderRadius: BorderRadius.circular(8),
         ),
       ],
     );
