@@ -6,132 +6,244 @@ import '../../../routes/route_names.dart';
 
 class TicketCard extends StatelessWidget {
   final Outlet outlet;
+  final VoidCallback? onCheckIn;
 
-  const TicketCard({super.key, required this.outlet});
+  const TicketCard({
+    super.key,
+    required this.outlet,
+    this.onCheckIn,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Generate some mock data based on name length to vary the UI slightly
+    // in the absence of real data in the Outlet entity.
+    final String name = outlet.firmName.isNotEmpty
+        ? outlet.firmName
+        : '${outlet.firstName} ${outlet.lastName}';
+    final bool isAtRisk = name.length % 3 == 0;
+    final String outstanding = isAtRisk ? '₹0' : '₹${(name.length * 12000)}';
+    final Color outstandingColor = isAtRisk ? AppColors.textPrimary : const Color(0xFFD93A3A);
+    final String lastOrderDays = '${name.length + 2}d';
+    final String locationText = '${outlet.city.isNotEmpty ? outlet.city : 'Location'} · 1.8km';
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primaryPurple, width: 1),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '• ${outlet.mobileNumber}',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              Text(
-                outlet.customerType,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.person, size: 14, color: AppColors.sfaBlue),
-              const SizedBox(width: 6),
-              Text(
-                '${outlet.firstName} ${outlet.lastName}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.location_on,
-                size: 14,
-                color: Colors.lightBlueAccent,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  outlet.address,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1, thickness: 0.5),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade100,
-                  foregroundColor: Colors.grey.shade700,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: const BorderSide(color: Colors.black12),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Icon Box
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBlueBackground,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 0,
+                  child: const Icon(
+                    Icons.store_mall_directory_rounded,
+                    color: AppColors.primaryPurple,
+                    size: 20,
                   ),
-                  minimumSize: const Size(0, 36),
                 ),
-                child: const Text(
-                  'Start Visit',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Get.toNamed(
-                  RoutesName.customer_summary_view,
-                  arguments: outlet,
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                const SizedBox(width: 12),
+                
+                // Middle Section (Name, Location, Badges)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              locationText,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (isAtRisk)
+                            _buildStatusChip('At Risk')
+                          else ...[
+                            _buildStatusChip('Active'),
+                            const SizedBox(width: 6),
+                            _buildStatusChip('In plan'),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Row(
-                  children: const [
-                    Text(
-                      'Summary',
+                
+                // Right Section (Outstanding)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Outstanding',
                       style: TextStyle(
-                        color: Colors.lightBlue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 0.3,
                       ),
                     ),
-                    SizedBox(width: 2),
-                    Icon(
-                      Icons.chevron_right,
-                      size: 16,
-                      color: Colors.lightBlue,
+                    const SizedBox(height: 2),
+                    Text(
+                      outstanding,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: outstandingColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Last order $lastOrderDays',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+          
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: AppColors.primaryPurple.withValues(alpha: 0.2),
+          ),
+          
+          // Bottom Actions
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: onCheckIn ?? () {
+                      Get.toNamed(RoutesName.visit_details_view, arguments: outlet);
+                    },
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: AppColors.textPrimary,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Check-In',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: AppColors.primaryPurple.withValues(alpha: 0.2),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {},
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(
+                            Icons.shopping_cart_outlined,
+                            size: 16,
+                            color: AppColors.primaryPurple,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Primary Order',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.fieldBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }

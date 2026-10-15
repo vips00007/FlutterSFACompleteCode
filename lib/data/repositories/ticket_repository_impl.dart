@@ -43,6 +43,21 @@ class TicketRepositoryImpl implements TicketRepository {
         pinCode: '641654',
         photos: [],
       ),
+      Outlet(
+        id: '3',
+        customerType: 'Distributor',
+        firstName: 'Rahul',
+        lastName: 'Sharma',
+        firmName: 'Sharma Distributors',
+        mobileNumber: '9876543210',
+        email: 'rahul@example.com',
+        address: 'MG Road, Bangalore',
+        state: 'Karnataka',
+        district: 'Bangalore Urban',
+        city: 'Bangalore',
+        pinCode: '560001',
+        photos: [],
+      ),
     ];
   }
 }

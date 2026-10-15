@@ -9,7 +9,7 @@ class TicketsViewModel extends GetxController {
 
   TicketsViewModel(this.getTicketsUseCase);
 
-  final selectedTabIndex = 0.obs; // 0 for Planned, 1 for Unplanned
+  final selectedTabIndex = 1.obs; // 0 for Planned, 1 for Unplanned
   final plannedTickets = <Outlet>[].obs;
   final unplannedTickets = <Outlet>[].obs;
   final state = TicketsState.loading.obs;
@@ -30,7 +30,6 @@ class TicketsViewModel extends GetxController {
 
       plannedTickets.assignAll(planned);
       unplannedTickets.assignAll(unplanned);
-
       state.value = TicketsState.success;
     } catch (e) {
       state.value = TicketsState.error;

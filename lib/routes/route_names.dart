@@ -12,6 +12,10 @@ class RoutesName {
   static const String create_plan_view = '/create_plan_view';
   static const String customer_summary_view = '/customer_summary_view';
   static const String customer_profile_view = '/customer_profile_view';
+  static const String visit_details_view = '/visit_details_view';
+  static const String visit_check_in_view = '/visit_check_in_view';
+  static const String select_customers_view = '/select_customers_view';
+  static const String review_plan_view = '/review_plan_view';
   static const String attendance_camera_view = '/attendance_camera_view';
 
   // Menu Routes

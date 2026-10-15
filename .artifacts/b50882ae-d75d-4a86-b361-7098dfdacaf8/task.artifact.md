@@ -1,0 +1,5 @@
+- `[/]` Create Edit Profile routes and register them.
+- `[ ]` Create `EditProfileViewModel`.
+- `[ ]` Implement `EditProfileScreen` UI.
+- `[ ]` Implement `EditProfileSuccessScreen` UI.
+- `[ ]` Integrate navigation from `VisitDetailsScreen`.

@@ -565,8 +565,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.store_mall_directory_outlined,
+                child: Icon(Icons.store_mall_directory_outlined,
                   color: color,
                   size: 20,
                 ),

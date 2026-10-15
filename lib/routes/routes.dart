@@ -15,6 +15,13 @@ import 'package:flutter_practice_sr_level/presentation/tickets/create_plan_scree
 import 'package:flutter_practice_sr_level/presentation/tickets/create_plan_viewmodel.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/customer_summary_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/customer_profile_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/visit_details_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/select_customers/select_customers_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/select_customers/select_customers_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/review_plan/review_plan_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/review_plan/review_plan_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/check_in/visit_check_in_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/check_in/visit_check_in_controller.dart';
 import 'package:flutter_practice_sr_level/presentation/team/team_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/order/order_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/dashboard/dashboard_screen.dart';
@@ -183,8 +190,33 @@ class AppRoutes {
       page: () => const CustomerProfileScreen(),
     ),
     GetPage(
+      name: RoutesName.visit_details_view,
+      page: () => const VisitDetailsScreen(),
+    ),
+    GetPage(
+      name: RoutesName.visit_check_in_view,
+      page: () => const VisitCheckInScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => VisitCheckInController());
+      }),
+    ),
+    GetPage(
       name: RoutesName.attendance_camera_view,
       page: () => const AttendanceCameraScreen(),
+    ),
+    GetPage(
+      name: RoutesName.select_customers_view,
+      page: () => const SelectCustomersScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => SelectCustomersViewModel());
+      }),
+    ),
+    GetPage(
+      name: RoutesName.review_plan_view,
+      page: () => const ReviewPlanScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => ReviewPlanViewModel());
+      }),
     ),
     GetPage(
       name: RoutesName.attendance_list_view,

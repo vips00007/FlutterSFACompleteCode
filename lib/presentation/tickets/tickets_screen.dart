@@ -5,6 +5,7 @@ import '../../routes/route_names.dart';
 import 'tickets_viewmodel.dart';
 import 'widgets/ticket_card.dart';
 import 'widgets/empty_state_widget.dart';
+import '../check_in/widgets/outside_radius_bottom_sheet.dart';
 
 class TicketsScreen extends StatelessWidget {
   const TicketsScreen({super.key});
@@ -19,39 +20,57 @@ class TicketsScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        automaticallyImplyLeading: false,
         titleSpacing: 16,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Logo
-            Image.asset('assets/images/logo.png', width: 40, height: 24),
-            ElevatedButton.icon(
-              onPressed: () => Get.toNamed(RoutesName.create_plan_view),
-              icon: const Icon(Icons.add, size: 14),
-              label: const Text(
-                'Create Plan',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Visit',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.sfaBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 0,
-                ),
-                minimumSize: const Size(0, 36),
+            ),
+            Text(
+              'Primary Sales · 5 Customer',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
               ),
             ),
           ],
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: ElevatedButton(
+              onPressed: () => Get.toNamed(RoutesName.create_plan_view),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 0,
+                ),
+                minimumSize: const Size(0, 36),
+              ),
+              child: const Text(
+                'Create Plan',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
-            color: Colors.lightBlueAccent.withValues(alpha: 0.5),
+            color: AppColors.secondary.withValues(alpha: 0.3),
             height: 1,
           ),
         ),
@@ -61,19 +80,12 @@ class TicketsScreen extends StatelessWidget {
           children: [
             // 1. Custom Tab Bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Container(
-                padding: const EdgeInsets.all(3),
+                padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
-                  color: Colors.white38,
+                  color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Obx(
                   () => Row(
@@ -81,8 +93,7 @@ class TicketsScreen extends StatelessWidget {
                       Expanded(
                         child: _buildTab(
                           title: 'Planned',
-                          subtitle:
-                              '${viewModel.plannedTickets.length}/0 visited',
+                          subtitle: '${viewModel.plannedTickets.length}/0 visited',
                           isSelected: viewModel.selectedTabIndex.value == 0,
                           onTap: () => viewModel.changeTab(0),
                         ),
@@ -90,8 +101,7 @@ class TicketsScreen extends StatelessWidget {
                       Expanded(
                         child: _buildTab(
                           title: 'Unplanned',
-                          subtitle:
-                              '${viewModel.unplannedTickets.length} customers',
+                          subtitle: '${viewModel.unplannedTickets.length} customers',
                           isSelected: viewModel.selectedTabIndex.value == 1,
                           onTap: () => viewModel.changeTab(1),
                         ),
@@ -102,79 +112,51 @@ class TicketsScreen extends StatelessWidget {
               ),
             ),
 
-            // 2. Search Bar
+            // Search Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.black12),
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.search, color: Colors.grey, size: 18),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Search customer, code, city...',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.primaryPurple, width: 1),
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search City, Name, Area',
+                    hintStyle: TextStyle(
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                      fontSize: 15,
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black12),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      color: Colors.grey,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // 3. Status Text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Obx(
-                  () => Text(
-                    'Showing ${viewModel.selectedTabIndex.value == 0 ? viewModel.plannedTickets.length : viewModel.unplannedTickets.length} visits',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    isDense: true,
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 8),
+            // Filter Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _buildFilterChip('All', isSelected: true),
+                  _buildFilterChip('Reorder Due'),
+                  _buildFilterChip('Scheme Eligible'),
+                  _buildFilterChip('At Risk'),
+                ],
+              ),
+            ),
 
-            // 4. Content Area
+            const SizedBox(height: 12),
+
+            // Content Area
             Expanded(
               child: Obx(() {
                 if (viewModel.state.value == TicketsState.loading) {
@@ -186,66 +168,70 @@ class TicketsScreen extends StatelessWidget {
                     : viewModel.unplannedTickets;
 
                 if (tickets.isEmpty) {
-                  return EmptyStateWidget(
-                    message: viewModel.selectedTabIndex.value == 0
-                        ? 'No results found'
-                        : 'No unplanned tickets available',
-                  );
+                  return const EmptyStateWidget(message: 'No results found');
                 }
 
                 return ListView.builder(
                   physics: const BouncingScrollPhysics(),
                   itemCount: tickets.length,
                   itemBuilder: (context, index) {
-                    return TicketCard(outlet: tickets[index]);
+                    VoidCallback? onCheckIn;
+                    
+                    if (viewModel.selectedTabIndex.value == 1) {
+                      // Logic for Unplanned list (Index 1)
+                      if (index == 0) {
+                        onCheckIn = () {
+                          Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
+                        };
+                      } else if (index == 1) {
+                        onCheckIn = () {
+                          Get.bottomSheet(
+                            OutsideRadiusBottomSheet(outlet: tickets[index], isInside: false),
+                            isScrollControlled: true,
+                          );
+                        };
+                      } else if (index == 2) {
+                        onCheckIn = () {
+                          Get.bottomSheet(
+                            OutsideRadiusBottomSheet(outlet: tickets[index], isInside: true),
+                            isScrollControlled: true,
+                          );
+                        };
+                      }
+                    }
+
+                    return TicketCard(
+                      outlet: tickets[index],
+                      onCheckIn: onCheckIn,
+                    );
                   },
                 );
               }),
             ),
-
-            // 5. Warning Banner
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade100),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.lock, color: Colors.red, size: 18),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Day Not Started',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          'Mark attendance to start visits.',
-                          style: TextStyle(color: Colors.black54, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-                ],
-              ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, {bool isSelected = false}) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primaryPurple : Colors.white,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(
+          color: AppColors.primaryPurple,
+          width: 1,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : AppColors.textPrimary,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 13,
         ),
       ),
     );
@@ -260,16 +246,16 @@ class TicketsScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.grey.shade100,
+          color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.sfaBlue.withValues(alpha: 0.1),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
@@ -279,8 +265,8 @@ class TicketsScreen extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                color: isSelected ? AppColors.sfaBlue : Colors.grey.shade600,
-                fontWeight: FontWeight.bold,
+                color: isSelected ? AppColors.primaryPurple : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 14,
               ),
             ),

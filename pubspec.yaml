@@ -43,6 +43,7 @@ dependencies:
   geolocator: ^14.0.0
   image: ^4.2.0
   dio: ^5.4.0
+  file_picker: ^13.1.0
 
 dev_dependencies:
   flutter_test:

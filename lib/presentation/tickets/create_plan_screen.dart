@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/colors/app_colors.dart';
+import '../../routes/route_names.dart';
 import 'create_plan_viewmodel.dart';
 
 class CreatePlanScreen extends StatelessWidget {
@@ -36,7 +37,7 @@ class CreatePlanScreen extends StatelessWidget {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
-            color: AppColors.sfaBlue.withValues(alpha: 0.1),
+            color: AppColors.primaryPurple.withValues(alpha: 0.1),
             height: 1,
           ),
         ),
@@ -118,7 +119,7 @@ class CreatePlanScreen extends StatelessWidget {
             shape: BoxShape.circle,
             color: Colors.white,
             border: Border.all(
-              color: isActive ? AppColors.sfaBlue : Colors.grey.shade300,
+              color: isActive ? AppColors.primaryPurple : Colors.grey.shade300,
               width: 1.5,
             ),
           ),
@@ -126,7 +127,9 @@ class CreatePlanScreen extends StatelessWidget {
             child: Text(
               '$number',
               style: TextStyle(
-                color: isActive ? AppColors.sfaBlue : Colors.grey.shade400,
+                color: isActive
+                    ? AppColors.primaryPurple
+                    : Colors.grey.shade400,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -137,7 +140,7 @@ class CreatePlanScreen extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: isActive ? AppColors.sfaBlue : Colors.grey.shade400,
+            color: isActive ? AppColors.primaryPurple : Colors.grey.shade400,
             fontSize: 10,
             fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
           ),
@@ -194,7 +197,7 @@ class CreatePlanScreen extends StatelessWidget {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.sfaBlue : Colors.transparent,
+          color: isSelected ? AppColors.primaryPurple : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -246,19 +249,19 @@ class CreatePlanScreen extends StatelessWidget {
             icon: const Icon(
               Icons.calendar_today_outlined,
               size: 16,
-              color: Colors.lightBlue,
+              color: AppColors.primaryPurple,
             ),
             label: const Text(
               'Calendar',
               style: TextStyle(
-                color: Colors.lightBlue,
+                color: AppColors.primaryPurple,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              backgroundColor: Colors.lightBlue.withValues(alpha: 0.05),
+              backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.05),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -283,11 +286,11 @@ class CreatePlanScreen extends StatelessWidget {
             width: 50,
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.sfaBlue : Colors.white,
+              color: isSelected ? AppColors.primaryPurple : Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: isSelected
-                    ? AppColors.sfaBlue
+                    ? AppColors.primaryPurple
                     : Colors.black.withValues(alpha: 0.08),
               ),
             ),
@@ -365,7 +368,11 @@ class CreatePlanScreen extends StatelessWidget {
             children: const [
               Row(
                 children: [
-                  Icon(Icons.auto_awesome, color: Colors.amber, size: 20),
+                  Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.primaryPurple,
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
                   Text(
                     'How can AI help?',
@@ -481,14 +488,14 @@ class CreatePlanScreen extends StatelessWidget {
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF00A3FF), Color(0xFF0081C9)],
+            colors: [Color(0xFF6D28D9), Color(0xFF8B5CF6), Color(0xFFB197FC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: AppColors.sfaBlue.withValues(alpha: 0.25),
+              color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -562,7 +569,7 @@ class CreatePlanScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
-                ? AppColors.sfaBlue
+                ? AppColors.primaryPurple
                 : Colors.black.withValues(alpha: 0.08),
             width: isSelected ? 2 : 1,
           ),
@@ -580,13 +587,13 @@ class CreatePlanScreen extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.sfaLightBlue
+                    ? AppColors.lightBlueBackground
                     : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 goal.icon,
-                color: isSelected ? AppColors.sfaBlue : Colors.grey,
+                color: isSelected ? AppColors.primaryPurple : Colors.grey,
                 size: 18,
               ),
             ),
@@ -603,7 +610,7 @@ class CreatePlanScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
                       color: isSelected
-                          ? AppColors.sfaBlue
+                          ? AppColors.primaryPurple
                           : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -654,14 +661,16 @@ class CreatePlanScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 1),
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.toNamed(RoutesName.select_customers_view);
+                  },
                   icon: const Icon(Icons.add_circle_outline, size: 22),
                   label: const Text(
                     'Pick Customers',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.sfaBlue,
+                    backgroundColor: AppColors.primaryPurple,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 54),
                     shape: RoundedRectangleBorder(
@@ -692,7 +701,7 @@ class CreatePlanScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.sfaBlue, size: 24),
+          Icon(icon, color: AppColors.primaryPurple, size: 24),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
