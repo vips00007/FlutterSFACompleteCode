@@ -16,6 +16,11 @@ import 'package:flutter_practice_sr_level/presentation/tickets/create_plan_viewm
 import 'package:flutter_practice_sr_level/presentation/tickets/customer_summary_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/customer_profile_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/visit_details_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/edit_profile_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/collect_payment_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/sales_return_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/market_survey_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/visit_more_menu_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/select_customers/select_customers_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/select_customers/select_customers_viewmodel.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/review_plan/review_plan_screen.dart';
@@ -192,6 +197,26 @@ class AppRoutes {
     GetPage(
       name: RoutesName.visit_details_view,
       page: () => const VisitDetailsScreen(),
+    ),
+    GetPage(
+      name: RoutesName.edit_profile_view,
+      page: () => const EditProfileScreen(),
+    ),
+    GetPage(
+      name: RoutesName.collect_payment_view,
+      page: () => const CollectPaymentScreen(),
+    ),
+    GetPage(
+      name: RoutesName.sales_return_view,
+      page: () => const SalesReturnScreen(),
+    ),
+    GetPage(
+      name: RoutesName.market_survey_view,
+      page: () => const MarketSurveyScreen(),
+    ),
+    GetPage(
+      name: RoutesName.visit_more_menu_view,
+      page: () => const VisitMoreMenuScreen(),
     ),
     GetPage(
       name: RoutesName.visit_check_in_view,

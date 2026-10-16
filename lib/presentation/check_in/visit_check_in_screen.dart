@@ -612,8 +612,7 @@ class VisitCheckInScreen extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Accuracy', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
                         Text('±8 m', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
@@ -623,8 +622,7 @@ class VisitCheckInScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              SizedBox(
-                width: double.infinity,
+              SizedBox(width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
                   onPressed: controller.finishCheckIn,

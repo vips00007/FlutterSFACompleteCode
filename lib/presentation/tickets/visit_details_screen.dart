@@ -134,9 +134,9 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
               left: 16,
               right: 16,
               top: 16,
-              bottom: _selectedTabIndex == 3
+              bottom: (_selectedTabIndex == 3 || _selectedTabIndex == 0)
                   ? 20
-                  : 100, // Less bottom padding on Focus tab since no bottom bar
+                  : 100, // Less bottom padding on Focus and Summary tabs
             ),
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -156,8 +156,8 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
             ),
           ),
 
-          // 4. Sticky Bottom Actions (Hide on Focus tab)
-          if (_selectedTabIndex != 3)
+          // 4. Sticky Bottom Actions (Hide on Focus and Summary tabs)
+          if (_selectedTabIndex != 3 && _selectedTabIndex != 0)
             Positioned(
               left: 0,
               right: 0,
@@ -278,7 +278,12 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               OutlinedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Get.toNamed(
+                    RoutesName.edit_profile_view,
+                    arguments: Get.arguments,
+                  );
+                },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   minimumSize: const Size(0, 32),
@@ -390,6 +395,54 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
             Expanded(child: _buildLastOrderCard()),
             const SizedBox(width: 12),
             Expanded(child: _buildStockCoverCard()),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionBox(
+                'Collect',
+                Icons.account_balance_wallet_outlined,
+                'Payment',
+                'Record receipt',
+                onTap: () => Get.toNamed(RoutesName.collect_payment_view),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionBox(
+                'Return',
+                Icons.keyboard_return,
+                'Products',
+                'Manage returns',
+                onTap: () => Get.toNamed(RoutesName.sales_return_view),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionBox(
+                'Survey',
+                Icons.assignment_outlined,
+                'Feedback',
+                'Take survey',
+                onTap: () => Get.toNamed(RoutesName.market_survey_view),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionBox(
+                'More',
+                Icons.more_horiz,
+                'Options',
+                'View more actions',
+                onTap: () => Get.toNamed(RoutesName.visit_more_menu_view),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -1401,6 +1454,62 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
     );
   }
 
+  Widget _buildActionBox(
+    String title,
+    IconData icon,
+    String mainText,
+    String subText, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: _buildBaseCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(icon, color: AppColors.primaryPurple, size: 18),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            mainText,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subText,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    ));
+  }
+
   Widget _buildSuggestedSteps() {
     final steps = [
       'Collect ₹11,00,000 Overdue Before New Order',
@@ -1609,59 +1718,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
       );
     } else {
       // Summary
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(child: _buildActionButton('Collect', isOutlined: true)),
-          const SizedBox(width: 4),
-          Expanded(child: _buildActionButton('Order', isOutlined: false)),
-          const SizedBox(width: 4),
-          Expanded(child: _buildActionButton('Return', isOutlined: true)),
-          const SizedBox(width: 4),
-          Expanded(child: _buildActionButton('Survey', isOutlined: true)),
-          const SizedBox(width: 4),
-          Expanded(child: _buildActionButton('More', isOutlined: true)),
-        ],
-      );
-    }
-  }
-
-  Widget _buildActionButton(String label, {required bool isOutlined}) {
-    if (isOutlined) {
-      return OutlinedButton(
-        onPressed: () {},
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          minimumSize: const Size(0, 36),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          side: const BorderSide(color: AppColors.primaryPurple),
-          foregroundColor: AppColors.textPrimary,
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
-    } else {
-      return ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryPurple,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          minimumSize: const Size(0, 36),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 0,
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
+      return const SizedBox.shrink();
     }
   }
 

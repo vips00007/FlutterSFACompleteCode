@@ -194,7 +194,9 @@ class TicketCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      Get.toNamed(RoutesName.visit_details_view, arguments: outlet);
+                    },
                     borderRadius: const BorderRadius.only(
                       bottomRight: Radius.circular(16),
                     ),
@@ -204,13 +206,12 @@ class TicketCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
                           Icon(
-                            Icons.shopping_cart_outlined,
+                            Icons.summarize,
                             size: 16,
-                            color: AppColors.primaryPurple,
-                          ),
+                            color: AppColors.primaryPurple,),
                           SizedBox(width: 6),
                           Text(
-                            'Primary Order',
+                            'View Summary',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,

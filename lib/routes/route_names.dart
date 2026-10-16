@@ -17,6 +17,11 @@ class RoutesName {
   static const String select_customers_view = '/select_customers_view';
   static const String review_plan_view = '/review_plan_view';
   static const String attendance_camera_view = '/attendance_camera_view';
+  static const String edit_profile_view = '/edit_profile_view';
+  static const String collect_payment_view = '/collect_payment_view';
+  static const String sales_return_view = '/sales_return_view';
+  static const String market_survey_view = '/market_survey_view';
+  static const String visit_more_menu_view = '/visit_more_menu_view';
 
   // Menu Routes
   static const String attendance_list_view = '/attendance_list_view';
