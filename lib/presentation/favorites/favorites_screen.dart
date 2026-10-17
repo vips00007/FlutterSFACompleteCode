@@ -40,15 +40,15 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.fingerprint,
                   'Attendance',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.attendance_list_view),
                 ),
                 _buildMenuItem(
                   Icons.beach_access_outlined,
                   'Leave Management',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.leave_management_view),
                 ),
               ],
@@ -60,23 +60,23 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.route_outlined,
                   'Daily Visit Plans',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.daily_visit_plans_view),
                 ),
                 _buildMenuItem(
                   Icons.calendar_month_outlined,
                   'Monthly Journey Plan',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () =>
                       Get.toNamed(RoutesName.monthly_journey_plan_view),
                 ),
                 _buildMenuItem(
                   Icons.history,
                   'Visit History',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.visit_history_view),
                 ),
               ],
@@ -88,8 +88,8 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.groups_outlined,
                   'Meeting or Exhibition',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.event_planner_view),
                 ),
               ],
@@ -101,8 +101,8 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.inventory_2_outlined,
                   'Product Catalog',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.product_catalogue_view),
                 ),
               ],
@@ -114,8 +114,8 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.auto_graph,
                   'My Performance',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.my_performance_view),
                 ),
               ],
@@ -127,8 +127,8 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.receipt_long_outlined,
                   'Expense / Claim',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.expense_claim_view),
                 ),
               ],
@@ -140,8 +140,8 @@ class FavoritesScreen extends StatelessWidget {
                 _buildMenuItem(
                   Icons.headset_mic_outlined,
                   'Help & Support',
-                  AppColors.sfaLightBlue,
-                  AppColors.sfaBlue,
+                  const Color(0xFFF3E8FF),
+                  const Color(0xFF8A2BE2),
                   onTap: () => Get.toNamed(RoutesName.help_support_view),
                 ),
               ],
@@ -160,8 +160,8 @@ class FavoritesScreen extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.sfaBlue,
-                  side: const BorderSide(color: AppColors.sfaBlue, width: 1.5),
+                  foregroundColor: const Color(0xFF8A2BE2),
+                  side: const BorderSide(color: Color(0xFF8A2BE2), width: 1.5),
                   minimumSize: const Size(double.infinity, 44),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -192,7 +192,11 @@ class FavoritesScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 45, 16, 20),
       decoration: const BoxDecoration(
-        color: AppColors.sfaBlue,
+        gradient: LinearGradient(
+          colors: [Color(0xFF6D28D9), Color(0xFF8A2BE2), Color(0xFFB197FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -204,8 +208,19 @@ class FavoritesScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Logo
-              Image.asset('assets/images/logo.png', width: 40, height: 16),
+              // Back Arrow / Navigation
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
               const Icon(
                 Icons.notifications_none,
                 color: Colors.white,
@@ -354,7 +369,7 @@ class FavoritesScreen extends StatelessWidget {
         children: [
           _buildStatItem('Visits Today', viewModel.visitsToday, Colors.green),
           _buildDivider(),
-          _buildStatItem('Orders MTD', viewModel.ordersMTD, AppColors.sfaBlue),
+          _buildStatItem('Orders MTD', viewModel.ordersMTD, const Color(0xFF8A2BE2)),
           _buildDivider(),
           _buildStatItem('Achievement', viewModel.achievement, Colors.orange),
           _buildDivider(),
@@ -459,7 +474,7 @@ class FavoritesScreen extends StatelessWidget {
           child: Text(
             title,
             style: const TextStyle(
-              color: AppColors.sfaBlue,
+              color: Color(0xFF6D28D9),
               fontWeight: FontWeight.bold,
               fontSize: 12,
               letterSpacing: 0.5,

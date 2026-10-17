@@ -1,0 +1,7 @@
+- `[/]` Redesign Favorites Screen with Purple Theme
+    - `[x]` Update header gradient
+    - `[x]` Add navigation/back arrow in header
+    - `[x]` Update icon backgrounds
+    - `[x]` Update Stats Card colors
+    - `[x]` Update Menu Section Title colors
+    - `[x]` Update Logout button colors

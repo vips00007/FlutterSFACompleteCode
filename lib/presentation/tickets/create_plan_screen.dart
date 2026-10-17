@@ -488,14 +488,14 @@ class CreatePlanScreen extends StatelessWidget {
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF6D28D9), Color(0xFF8B5CF6), Color(0xFFB197FC)],
+            colors: [Color(0xFF6D28D9), Color(0xFF8A2BE2), Color(0xFFB197FC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+              color: const Color(0xFF8A2BE2).withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),

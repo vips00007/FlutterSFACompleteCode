@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand Colors
-  static const Color primaryPurple = Color(0xFF8B5CF6);
+  static const Color primaryPurple = Color(0xFF8A2BE2);
   static const Color secondaryPurple = Color(0xFFAA86FB);
-  static const Color accentPurple = Color(0xFF8B5CF6);
+  static const Color accentPurple = Color(0xFF8A2BE2);
 
   // Design Specific Colors
   static const Color loginBackground = Color(0xFFFAFBFD);
   static const Color loginAccent = Color(0xFFC9DDE7);
   static const Color loginButtonBlue = Color(
-    0xFF0081C9,
+    0xFF8A2BE2,
   ); // Brighter blue from latest design
   static const Color loginBadgeBlue = Color(0xFF74A4D1);
 
   // SFA Specific Colors
-  static const Color sfaBlue = Color(0xFF0081C9);
+  static const Color sfaBlue = Color(0xFF8A2BE2);
   static const Color sfaLightBlue = Color(0xFFE1F1F8);
   static const Color sfaTextGray = Color(0xFF757575);
-  static const Color sfaIconBoxBlue = Color(0xFF0081C9);
+  static const Color sfaIconBoxBlue = Color(0xFF8A2BE2);
   static const Color sfaSendOtpBlue = Color(0xFF87D5F2);
 
   // Background & Surfaces

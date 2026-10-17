@@ -22,6 +22,16 @@ class RoutesName {
   static const String sales_return_view = '/sales_return_view';
   static const String market_survey_view = '/market_survey_view';
   static const String visit_more_menu_view = '/visit_more_menu_view';
+  static const String stock_audit_view = '/stock_audit_view';
+  static const String call_manager_view = '/call_manager_view';
+  static const String competitor_info_view = '/competitor_info_view';
+  static const String credit_request_view = '/credit_request_view';
+  static const String scheme_claims_view = '/scheme_claims_view';
+  static const String display_photos_view = '/display_photos_view';
+  static const String visit_note_view = '/visit_note_view';
+  static const String target_view = '/target_view';
+  static const String next_beat_view = '/next_beat_view';
+  static const String sync_queue_view = '/sync_queue_view';
 
   // Menu Routes
   static const String attendance_list_view = '/attendance_list_view';

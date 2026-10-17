@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/colors/app_colors.dart';
+import '../../../routes/route_names.dart';
 
 class VisitMoreMenuScreen extends StatelessWidget {
   const VisitMoreMenuScreen({super.key});
@@ -8,16 +9,16 @@ class VisitMoreMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> menuItems = [
-      {'icon': Icons.inventory_2_outlined, 'label': 'Stock audit'},
-      {'icon': Icons.local_offer_outlined, 'label': 'Scheme claims'},
-      {'icon': Icons.bar_chart, 'label': 'Competitor info'},
-      {'icon': Icons.camera_alt_outlined, 'label': 'Display photo'},
-      {'icon': Icons.note_alt_outlined, 'label': 'Visit note'},
-      {'icon': Icons.credit_card, 'label': 'Credit request'},
-      {'icon': Icons.track_changes, 'label': 'Target'},
-      {'icon': Icons.arrow_forward, 'label': 'Next beat'},
-      {'icon': Icons.phone_in_talk_outlined, 'label': 'Call manager'},
-      {'icon': Icons.sync, 'label': 'Sync queue'},
+      {'icon': Icons.inventory_2_outlined, 'label': 'Stock audit', 'route': RoutesName.stock_audit_view},
+      {'icon': Icons.local_offer_outlined, 'label': 'Scheme claims', 'route': RoutesName.scheme_claims_view},
+      {'icon': Icons.bar_chart, 'label': 'Competitor info', 'route': RoutesName.competitor_info_view},
+      {'icon': Icons.camera_alt_outlined, 'label': 'Display photos', 'route': RoutesName.display_photos_view},
+      {'icon': Icons.note_alt_outlined, 'label': 'Visit note', 'route': RoutesName.visit_note_view},
+      {'icon': Icons.credit_card, 'label': 'Credit request', 'route': RoutesName.credit_request_view},
+      {'icon': Icons.track_changes, 'label': 'Target', 'route': RoutesName.target_view},
+      {'icon': Icons.arrow_forward, 'label': 'Next beat', 'route': RoutesName.next_beat_view},
+      {'icon': Icons.phone_in_talk_outlined, 'label': 'Call manager', 'route': RoutesName.call_manager_view},
+      {'icon': Icons.sync, 'label': 'Sync queue', 'route': RoutesName.sync_queue_view},
     ];
 
     return Scaffold(
@@ -71,7 +72,11 @@ class VisitMoreMenuScreen extends StatelessWidget {
               ),
               itemCount: menuItems.length,
               itemBuilder: (context, index) {
-                return _buildMenuItem(menuItems[index]['icon'], menuItems[index]['label']);
+                return _buildMenuItem(
+                  menuItems[index]['icon'], 
+                  menuItems[index]['label'],
+                  menuItems[index]['route'],
+                );
               },
             ),
           ],
@@ -144,32 +149,39 @@ class VisitMoreMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String label) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildMenuItem(IconData icon, String label, String route) {
+    return GestureDetector(
+      onTap: () {
+        if (route.isNotEmpty) {
+          Get.toNamed(route);
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: AppColors.primaryPurple, size: 24),
             ),
-            child: Icon(icon, color: AppColors.primaryPurple, size: 24),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textPrimary),
-            maxLines: 2,
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.textPrimary),
+              maxLines: 2,
+            ),
+          ],
+        ),
       ),
     );
   }

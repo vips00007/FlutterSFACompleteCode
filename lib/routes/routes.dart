@@ -21,6 +21,16 @@ import 'package:flutter_practice_sr_level/presentation/tickets/actions/collect_p
 import 'package:flutter_practice_sr_level/presentation/tickets/actions/sales_return_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/actions/market_survey_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/actions/visit_more_menu_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/stock_audit_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/call_manager_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/competitor_info_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/credit_request_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/scheme_claims_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/display_photos_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/visit_note_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/target_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/next_beat_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/tickets/actions/sync_queue_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/select_customers/select_customers_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/select_customers/select_customers_viewmodel.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/review_plan/review_plan_screen.dart';
@@ -217,6 +227,46 @@ class AppRoutes {
     GetPage(
       name: RoutesName.visit_more_menu_view,
       page: () => const VisitMoreMenuScreen(),
+    ),
+    GetPage(
+      name: RoutesName.stock_audit_view,
+      page: () => const StockAuditScreen(),
+    ),
+    GetPage(
+      name: RoutesName.call_manager_view,
+      page: () => const CallManagerScreen(),
+    ),
+    GetPage(
+      name: RoutesName.competitor_info_view,
+      page: () => const CompetitorInfoScreen(),
+    ),
+    GetPage(
+      name: RoutesName.credit_request_view,
+      page: () => const CreditRequestScreen(),
+    ),
+    GetPage(
+      name: RoutesName.scheme_claims_view,
+      page: () => const SchemeClaimsScreen(),
+    ),
+    GetPage(
+      name: RoutesName.display_photos_view,
+      page: () => const DisplayPhotosScreen(),
+    ),
+    GetPage(
+      name: RoutesName.visit_note_view,
+      page: () => const VisitNoteScreen(),
+    ),
+    GetPage(
+      name: RoutesName.target_view,
+      page: () => const TargetScreen(),
+    ),
+    GetPage(
+      name: RoutesName.next_beat_view,
+      page: () => const NextBeatScreen(),
+    ),
+    GetPage(
+      name: RoutesName.sync_queue_view,
+      page: () => const SyncQueueScreen(),
     ),
     GetPage(
       name: RoutesName.visit_check_in_view,

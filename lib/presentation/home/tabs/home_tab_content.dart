@@ -35,7 +35,7 @@ class _HomeTabContentState extends State<HomeTabContent>
 
     return RefreshIndicator(
       onRefresh: viewModel.refreshHome,
-      color: const Color(0xFF8B5CF6),
+      color: const Color(0xFF8A2BE2),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -76,7 +76,7 @@ class _HomeTabContentState extends State<HomeTabContent>
               _buildQuickActionCard(
                 'Travel Plan',
                 Icons.location_on_outlined,
-                const Color(0xFF8B5CF6),
+                const Color(0xFF8A2BE2),
                 null,
               ),
               _buildQuickActionCard(
@@ -88,7 +88,7 @@ class _HomeTabContentState extends State<HomeTabContent>
               _buildQuickActionCard(
                 'Collect',
                 Icons.attach_money_rounded,
-                const Color(0xFF8B5CF6),
+                const Color(0xFF8A2BE2),
                 5,
               ),
               _buildQuickActionCard(
@@ -192,29 +192,31 @@ class _HomeTabContentState extends State<HomeTabContent>
       final isLoading = viewModel.isAttendanceLoading.value;
 
       String title;
+      String timeText = '';
       String subtitle;
       String buttonLabel;
       VoidCallback? action;
       bool isCheckIn;
 
       if (status == 'CHECKED_OUT') {
-        title = 'Attendance Completed';
-        subtitle = 'You have completed your day';
+        title = 'Checked Out';
+        subtitle = 'Day completed';
         buttonLabel = 'Completed';
         action = null;
         isCheckIn = false;
       } else if (status == 'CHECKED_IN' || status == 'MARKED') {
-        title = 'Currently on Duty';
-        subtitle = 'Mark your day as completed';
-        buttonLabel = 'Check Out';
+        title = 'Checked In';
+        timeText = '09:12 AM'; // Placeholder
+        subtitle = 'Working Hours 4h 32m'; // Placeholder
+        buttonLabel = 'End Day';
         action = () => Get.toNamed(
           RoutesName.attendance_camera_view,
           arguments: {'isCheckIn': false},
         );
         isCheckIn = false;
       } else {
-        title = 'Start Your Day';
-        subtitle = 'Check in now to start your visits';
+        title = 'Not Started';
+        subtitle = 'Start working hours';
         buttonLabel = 'Start Day';
         action = () => Get.toNamed(
           RoutesName.attendance_camera_view,
@@ -223,251 +225,139 @@ class _HomeTabContentState extends State<HomeTabContent>
         isCheckIn = true;
       }
 
+      final isCompleted = status == 'CHECKED_OUT';
+      final isStarted = status == 'CHECKED_IN' || status == 'MARKED';
+
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          gradient: const LinearGradient(
-            colors: [Colors.white, Color(0xFFF3ECFF), Color(0xFFE6D9FF)],
-            stops: [0.0, 0.55, 1.0],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6D28D9).withValues(alpha: 0.35),
-              blurRadius: 24,
-              spreadRadius: -6,
-              offset: const Offset(0, 12),
-            ),
-            BoxShadow(
-              color: const Color(0xFF6D28D9).withValues(alpha: 0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
-          border: Border.all(
-            color: const Color(0xFFA78BFA).withValues(alpha: 0.45),
-          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(26),
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 6,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFC4B5FD),
-                        Color(0xFF7C3AED),
-                        Color(0xFF4C1D95),
-                      ],
-                      stops: [0.0, 0.55, 1.0],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isStarted || isCompleted
+                          ? const Color(0xFF00C853)
+                          : Colors.grey,
+                      shape: BoxShape.circle,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4C1D95).withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(2, 0),
-                      ),
-                    ],
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                child: Column(
-                  children: [
-                    Row(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: 54,
-                          height: 54,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              AnimatedBuilder(
-                                animation: _rocketAnimationController,
-                                builder: (context, child) {
-                                  return Transform.scale(
-                                    scale:
-                                        0.92 +
-                                        (_rocketAnimationController.value *
-                                            0.26),
-                                    child: Opacity(
-                                      opacity:
-                                          0.95 -
-                                          (_rocketAnimationController.value *
-                                              0.4),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: RadialGradient(
-                                            colors: [
-                                              const Color(
-                                                0xFFA78BFA,
-                                              ).withValues(alpha: 0.6),
-                                              Colors.transparent,
-                                            ],
-                                            stops: const [0.0, 0.68],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                        Row(
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: Color(0xFF8A2BE2),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFFC4B5FD),
-                                      Color(0xFF7C3AED),
-                                      Color(0xFF4C1D95),
-                                    ],
-                                    stops: [0.0, 0.55, 1.0],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF4C1D95,
-                                      ).withValues(alpha: 0.45),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    isCheckIn
-                                        ? Icons.rocket_launch_rounded
-                                        : Icons.check_circle_outline_rounded,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
+                            ),
+                            if (timeText.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                timeText,
+                                style: const TextStyle(
+                                  color: Color(0xFF8A2BE2),
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, color: Colors.grey, size: 14),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                subtitle,
                                 style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1E1033),
-                                  height: 1.25,
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                subtitle,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF6B6480),
-                                  height: 1.4,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: isLoading ? null : action,
-                      child: Container(
-                        height: 48,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.35),
-                          ),
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFB197FC),
-                              Color(0xFF8B5CF6),
-                              Color(0xFF6D28D9),
-                            ],
-                            stops: [0.0, 0.45, 1.0],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          boxShadow: [
-                            const BoxShadow(
-                              color: Color(0xFF3B1578),
-                              offset: Offset(0, 4),
-                            ),
-                            BoxShadow(
-                              color: const Color(
-                                0xFF4C1D95,
-                              ).withValues(alpha: 0.4),
-                              blurRadius: 16,
-                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 3,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.access_time_filled,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      buttonLabel,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(
-                      height: 4,
-                    ), // spacing for the 3D button effect
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: isLoading ? null : action,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Colors.grey.shade400
+                      : (isCheckIn ? const Color(0xFF8A2BE2) : const Color(0xFFD32F2F)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Row(
+                        children: [
+                          if (!isCompleted) ...[
+                            const Icon(
+                              Icons.logout_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            buttonLabel,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
         ),
       );
     });
@@ -489,7 +379,7 @@ class _HomeTabContentState extends State<HomeTabContent>
               Text(
                 'View all >',
                 style: TextStyle(
-                  color: Color(0xFF8B5CF6),
+                  color: Color(0xFF8A2BE2),
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -511,7 +401,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 '1,50,000',
                 '3 Orders',
                 '2 Pending',
-                const Color(0xFF8B5CF6),
+                const Color(0xFF8A2BE2),
               ),
               _buildBusinessCard(
                 'Retailer',
@@ -520,7 +410,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 '1,00,000',
                 '9 Orders',
                 '6 Pending',
-                const Color(0xFF8B5CF6),
+                const Color(0xFF8A2BE2),
               ),
             ],
           ),
@@ -652,12 +542,12 @@ class _HomeTabContentState extends State<HomeTabContent>
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                  color: const Color(0xFF8A2BE2).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.map_outlined,
-                  color: Color(0xFF8B5CF6),
+                  color: Color(0xFF8A2BE2),
                   size: 20,
                 ),
               ),
@@ -694,7 +584,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                       const Text(
                         'Start now',
                         style: TextStyle(
-                          color: Color(0xFF8B5CF6),
+                          color: Color(0xFF8A2BE2),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),
@@ -721,7 +611,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                             child: _buildJourneyMetric(
                               'Prod',
                               '20',
-                              const Color(0xFF8B5CF6),
+                              const Color(0xFF8A2BE2),
                             ),
                           ),
                           Expanded(
@@ -1122,13 +1012,13 @@ class _HomeTabContentState extends State<HomeTabContent>
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border.all(color: const Color(0xFF8B5CF6)),
+                  border: Border.all(color: const Color(0xFF8A2BE2)),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'Unplanned',
                   style: TextStyle(
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF8A2BE2),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1152,7 +1042,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                   '5',
                   'Prod.',
                   Icons.track_changes,
-                  color: const Color(0xFF8B5CF6),
+                  color: const Color(0xFF8A2BE2),
                 ),
               ),
               Expanded(
@@ -1164,7 +1054,7 @@ class _HomeTabContentState extends State<HomeTabContent>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6),
+              color: const Color(0xFF8A2BE2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -1225,7 +1115,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                   child: const Text(
                     'Details >',
                     style: TextStyle(
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF8A2BE2),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1282,7 +1172,7 @@ class _HomeTabContentState extends State<HomeTabContent>
               Text(
                 'Details >',
                 style: TextStyle(
-                  color: Color(0xFF8B5CF6),
+                  color: Color(0xFF8A2BE2),
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1310,13 +1200,13 @@ class _HomeTabContentState extends State<HomeTabContent>
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: const Color(
-                              0xFF8B5CF6,
+                              0xFF8A2BE2,
                             ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
                             Icons.business,
-                            color: Color(0xFF8B5CF6),
+                            color: Color(0xFF8A2BE2),
                             size: 20,
                           ),
                         ),
@@ -1368,7 +1258,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     child: _buildJourneyMetric(
                       'Prod',
                       '3',
-                      const Color(0xFF8B5CF6),
+                      const Color(0xFF8A2BE2),
                     ),
                   ),
                   Expanded(
@@ -1429,7 +1319,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     ),
                     child: const Icon(
                       Icons.emoji_events,
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF8A2BE2),
                       size: 16,
                     ),
                   ),
@@ -1459,7 +1349,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     ),
                     child: const Icon(
                       Icons.bar_chart,
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF8A2BE2),
                       size: 16,
                     ),
                   ),
@@ -1500,7 +1390,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                       strokeCap: StrokeCap.round,
                       backgroundColor: Colors.grey.shade100,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF8B5CF6),
+                        Color(0xFF8A2BE2),
                       ),
                     ),
                   ),
@@ -1564,7 +1454,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 Icon(
                   icon,
                   size: 14,
-                  color: const Color(0xFF8B5CF6),
+                  color: const Color(0xFF8A2BE2),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -1591,7 +1481,7 @@ class _HomeTabContentState extends State<HomeTabContent>
         LinearProgressIndicator(
           value: value,
           backgroundColor: Colors.grey.shade100,
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8A2BE2)),
           minHeight: 6,
           borderRadius: BorderRadius.circular(8),
         ),

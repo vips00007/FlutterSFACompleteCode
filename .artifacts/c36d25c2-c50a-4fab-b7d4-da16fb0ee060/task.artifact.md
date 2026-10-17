@@ -1,0 +1,10 @@
+- `[x]` Update route names in `route_names.dart`
+- `[x]` Update route bindings in `routes.dart`
+- `[x]` Add navigation logic to `visit_more_menu_screen.dart`
+- `[x]` Implement `scheme_claims_screen.dart`
+- `[x]` Implement `display_photos_screen.dart`
+- `[x]` Implement `visit_note_screen.dart`
+- `[x]` Implement `target_screen.dart`
+- `[x]` Implement `next_beat_screen.dart`
+- `[x]` Implement `sync_queue_screen.dart`
+- `[x]` Update `walkthrough.artifact.md`

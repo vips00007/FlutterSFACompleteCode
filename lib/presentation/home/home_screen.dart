@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF6D28D9), Color(0xFF8B5CF6), Color(0xFFB197FC)],
+          colors: [Color(0xFF6D28D9), Color(0xFF8A2BE2), Color(0xFFB197FC)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -122,7 +122,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.notifications_none_rounded,
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF8A2BE2),
                       size: 20,
                     ),
                   ),

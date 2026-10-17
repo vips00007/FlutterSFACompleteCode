@@ -106,7 +106,7 @@ class DashboardScreen extends StatelessWidget {
             Icon(
               isSelected ? activeIcon : icon,
               color: isSelected
-                  ? const Color(0xFF8B5CF6)
+                  ? const Color(0xFF8A2BE2)
                   : Colors.grey.shade500,
               size: 24,
             ),
@@ -115,7 +115,7 @@ class DashboardScreen extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected
-                    ? const Color(0xFF8B5CF6)
+                    ? const Color(0xFF8A2BE2)
                     : Colors.grey.shade500,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 fontSize: 10,

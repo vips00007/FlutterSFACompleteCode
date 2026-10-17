@@ -31,4 +31,4 @@ I have successfully updated the `TicketsScreen` (the "Visits" tab) to include th
 4.  **Responsive Check**: Verify that the entire screen (search bar, tabs, and lists) fits perfectly on your mobile device with zero overflow errors.
 
 > [!TIP]
-> The UI uses the `sfaBlue` (`#0081C9`) theme throughout to ensure consistency with the rest of the SFA application.
+> The UI uses the `sfaBlue` (`#8A2BE2`) theme throughout to ensure consistency with the rest of the SFA application.
