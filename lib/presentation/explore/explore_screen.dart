@@ -199,85 +199,155 @@ class AddOutletScreen extends StatelessWidget {
       icon: Icons.receipt_long,
       title: 'Customer Type',
       isRequired: true,
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSegmentButton(
-              title: 'Retailer',
-              subtitle: 'Shop / outlet',
-              icon: '🏪',
-              isSelected: viewModel.customerType.value == 'Retailer',
-              onTap: () => viewModel.toggleCustomerType('Retailer'),
+      child: Obx(() {
+        if (viewModel.isCustomerTypesLoading.value) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(color: AppColors.primaryPurple),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildSegmentButton(
-              title: 'Mechanic',
-              subtitle: 'Workshop',
-              icon: '🔧',
-              isSelected: viewModel.customerType.value == 'Mechanic',
-              onTap: () => viewModel.toggleCustomerType('Mechanic'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+          );
+        }
 
-  Widget _buildSegmentButton({
-    required String title,
-    required String subtitle,
-    required String icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.lightBlueBackground : Colors.white,
-          border: Border.all(
-            color: isSelected
-                ? AppColors.primaryPurple
-                : AppColors.secondary.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 22)),
-            const SizedBox(width: 10),
-            Expanded(
+        if (viewModel.customerTypesError.value.isNotEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Icon(Icons.error_outline, color: Colors.redAccent),
+                  const SizedBox(height: 8),
                   Text(
-                    title,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                      fontSize: 14,
+                    viewModel.customerTypesError.value,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 13,
                     ),
                   ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
+                  TextButton(
+                    onPressed: viewModel.fetchCustomerReferenceData,
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(color: AppColors.primaryPurple),
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        if (viewModel.customerTypes.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'No customer types found.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: viewModel.customerTypes.map((type) {
+            String icon = '🏪';
+            String subtitle = 'Outlet';
+            if (type.code.toUpperCase() == 'MECHANIC') {
+              icon = '🔧';
+              subtitle = 'Workshop';
+            } else if (type.code.toUpperCase() == 'RETAILER') {
+              icon = '🏪';
+              subtitle = 'Shop / outlet';
+            } else {
+              icon = '🏢';
+              subtitle = 'Business';
+            }
+
+            final isSelected = viewModel.customerTypeUuid.value == type.uuid;
+
+            return Expanded(
+              child: InkWell(
+                onTap: () => viewModel.toggleCustomerType(type),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 2,
+                  ),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.lightBlueBackground
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected
+                        ? Border.all(
+                            color: AppColors.primaryPurple.withValues(
+                              alpha: 0.5,
+                            ),
+                            width: 1,
+                          )
+                        : Border.all(color: Colors.transparent, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Radio<String>(
+                        value: type.uuid,
+                        groupValue: viewModel.customerTypeUuid.value,
+                        onChanged: (val) {
+                          if (val != null) {
+                            viewModel.toggleCustomerType(type);
+                          }
+                        },
+                        activeColor: AppColors.primaryPurple,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: const VisualDensity(
+                          horizontal: -4,
+                          vertical: -4,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(icon, style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              type.name,
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      }),
     );
   }
 
@@ -358,6 +428,40 @@ class AddOutletScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Obx(() {
+            if (viewModel.isLocationLoading.value) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlueBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryPurple,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      'Detecting current location...',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           _buildFieldLayout(
             label: 'Address Line',
             isRequired: true,
@@ -380,94 +484,172 @@ class AddOutletScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Obx(
-            () => Container(
+          Obx(() {
+            if (viewModel.isGeographyLoading.value) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryPurple,
+                  ),
+                ),
+              );
+            }
+
+            if (viewModel.geographyError.value.isNotEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4DC),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.error_outline, color: Color(0xFF8A5B00)),
+                    const SizedBox(height: 8),
+                    Text(
+                      viewModel.geographyError.value,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF8A5B00),
+                        fontSize: 13,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: viewModel.fetchGeographyData,
+                      child: const Text(
+                        'Retry',
+                        style: TextStyle(color: AppColors.primaryPurple),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: viewModel.isPinMapped.value
-                    ? AppColors.lightBlueBackground
-                    : const Color(0xFFFFF4DC),
+                color: AppColors.lightBlueBackground,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        viewModel.isPinMapped.value
-                            ? '✓ Mapped automatically from pincode'
-                            : '⚠ Couldn’t confidently map — please review',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: viewModel.isPinMapped.value
-                              ? AppColors.primaryPurple
-                              : const Color(0xFF8A5B00),
-                        ),
-                      ),
-                      const Text(
-                        'Review / Change',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryPurple,
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'Geography Selection',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryPurple,
+                    ),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildGeoValue('State', viewModel.state.value),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _buildGeoValue('City', viewModel.city.value),
-                      ),
-                    ],
+                  _buildGeographyDropdown(
+                    label: 'State',
+                    value: viewModel.selectedStateUuid.value,
+                    items: viewModel.stateList,
+                    onChanged: viewModel.onStateSelected,
+                    isEnabled: true,
                   ),
                   const SizedBox(height: 10),
-                  _buildGeoValue('Territory', viewModel.territory.value),
+                  _buildGeographyDropdown(
+                    label: 'City',
+                    value: viewModel.selectedCityUuid.value,
+                    items: viewModel.cityList,
+                    onChanged: viewModel.onCitySelected,
+                    isEnabled: viewModel.selectedStateUuid.value != null,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildGeographyDropdown(
+                    label: 'Territory',
+                    value: viewModel.selectedTerritoryUuid.value,
+                    items: viewModel.territoryList,
+                    onChanged: viewModel.onTerritorySelected,
+                    isEnabled: viewModel.selectedCityUuid.value != null,
+                  ),
                 ],
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildGeoValue(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+  Widget _buildGeographyDropdown({
+    required String label,
+    required String? value,
+    required List<dynamic> items,
+    required void Function(String?) onChanged,
+    required bool isEnabled,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 4),
+          child: Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10.5,
-              color: AppColors.textSecondary,
+              color: isEnabled
+                  ? AppColors.textSecondary
+                  : AppColors.secondary.withValues(alpha: 0.5),
               letterSpacing: 0.4,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
             ),
           ),
-        ],
-      ),
+        ),
+        Container(
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: isEnabled ? Colors.white : AppColors.background,
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+              color: isEnabled
+                  ? AppColors.secondary.withValues(alpha: 0.4)
+                  : AppColors.secondary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              hint: Text(
+                isEnabled ? 'Select $label' : 'Select parent first',
+                style: TextStyle(
+                  color: isEnabled
+                      ? AppColors.secondary
+                      : AppColors.secondary.withValues(alpha: 0.5),
+                  fontSize: 14,
+                ),
+              ),
+              isExpanded: true,
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: isEnabled
+                    ? AppColors.textSecondary
+                    : AppColors.secondary.withValues(alpha: 0.5),
+              ),
+              items: items.map((item) {
+                return DropdownMenuItem<String>(
+                  value: item.uuid,
+                  child: Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: isEnabled ? onChanged : null,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -485,10 +667,13 @@ class AddOutletScreen extends StatelessWidget {
                 child: _buildFieldLayout(
                   label: 'Sub Type',
                   isRequired: true,
-                  child: _buildDropdown(
-                    value: viewModel.subType.value,
-                    items: ['Retailer', 'Wholesaler', 'Semi-Wholesaler'],
-                    onChanged: (val) => viewModel.subType.value = val!,
+                  child: Obx(
+                    () => _buildLookupDropdown(
+                      value: viewModel.selectedSubTypeUuid.value,
+                      hint: 'Select sub type',
+                      items: viewModel.subTypeList,
+                      onChanged: viewModel.onSubTypeSelected,
+                    ),
                   ),
                 ),
               ),
@@ -497,10 +682,14 @@ class AddOutletScreen extends StatelessWidget {
                 child: _buildFieldLayout(
                   label: 'Channel',
                   isRequired: true,
-                  child: _buildDropdown(
-                    value: viewModel.channel.value,
-                    items: ['General Trade', 'Modern Trade', 'Institutional'],
-                    onChanged: (val) => viewModel.channel.value = val!,
+                  child: Obx(
+                    () => _buildLookupDropdown(
+                      value: viewModel.selectedChannelUuid.value,
+                      hint: 'Select channel',
+                      items: viewModel.channelList,
+                      onChanged: viewModel.onChannelSelected,
+                      isEnabled: viewModel.selectedSubTypeUuid.value != null,
+                    ),
                   ),
                 ),
               ),
@@ -513,10 +702,14 @@ class AddOutletScreen extends StatelessWidget {
                 child: _buildFieldLayout(
                   label: 'Segment',
                   isRequired: true,
-                  child: _buildDropdown(
-                    value: viewModel.segment.value,
-                    items: ['Automotive', 'Industrial', 'Hardware'],
-                    onChanged: (val) => viewModel.segment.value = val!,
+                  child: Obx(
+                    () => _buildLookupDropdown(
+                      value: viewModel.selectedSegmentUuid.value,
+                      hint: 'Select segment',
+                      items: viewModel.segmentList,
+                      onChanged: viewModel.onSegmentSelected,
+                      isEnabled: viewModel.selectedChannelUuid.value != null,
+                    ),
                   ),
                 ),
               ),
@@ -525,10 +718,14 @@ class AddOutletScreen extends StatelessWidget {
                 child: _buildFieldLayout(
                   label: 'Category',
                   isRequired: true,
-                  child: _buildDropdown(
-                    value: viewModel.category.value,
-                    items: ['A', 'B', 'C'],
-                    onChanged: (val) => viewModel.category.value = val!,
+                  child: Obx(
+                    () => _buildLookupDropdown(
+                      value: viewModel.selectedCategoryUuid.value,
+                      hint: 'Select category',
+                      items: viewModel.categoryList,
+                      onChanged: viewModel.onCategorySelected,
+                      isEnabled: viewModel.selectedSegmentUuid.value != null,
+                    ),
                   ),
                 ),
               ),
@@ -538,10 +735,14 @@ class AddOutletScreen extends StatelessWidget {
           _buildFieldLayout(
             label: 'Class',
             isRequired: true,
-            child: _buildDropdown(
-              value: viewModel.classificationClass.value,
-              items: ['Premium', 'Standard', 'Economy'],
-              onChanged: (val) => viewModel.classificationClass.value = val!,
+            child: Obx(
+              () => _buildLookupDropdown(
+                value: viewModel.selectedClassUuid.value,
+                hint: 'Select class',
+                items: viewModel.classList,
+                onChanged: viewModel.onClassSelected,
+                isEnabled: viewModel.selectedCategoryUuid.value != null,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -549,13 +750,11 @@ class AddOutletScreen extends StatelessWidget {
             label: 'Beat Area',
             isRequired: true,
             child: Obx(
-              () => _buildDropdown(
-                value: viewModel.beatArea.value.isEmpty
-                    ? null
-                    : viewModel.beatArea.value,
+              () => _buildLookupDropdown(
+                value: viewModel.selectedBeatUuid.value,
                 hint: 'Select beat area',
-                items: viewModel.beatAreas,
-                onChanged: (val) => viewModel.beatArea.value = val!,
+                items: viewModel.beatList,
+                onChanged: viewModel.onBeatSelected,
               ),
             ),
           ),
@@ -588,10 +787,13 @@ class AddOutletScreen extends StatelessWidget {
                   Expanded(
                     child: _buildFieldLayout(
                       label: 'Business Type',
-                      child: _buildDropdown(
-                        value: viewModel.businessType.value,
-                        items: ['Proprietorship', 'Partnership', 'Pvt. Ltd.'],
-                        onChanged: (val) => viewModel.businessType.value = val!,
+                      child: Obx(
+                        () => _buildLookupDropdown(
+                          value: viewModel.selectedBusinessTypeUuid.value,
+                          hint: 'Select type',
+                          items: viewModel.businessTypeList,
+                          onChanged: viewModel.onBusinessTypeSelected,
+                        ),
                       ),
                     ),
                   ),
@@ -628,6 +830,21 @@ class AddOutletScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _buildFieldLayout(
+                label: 'GST Registration Type',
+                child: Obx(
+                  () => _buildDropdown(
+                    value: viewModel.gstRegistrationType.value,
+                    items: const ['REGISTERED', 'UNREGISTERED'],
+                    onChanged: (val) {
+                      if (val != null) {
+                        viewModel.gstRegistrationType.value = val;
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildFieldLayout(
                 label: 'GSTIN',
                 child: _buildTextField(
                   viewModel.gstController,
@@ -638,10 +855,13 @@ class AddOutletScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _buildFieldLayout(
                 label: 'KYC Document',
-                child: _buildDropdown(
-                  value: viewModel.kycDocType.value,
-                  items: ['Aadhaar', 'Voter ID', 'Driving Licence'],
-                  onChanged: (val) => viewModel.kycDocType.value = val!,
+                child: Obx(
+                  () => _buildLookupDropdown(
+                    value: viewModel.selectedKycDocTypeUuid.value,
+                    hint: 'Select document',
+                    items: viewModel.kycDocTypeList,
+                    onChanged: viewModel.onKycDocTypeSelected,
+                  ),
                 ),
               ),
             ],
@@ -704,7 +924,8 @@ class AddOutletScreen extends StatelessWidget {
   }
 
   Widget _buildTypeSpecificDetails(AddOutletViewModel viewModel) {
-    if (viewModel.customerType.value == 'Retailer') {
+    if (viewModel.customerTypeCode.value.toUpperCase() == 'RETAILER' ||
+        viewModel.customerType.value.toUpperCase() == 'RETAILER') {
       return _buildSectionCard(
         icon: Icons.storefront,
         title: 'Retailer Details',
@@ -715,10 +936,13 @@ class AddOutletScreen extends StatelessWidget {
                 Expanded(
                   child: _buildFieldLayout(
                     label: 'Shop Size',
-                    child: _buildDropdown(
-                      value: viewModel.shopSize.value,
-                      items: ['Small (<200 sq ft)', 'Medium', 'Large'],
-                      onChanged: (val) => viewModel.shopSize.value = val!,
+                    child: Obx(
+                      () => _buildLookupDropdown(
+                        value: viewModel.selectedShopSizeUuid.value,
+                        hint: 'Select size',
+                        items: viewModel.shopSizeList,
+                        onChanged: viewModel.onShopSizeSelected,
+                      ),
                     ),
                   ),
                 ),
@@ -726,11 +950,13 @@ class AddOutletScreen extends StatelessWidget {
                 Expanded(
                   child: _buildFieldLayout(
                     label: 'Monthly Potential',
-                    child: _buildDropdown(
-                      value: viewModel.monthlyPotential.value,
-                      items: ['₹1–3 L', '₹3–5 L', '₹5 L+'],
-                      onChanged: (val) =>
-                          viewModel.monthlyPotential.value = val!,
+                    child: Obx(
+                      () => _buildLookupDropdown(
+                        value: viewModel.selectedMonthlyPotentialUuid.value,
+                        hint: 'Select potential',
+                        items: viewModel.monthlyPotentialList,
+                        onChanged: viewModel.onMonthlyPotentialSelected,
+                      ),
                     ),
                   ),
                 ),
@@ -739,10 +965,7 @@ class AddOutletScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildFieldLayout(
               label: 'Brands Stocked',
-              child: _buildTextField(
-                viewModel.brandsStockedController,
-                'e.g. Bosch, Exide',
-              ),
+              child: _buildMultiSelectBrandsDropdown(Get.context!, viewModel),
             ),
             const SizedBox(height: 12),
             _buildFieldLayout(
@@ -755,7 +978,8 @@ class AddOutletScreen extends StatelessWidget {
           ],
         ),
       );
-    } else {
+    } else if (viewModel.customerTypeCode.value.toUpperCase() == 'MECHANIC' ||
+        viewModel.customerType.value.toUpperCase() == 'MECHANIC') {
       return _buildSectionCard(
         icon: Icons.handyman,
         title: 'Mechanic Details',
@@ -807,6 +1031,8 @@ class AddOutletScreen extends StatelessWidget {
         ),
       );
     }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildAttachmentSection(AddOutletViewModel viewModel) {
@@ -912,19 +1138,27 @@ class AddOutletScreen extends StatelessWidget {
           ),
           _buildReviewRow(
             'Address',
-            '${viewModel.addressController.text}, ${viewModel.city.value} ${viewModel.pinCodeController.text}',
+            '${viewModel.addressController.text}, ${viewModel.selectedCityUuid.value ?? ''} ${viewModel.pinCodeController.text}',
           ),
-          _buildReviewRow('Territory', viewModel.territory.value),
+          _buildReviewRow(
+            'Territory',
+            viewModel.selectedTerritoryUuid.value ?? '',
+          ),
           _buildReviewRow(
             'Classification',
-            '${viewModel.subType.value} / ${viewModel.channel.value} / ${viewModel.segment.value} / ${viewModel.category.value} / ${viewModel.classificationClass.value}',
+            '${viewModel.subTypeName} / ${viewModel.channelName} / ${viewModel.segmentName} / ${viewModel.categoryName} / ${viewModel.className}',
           ),
-          _buildReviewRow(
-            'Beat Area',
-            viewModel.beatArea.value.isNotEmpty
-                ? viewModel.beatArea.value
-                : '—',
-          ),
+          if (viewModel.customerTypeCode.value.toUpperCase() == 'RETAILER' ||
+              viewModel.customerType.value.toUpperCase() == 'RETAILER') ...[
+            _buildReviewRow('Shop Size', viewModel.shopSizeName),
+            _buildReviewRow(
+              'Monthly Potential',
+              viewModel.monthlyPotentialName,
+            ),
+          ],
+          _buildReviewRow('Business Type', viewModel.businessTypeName),
+          _buildReviewRow('KYC Document', viewModel.kycDocTypeName),
+          _buildReviewRow('Beat Area', viewModel.beatName),
           _buildReviewRow(
             'Attachment',
             viewModel.selectedFileName.value.isNotEmpty
@@ -1191,12 +1425,14 @@ class AddOutletScreen extends StatelessWidget {
     int? maxLength,
     bool isTextArea = false,
   }) {
-    return TextField(controller: controller,
+    return TextField(
+      controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       maxLength: maxLength,
       style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
-      decoration: InputDecoration(hintText: hint,
+      decoration: InputDecoration(
+        hintText: hint,
         counterText: '',
         hintStyle: const TextStyle(color: AppColors.secondary, fontSize: 15),
         contentPadding: EdgeInsets.symmetric(
@@ -1226,6 +1462,65 @@ class AddOutletScreen extends StatelessWidget {
             color: AppColors.primaryPurple,
             width: 1.5,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLookupDropdown({
+    required String? value,
+    String? hint,
+    required List<dynamic> items,
+    required void Function(String?) onChanged,
+    bool isEnabled = true,
+  }) {
+    return Container(
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: isEnabled ? Colors.white : AppColors.background,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(
+          color: isEnabled
+              ? AppColors.secondary.withValues(alpha: 0.4)
+              : AppColors.secondary.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: hint != null
+              ? Text(
+                  hint,
+                  style: TextStyle(
+                    color: isEnabled
+                        ? AppColors.secondary
+                        : AppColors.secondary.withValues(alpha: 0.5),
+                    fontSize: 14,
+                  ),
+                )
+              : null,
+          isExpanded: true,
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: isEnabled
+                ? AppColors.textSecondary
+                : AppColors.secondary.withValues(alpha: 0.5),
+          ),
+          items: items.map((dynamic item) {
+            return DropdownMenuItem<String>(
+              value: item.uuid,
+              child: Text(
+                item.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: isEnabled ? onChanged : null,
         ),
       ),
     );
@@ -1280,6 +1575,144 @@ class AddOutletScreen extends StatelessWidget {
           onChanged: onChanged,
         ),
       ),
+    );
+  }
+
+  Widget _buildMultiSelectBrandsDropdown(
+      BuildContext context, AddOutletViewModel viewModel) {
+    return Obx(() {
+      final selectedCount = viewModel.selectedBrands.length;
+      final displayText = selectedCount == 0
+          ? 'Select brands'
+          : viewModel.selectedBrands.join(', ');
+
+      return InkWell(
+        onTap: () {
+          _showBrandsMultiSelectDialog(context, viewModel);
+        },
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 42),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+              color: AppColors.secondary.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  displayText,
+                  style: TextStyle(
+                    color: selectedCount == 0
+                        ? AppColors.secondary
+                        : AppColors.textPrimary,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.arrow_drop_down,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  void _showBrandsMultiSelectDialog(
+      BuildContext context, AddOutletViewModel viewModel) {
+    final tempSelectedBrands = <String>[...viewModel.selectedBrands].obs;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select Brands',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Obx(
+                      () => Column(
+                        children: viewModel.availableBrands.map((brand) {
+                          final isSelected = tempSelectedBrands.contains(brand);
+                          return CheckboxListTile(
+                            title: Text(brand),
+                            value: isSelected,
+                            activeColor: AppColors.primaryPurple,
+                            dense: true,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                            onChanged: (bool? value) {
+                              if (value == true) {
+                                tempSelectedBrands.add(brand);
+                              } else {
+                                tempSelectedBrands.remove(brand);
+                              }
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        viewModel.selectedBrands.value =
+                            tempSelectedBrands.toList();
+                        Navigator.pop(dialogContext);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryPurple,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -1,49 +1,28 @@
-# Implementation Plan - Tickets Screen UI Optimization
+# Replace Visit Screen with New Design
 
-Optimize the `TicketsScreen` and `TicketCard` layouts to be more compact, efficient, and visually similar to the professional high-density reference design.
+This plan replaces the existing `TicketsScreen` (the Visit tab) and `TicketCard` components with the new design, replacing the Planned/Unplanned tabs while maintaining all business logic and navigation.
 
 ## Proposed Changes
 
-### [Component] Tickets Screen UI (`tickets_screen.dart`)
-#### [MODIFY] [tickets_screen.dart](file:///E:/FlutterPracticeSrLevel/lib/presentation/tickets/tickets_screen.dart)
-- **AppBar**:
-    - Reduce `horizontal` padding in the title `Row`.
-    - Adjust `Create Plan` button height and padding.
-- **Tabs Section**:
-    - Reduce outer padding from `12.0` to `EdgeInsets.symmetric(horizontal: 16, vertical: 10)`.
-    - Reduce internal tab vertical padding from `12` to `8`.
-    - Reduce spacing between title and subtitle in `_buildTab`.
-    - Use smaller font sizes: Title (`14-15`), Subtitle (`10`).
-- **Search Bar**:
-    - Reduce top padding from `20.0` (implied or existing) to `8.0`.
-    - Keep height at `48-50`.
-- **Status Text**:
-    - Reduce top spacing from `16` to `10`.
-- **Warning Banner**:
-    - Reduce margins from `20` to `16`.
-    - Compact internal padding and icon sizes.
+### [MODIFY] TicketsScreen (lib/presentation/tickets/tickets_screen.dart)
+- Replace the app bar with the new layout (`<` back button, bold "Visits" title, and a top-right "Planned" toggle button).
+- Use the view model's `selectedTabIndex` state to toggle the top-right button text between "Planned" and "Unplanned", allowing users to switch lists without tabs.
+- Add the new search text field with its trailing filter button.
+- Add the horizontally scrollable filter chips (All, FR, A-Z, L3M, MTD, BL, UN, IN).
+- Add the "Business Partner" and date list header.
+- Keep the `ListView.builder` the same to preserve the click/bottom sheet logic.
 
----
-
-### [Component] Ticket Card Widget (`ticket_card.dart`)
-#### [MODIFY] [ticket_card.dart](file:///E:/FlutterPracticeSrLevel/lib/presentation/tickets/widgets/ticket_card.dart)
-- **Margins & Padding**:
-    - Reduce `margin` from `symmetric(horizontal: 16, vertical: 8)` to `EdgeInsets.symmetric(horizontal: 16, vertical: 6)`.
-    - Reduce `padding` from `16` to `12`.
-- **Internal Spacing**:
-    - Reduce gaps between text rows from `8` to `4`.
-    - Reduce spacing before the button row from `16` to `10`.
-- **Typography & Icons**:
-    - Slightly reduce font sizes for mobile density.
-    - Match icon sizing to the compact look.
+### [MODIFY] TicketCard (lib/presentation/tickets/widgets/ticket_card.dart)
+- Remove the old Check-In and View Summary bottom action row.
+- Wrap the entire card in a `GestureDetector` that triggers `onCheckIn` or navigation.
+- Update the card layout to match the provided image:
+  - Top row: Purple building icon, name, location, purple mock ID.
+  - Top right: Outstanding amount and "Last order 12d" text.
+  - Middle: A 3x3 grid showing mock statistics (Channel, Tgt, AvgL3M, etc.).
+  - Bottom: Three small icons (outline circle, green location pin, red circle).
 
 ## Verification Plan
-
-### Automated Tests
-- Run `flutter analyze` to ensure no linting errors or warnings.
-
-### Manual Verification
-- Verify that more ticket cards are visible on the screen without scrolling.
-- Ensure all elements (Planned/Unplanned counts, search bar, buttons) are fully accessible.
-- Confirm that back navigation and tab switching functionality remains 100% intact.
-- Verify no RenderFlex overflow occurs on standard mobile screen sizes.
+- Launch the app and navigate to the Visit screen.
+- Verify the new UI is rendered without overflows.
+- Tap the "Planned" button in the app bar to verify it switches to "Unplanned" and updates the list.
+- Tap on a card to ensure the existing Check-In/Bottom Sheet flow is preserved.

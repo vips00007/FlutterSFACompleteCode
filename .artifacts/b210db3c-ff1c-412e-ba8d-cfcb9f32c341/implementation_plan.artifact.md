@@ -1,42 +1,45 @@
-# Implementation Plan - Customer Profile Screen
+# Implementation Plan - Geography API Integration
 
-Implement a dedicated **Customer Profile** screen that displays comprehensive details about a customer (Outlet). This screen will be accessible from the "View Profile" button on the Customer Summary screen.
-
-## User Review Required
-
-> [!IMPORTANT]
-> The "Location" information (Coordinates and Geofence Radius) is not currently present in the `Outlet` domain entity. I will use placeholder values as shown in the reference images (10.104624, 76.483031 and 200 m) unless provided otherwise.
+Integrate the `/customers/geography` API to populate dynamic dropdowns for State, City, and Territory in the Add Outlet screen, complete with parent-child filtering logic.
 
 ## Proposed Changes
 
-### Routes & Navigation
+### Data Layer
 
-#### [MODIFY] [route_names.dart](file:///E:/FlutterPracticeSrLevel/lib/routes/route_names.dart)
-- Add `customer_profile_view` constant.
+#### [NEW] `geography_response.dart`(file:///E:/FlutterPracticeSrLevel/lib/data/models/geography_response.dart)
+Create model classes to map the JSON response, capturing `uuid`, `type`, `code`, `name`, and `parentUuid`.
 
-#### [MODIFY] [routes.dart](file:///E:/FlutterPracticeSrLevel/lib/routes/routes.dart)
-- Add `GetPage` entry for `customer_profile_view` mapping to `CustomerProfileScreen`.
+#### [MODIFY] `customer_api_service.dart`(file:///E:/FlutterPracticeSrLevel/lib/data/datasource/remote/customer_api_service.dart)
+Add a `getGeographyData()` method to fetch data from `{{baseUrl}}/api/v1/sfa/customers/geography`.
+- Uses `SharedPrefsManager` for the Bearer token.
+- Uses the local `_generateUuidV4()` method for the `X-Correlation-ID` header.
 
-#### [MODIFY] [customer_summary_screen.dart](file:///E:/FlutterPracticeSrLevel/lib/presentation/tickets/customer_summary_screen.dart)
-- Update `View Profile` button `onPressed` to navigate to `RoutesName.customer_profile_view` with the `outlet` argument.
+### Presentation Layer
 
-### UI Components
+#### [MODIFY] `add_outlet_viewmodel.dart`(file:///E:/FlutterPracticeSrLevel/lib/presentation/explore/add_outlet_viewmodel.dart)
+- Call `CustomerApiService.getGeographyData()` during `onInit()` alongside `fetchCustomerReferenceData()`.
+- Add reactive state variables for Geography tracking:
+  - `isLoadingGeography` (bool), `geographyError` (String), `allGeographies` (List).
+  - Selected states: `selectedStateUuid`, `selectedCityUuid`, `selectedTerritoryUuid`.
+- Add computed lists (`stateList`, `cityList`, `territoryList`) to filter `allGeographies` by `type` and their respective `parentUuid` hierarchies.
+- Implement selection methods (`onStateSelected`, `onCitySelected`, `onTerritorySelected`) that reset downstream dropdowns appropriately when a parent's value changes.
 
-#### [NEW] [customer_profile_screen.dart](file:///E:/FlutterPracticeSrLevel/lib/presentation/tickets/customer_profile_screen.dart)
-- Create the screen with the following sections based on the reference images:
-    - **AppBar**: "Customer Profile" title, back arrow, and thin light-blue bottom border.
-    - **Header Section**: A card containing a large circular "?" avatar and a "Retailer" status badge.
-    - **Business Info Section**: A card with "Type" (Retailer).
-    - **Contact Info Section**: A card with "Phone" and "Contact Person" (Combined first and last name).
-    - **Address Section**: A card with "Address", "City", "State", and "Pincode".
-    - **Location Section**: A card with "Coordinates" and "Geofence Radius".
+#### [MODIFY] `explore_screen.dart`(file:///E:/FlutterPracticeSrLevel/lib/presentation/explore/explore_screen.dart)
+- Overhaul `_buildAddressSection()` to remove the hardcoded pincode-based UI.
+- Implement a custom `_buildGeographyDropdown` (or modify `_buildDropdown` to accept custom items like `<String, String>`) to allow using UUID as the internal value while displaying the localized name.
+- Insert the State, City, and Territory dropdowns in the layout.
+- Wrap the Geography section in an `Obx` that displays a `CircularProgressIndicator` while loading, or a friendly error state if it fails.
+- Pass appropriate state properties to disable City if State is null, and Territory if City is null.
 
 ## Verification Plan
 
+### Automated Tests
+- Run `dart analyze` to ensure syntax is valid and all imports are correct.
+
 ### Manual Verification
-- Navigate to the Customer Summary screen.
-- Click on "View Profile".
-- Verify that the Customer Profile screen opens correctly.
-- Verify that the layout, icons, and colors match the provided images.
-- Verify that the back button returns to the Customer Summary screen.
-- Verify responsiveness on different screen sizes.
+- Launch the application and navigate to Add Outlet -> Create Customer.
+- Confirm that the State dropdown displays data retrieved from the API (`type == "STATE"`).
+- Select a State and verify that the City dropdown becomes enabled and populates with records mapping to that state's `uuid`.
+- Select a City and verify that the Territory dropdown populates with records mapping to the city's `uuid`.
+- Change the selected State and ensure City and Territory are reset and disabled accordingly.
+- Test scenarios with slow or offline connections to observe loading and error UI states without screen disruption.

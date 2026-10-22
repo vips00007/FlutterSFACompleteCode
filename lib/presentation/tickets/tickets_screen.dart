@@ -15,26 +15,41 @@ class TicketsScreen extends StatelessWidget {
     final viewModel = Get.find<TicketsViewModel>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
         automaticallyImplyLeading: false,
-        titleSpacing: 16,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_back_ios_new,
+              color: AppColors.textPrimary,
+              size: 16,
+            ),
+          ),
+          onPressed: () => Get.back(),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Text(
-              'Visit',
+              'Visits',
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 20,
               ),
             ),
             Text(
-              'Primary Sales · 5 Customer',
+              'Beat plan and journey approval',
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -43,100 +58,95 @@ class TicketsScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: ElevatedButton(
-              onPressed: () => Get.toNamed(RoutesName.create_plan_view),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(99),
+          Obx(() => GestureDetector(
+                onTap: () => viewModel.changeTab(
+                    viewModel.selectedTabIndex.value == 0 ? 1 : 0),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    viewModel.selectedTabIndex.value == 0
+                        ? 'Planned'
+                        : 'Unplanned',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
-                minimumSize: const Size(0, 36),
-              ),
-              child: const Text(
-                'Create Plan',
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-              ),
-            ),
-          ),
+              )),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
-            color: AppColors.secondary.withValues(alpha: 0.3),
+            color: Colors.grey.shade200,
             height: 1,
           ),
         ),
       ),
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Custom Tab Bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Obx(
-                  () => Row(
-                    children: [
-                      Expanded(
-                        child: _buildTab(
-                          title: 'Planned',
-                          subtitle: '${viewModel.plannedTickets.length}/0 visited',
-                          isSelected: viewModel.selectedTabIndex.value == 0,
-                          onTap: () => viewModel.changeTab(0),
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildTab(
-                          title: 'Unplanned',
-                          subtitle: '${viewModel.unplannedTickets.length} customers',
-                          isSelected: viewModel.selectedTabIndex.value == 1,
-                          onTap: () => viewModel.changeTab(1),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Search Bar
+            // Search Bar & Filter Button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: Container(
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.primaryPurple, width: 1),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search City, Name, Area',
-                    hintStyle: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.7),
-                      fontSize: 15,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.primaryPurple.withValues(alpha: 0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search name, area or owner',
+                          hintStyle: TextStyle(
+                            color: AppColors.textSecondary
+                                .withValues(alpha: 0.7),
+                            fontSize: 15,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          isDense: true,
+                        ),
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    isDense: true,
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Container(
+                    height: 48,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.tune,
+                      color: AppColors.primaryPurple,
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -146,15 +156,43 @@ class TicketsScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _buildFilterChip('All', isSelected: true),
-                  _buildFilterChip('Reorder Due'),
-                  _buildFilterChip('Scheme Eligible'),
-                  _buildFilterChip('At Risk'),
+                  _buildNewFilterChip('All', isSelected: true, isOutline: true),
+                  _buildNewFilterChip('FR', isSelected: true, isOutline: false),
+                  _buildNewFilterChip('A-Z'),
+                  _buildNewFilterChip('L3M'),
+                  _buildNewFilterChip('MTD'),
+                  _buildNewFilterChip('BL'),
+                  _buildNewFilterChip('UN'),
+                  _buildNewFilterChip('IN'),
                 ],
               ),
             ),
 
-            const SizedBox(height: 12),
+            // List Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Business Partner',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Saturday, 12 September',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
             // Content Area
             Expanded(
@@ -181,19 +219,22 @@ class TicketsScreen extends StatelessWidget {
                       // Logic for Unplanned list (Index 1)
                       if (index == 0) {
                         onCheckIn = () {
-                          Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
+                          Get.toNamed(RoutesName.visit_check_in_view,
+                              arguments: tickets[index]);
                         };
                       } else if (index == 1) {
                         onCheckIn = () {
                           Get.bottomSheet(
-                            OutsideRadiusBottomSheet(outlet: tickets[index], isInside: false),
+                            OutsideRadiusBottomSheet(
+                                outlet: tickets[index], isInside: false),
                             isScrollControlled: true,
                           );
                         };
                       } else if (index == 2) {
                         onCheckIn = () {
                           Get.bottomSheet(
-                            OutsideRadiusBottomSheet(outlet: tickets[index], isInside: true),
+                            OutsideRadiusBottomSheet(
+                                outlet: tickets[index], isInside: true),
                             isScrollControlled: true,
                           );
                         };
@@ -214,71 +255,38 @@ class TicketsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip(String label, {bool isSelected = false}) {
+  Widget _buildNewFilterChip(String label,
+      {bool isSelected = false, bool isOutline = false}) {
+    Color bgColor;
+    Color textColor;
+    Color borderColor = Colors.transparent;
+
+    if (isOutline) {
+      bgColor = Colors.white;
+      textColor = AppColors.primaryPurple;
+      borderColor = AppColors.primaryPurple;
+    } else if (isSelected) {
+      bgColor = AppColors.primaryPurple;
+      textColor = Colors.white;
+    } else {
+      bgColor = const Color(0xFFF3E8FF); // light purple
+      textColor = AppColors.primaryPurple;
+    }
+
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primaryPurple : Colors.white,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(
-          color: AppColors.primaryPurple,
-          width: 1,
-        ),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: isSelected ? Colors.white : AppColors.textPrimary,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          color: textColor,
+          fontWeight: FontWeight.w600,
           fontSize: 13,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTab({
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? AppColors.primaryPurple : Colors.grey,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 1),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: isSelected ? Colors.grey.shade500 : Colors.grey.shade400,
-                fontSize: 10,
-              ),
-            ),
-          ],
         ),
       ),
     );

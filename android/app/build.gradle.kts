@@ -4,15 +4,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val paths = listOf(
-    "ANDROID_PREFS_ROOT" to System.getenv("ANDROID_PREFS_ROOT"),
-    "ANDROID_USER_HOME" to System.getenv("ANDROID_USER_HOME")
-)
-val distinct = paths.mapNotNull { it.second }.map { File(it).absolutePath }.distinct()
-println("PATHS: $paths")
-println("DISTINCT SIZE: ${distinct.size}")
-println("DISTINCT PATHS: $distinct")
-
 android {
     namespace = "com.example.flutter_practice_sr_level"
     compileSdk = 35

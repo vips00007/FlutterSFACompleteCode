@@ -1,10 +1,15 @@
 try {
-    val env = System.getenv()
-    val cl = env.javaClass
-    val field = cl.getDeclaredField("m")
-    field.isAccessible = true
-    val map = field.get(env) as MutableMap<String, String>
-    map.remove("ANDROID_PREFS_ROOT")
+    val pe = Class.forName("java.lang.ProcessEnvironment")
+    val theEnvField = pe.getDeclaredField("theEnvironment")
+    theEnvField.isAccessible = true
+    val theEnv = theEnvField.get(null) as MutableMap<String, String>
+    theEnv.remove("ANDROID_PREFS_ROOT")
+
+    val theCaseInsensitiveEnvField = pe.getDeclaredField("theCaseInsensitiveEnvironment")
+    theCaseInsensitiveEnvField.isAccessible = true
+    val theCaseInsensitiveEnv = theCaseInsensitiveEnvField.get(null) as MutableMap<String, String>
+    theCaseInsensitiveEnv.remove("ANDROID_PREFS_ROOT")
+    
     println("Successfully removed ANDROID_PREFS_ROOT via reflection")
 } catch (e: Exception) {
     println("Failed to modify env: $e")

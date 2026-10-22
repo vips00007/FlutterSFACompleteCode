@@ -1,11 +1,23 @@
-- [x] Add `customer_profile_view` to `route_names.dart`
-- [x] Add `CustomerProfileScreen` route to `routes.dart`
-- [x] Update "View Profile" button in `customer_summary_screen.dart`
-- [x] Create `customer_profile_screen.dart`
-    - [x] Implement AppBar and layout
-    - [x] Implement Profile Header card
-    - [x] Implement Business Info card
-    - [x] Implement Contact Info card
-    - [x] Implement Address card
-    - [x] Implement Location card
-- [x] Verify navigation and UI
+- [x] Create `customer_reference_data_response.dart` model.
+- [x] Create `CustomerApiService` with `getReferenceData()` endpoint.
+- [x] Integrate unique `X-Correlation-ID` header generation for each API request.
+- [x] Update `AddOutletViewModel` to fetch `data.customerTypes` on screen initialization.
+- [x] Update `AddOutletViewModel` to map and store `uuid`, `code`, and `name` of the selected type.
+- [x] Update `explore_screen.dart` to dynamically render segment buttons using the fetched `customerTypes`.
+- [x] Handle loading, empty, and error states gracefully in the `Customer Type` segment UI.
+- [x] Ensure specific forms (like Retailer/Mechanic details) continue functioning by comparing the dynamic `customerTypeCode`.
+- [x] Verify the existing UI design constraint holds for future types using a wrapped `LayoutBuilder`.
+- [x] Run `dart analyze` to resolve missing or extra imports.
+
+---
+
+- [x] Create `geography_response.dart` model mapping `uuid`, `type`, `code`, `name`, and `parentUuid`.
+- [x] Add `getGeographyData()` to `CustomerApiService`.
+- [x] Add tracking state for geography list, loading state, and error handling in `AddOutletViewModel`.
+- [x] Add `stateList`, `cityList`, and `territoryList` dynamic computed getters in ViewModel.
+- [x] Implement `onStateSelected`, `onCitySelected`, and `onTerritorySelected` methods with hierarchy reset logic in ViewModel.
+- [x] Refactor `_buildAddressSection()` in `explore_screen.dart` to remove the hardcoded pincode-based UI.
+- [x] Create or modify dropdown UI in `explore_screen.dart` to accommodate `uuid` values while displaying `name`.
+- [x] Wrap Geography section in an `Obx` widget for graceful loading/error handling.
+- [x] Disable City/Territory dropdowns when their respective parent is not selected.
+- [x] Run `dart analyze` to ensure clean integration.
