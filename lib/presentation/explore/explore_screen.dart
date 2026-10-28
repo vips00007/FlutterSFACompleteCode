@@ -1,1624 +1,216 @@
+import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../core/colors/app_colors.dart';
-import '../dashboard/dashboard_viewmodel.dart';
 import 'add_outlet_viewmodel.dart';
+import '../dashboard/dashboard_viewmodel.dart';
 
-class AddOutletScreen extends StatelessWidget {
+// HTML Colors mapped to the existing purple theme tokens
+class HtmlColors {
+  static const Color bg = Color(0xFFF9FAFB); // grey.shade50
+  static const Color card = Colors.white;
+  static const Color ink = Color(0xFF1B2733);
+  static const Color mut = Color(0xFF64748B); // Text secondary
+  static const Color line = Color(0xFFE2E8F0);
+  static const Color pri = Color(0xFF8A2BE2); // Primary
+  static const Color acc = Color(0xFF6D28D9); // Accent
+  static const Color sec = Color(0xFFB197FC); // Secondary
+  static const Color bad = Color(0xFFD32F2F);
+  static const Color ok = Color(0xFF1B873F);
+}
+
+class AddOutletScreen extends StatefulWidget {
   const AddOutletScreen({super.key});
 
   @override
+  State<AddOutletScreen> createState() => _AddOutletScreenState();
+}
+
+class _AddOutletScreenState extends State<AddOutletScreen> {
+  late final AddOutletViewModel viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    viewModel = Get.put(AddOutletViewModel());
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final viewModel = Get.find<AddOutletViewModel>();
-    final dashboardViewModel = Get.find<DashboardViewModel>();
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => dashboardViewModel.changeTabIndex(0),
-        ),
-        title: const Text(
-          'Create Customer',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(20),
-          child: Container(
-            padding: const EdgeInsets.only(left: 56, bottom: 8),
-            alignment: Alignment.centerLeft,
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: AppColors.primaryPurple, width: 2),
-              ),
-            ),
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                children: [
-                  TextSpan(text: 'Customer Management › '),
-                  TextSpan(
-                    text: 'Create Customer',
-                    style: TextStyle(
-                      color: AppColors.primaryPurple,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(14.0),
+    return Scaffold(backgroundColor: HtmlColors.bg,
+      body: SafeArea(
+        bottom: false,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStepProgress(viewModel),
-            const SizedBox(height: 14),
-            Obx(() => _buildStepContent(viewModel)),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomDock(context, viewModel),
-    );
-  }
-
-  Widget _buildStepProgress(AddOutletViewModel viewModel) {
-    return Obx(
-      () => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepIndicator(1, 'Basics', viewModel.currentStep.value),
-          _buildStepDivider(1, viewModel.currentStep.value),
-          _buildStepIndicator(2, 'Classification', viewModel.currentStep.value),
-          _buildStepDivider(2, viewModel.currentStep.value),
-          _buildStepIndicator(3, 'Details & Docs', viewModel.currentStep.value),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepIndicator(int step, String label, int currentStep) {
-    final isDone = currentStep > step;
-    final isActive = currentStep == step;
-    final color = isDone
-        ? AppColors.textPrimary
-        : isActive
-        ? AppColors.primaryPurple
-        : AppColors.textSecondary;
-
-    return Expanded(
-      flex: 2,
-      child: Column(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: isDone ? AppColors.primaryPurple : Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isActive || isDone
-                    ? AppColors.primaryPurple
-                    : AppColors.secondary,
-                width: 2,
-              ),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: AppColors.lightBlueBackground,
-                        spreadRadius: 4,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: isDone
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : Text(
-                      '$step',
-                      style: TextStyle(
-                        color: isActive
-                            ? AppColors.primaryPurple
-                            : AppColors.textSecondary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: color,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepDivider(int step, int currentStep) {
-    final isDone = currentStep > step;
-    return Expanded(
-      flex: 3,
-      child: Container(
-        height: 3,
-        margin: const EdgeInsets.only(top: 14),
-        decoration: BoxDecoration(
-          color: isDone
-              ? AppColors.primaryPurple
-              : AppColors.secondary.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(3),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepContent(AddOutletViewModel viewModel) {
-    switch (viewModel.currentStep.value) {
-      case 1:
-        return _buildStep1(viewModel);
-      case 2:
-        return _buildStep2(viewModel);
-      case 3:
-        return _buildStep3(viewModel);
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  // --- Step 1 ---
-
-  Widget _buildStep1(AddOutletViewModel viewModel) {
-    return Column(
-      children: [
-        _buildCustomerTypeSelection(viewModel),
-        _buildBasicInformation(viewModel),
-        _buildAddressSection(viewModel),
-      ],
-    );
-  }
-
-  Widget _buildCustomerTypeSelection(AddOutletViewModel viewModel) {
-    return _buildSectionCard(
-      icon: Icons.receipt_long,
-      title: 'Customer Type',
-      isRequired: true,
-      child: Obx(() {
-        if (viewModel.isCustomerTypesLoading.value) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(color: AppColors.primaryPurple),
-            ),
-          );
-        }
-
-        if (viewModel.customerTypesError.value.isNotEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.redAccent),
-                  const SizedBox(height: 8),
-                  Text(
-                    viewModel.customerTypesError.value,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 13,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: viewModel.fetchCustomerReferenceData,
-                    child: const Text(
-                      'Retry',
-                      style: TextStyle(color: AppColors.primaryPurple),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        if (viewModel.customerTypes.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'No customer types found.',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: viewModel.customerTypes.map((type) {
-            String icon = '🏪';
-            String subtitle = 'Outlet';
-            if (type.code.toUpperCase() == 'MECHANIC') {
-              icon = '🔧';
-              subtitle = 'Workshop';
-            } else if (type.code.toUpperCase() == 'RETAILER') {
-              icon = '🏪';
-              subtitle = 'Shop / outlet';
-            } else {
-              icon = '🏢';
-              subtitle = 'Business';
-            }
-
-            final isSelected = viewModel.customerTypeUuid.value == type.uuid;
-
-            return Expanded(
-              child: InkWell(
-                onTap: () => viewModel.toggleCustomerType(type),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 2,
-                  ),
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.lightBlueBackground
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected
-                        ? Border.all(
-                            color: AppColors.primaryPurple.withValues(
-                              alpha: 0.5,
-                            ),
-                            width: 1,
-                          )
-                        : Border.all(color: Colors.transparent, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      Radio<String>(
-                        value: type.uuid,
-                        groupValue: viewModel.customerTypeUuid.value,
-                        onChanged: (val) {
-                          if (val != null) {
-                            viewModel.toggleCustomerType(type);
-                          }
-                        },
-                        activeColor: AppColors.primaryPurple,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(
-                          horizontal: -4,
-                          vertical: -4,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(icon, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              type.name,
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                                fontSize: 13,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              subtitle,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      }),
-    );
-  }
-
-  Widget _buildBasicInformation(AddOutletViewModel viewModel) {
-    return _buildSectionCard(
-      icon: Icons.person_outline,
-      title: 'Basic Information',
-      child: Column(
-        children: [
-          _buildFieldLayout(
-            label: 'Shop Name',
-            isRequired: true,
-            child: _buildTextField(viewModel.shopNameController, 'Enter name'),
-          ),
-          const SizedBox(height: 12),
-          _buildFieldLayout(
-            label: 'Contact Person',
-            isRequired: true,
-            child: _buildTextField(
-              viewModel.contactPersonController,
-              'Enter name',
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildFieldLayout(
-                  label: 'Mobile',
-                  isRequired: true,
-                  child: _buildTextField(
-                    viewModel.mobileController,
-                    '10-digit mobile',
-                    keyboardType: TextInputType.phone,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildFieldLayout(
-                  label: 'Alt. Mobile',
-                  child: _buildTextField(
-                    viewModel.altMobileController,
-                    'Optional',
-                    keyboardType: TextInputType.phone,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildFieldLayout(
-            label: 'Email',
-            child: _buildTextField(
-              viewModel.emailController,
-              'name@example.com',
-              keyboardType: TextInputType.emailAddress,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildFieldLayout(
-            label: 'WhatsApp No.',
-            child: _buildTextField(
-              viewModel.whatsappController,
-              'Optional',
-              keyboardType: TextInputType.phone,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddressSection(AddOutletViewModel viewModel) {
-    return _buildSectionCard(
-      icon: Icons.location_on_outlined,
-      title: 'Address',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Obx(() {
-            if (viewModel.isLocationLoading.value) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.lightBlueBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        color: AppColors.primaryPurple,
-                        strokeWidth: 2,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Detecting current location...',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.primaryPurple,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-          _buildFieldLayout(
-            label: 'Address Line',
-            isRequired: true,
-            child: _buildTextField(
-              viewModel.addressController,
-              'Enter address',
-              maxLines: 2,
-              isTextArea: true,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildFieldLayout(
-            label: 'Pincode',
-            isRequired: true,
-            child: _buildTextField(
-              viewModel.pinCodeController,
-              '6-digit code',
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Obx(() {
-            if (viewModel.isGeographyLoading.value) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-              );
-            }
-
-            if (viewModel.geographyError.value.isNotEmpty) {
-              return Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF4DC),
-                  borderRadius: BorderRadius.circular(14),
-                ),
+            _buildHeader(viewModel),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.error_outline, color: Color(0xFF8A5B00)),
-                    const SizedBox(height: 8),
-                    Text(
-                      viewModel.geographyError.value,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF8A5B00),
-                        fontSize: 13,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: viewModel.fetchGeographyData,
-                      child: const Text(
-                        'Retry',
-                        style: TextStyle(color: AppColors.primaryPurple),
-                      ),
-                    ),
+                    _buildTabs(viewModel),
+                    const SizedBox(height: 12),
+                    _buildStepCard(viewModel, context),
+                    const SizedBox(height: 100), // Padding for bottom nav
                   ],
                 ),
-              );
-            }
-
-            return Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.lightBlueBackground,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Geography Selection',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildGeographyDropdown(
-                    label: 'State',
-                    value: viewModel.selectedStateUuid.value,
-                    items: viewModel.stateList,
-                    onChanged: viewModel.onStateSelected,
-                    isEnabled: true,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildGeographyDropdown(
-                    label: 'City',
-                    value: viewModel.selectedCityUuid.value,
-                    items: viewModel.cityList,
-                    onChanged: viewModel.onCitySelected,
-                    isEnabled: viewModel.selectedStateUuid.value != null,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildGeographyDropdown(
-                    label: 'Territory',
-                    value: viewModel.selectedTerritoryUuid.value,
-                    items: viewModel.territoryList,
-                    onChanged: viewModel.onTerritorySelected,
-                    isEnabled: viewModel.selectedCityUuid.value != null,
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGeographyDropdown({
-    required String label,
-    required String? value,
-    required List<dynamic> items,
-    required void Function(String?) onChanged,
-    required bool isEnabled,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 4),
-          child: Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10.5,
-              color: isEnabled
-                  ? AppColors.textSecondary
-                  : AppColors.secondary.withValues(alpha: 0.5),
-              letterSpacing: 0.4,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: isEnabled ? Colors.white : AppColors.background,
-            borderRadius: BorderRadius.circular(99),
-            border: Border.all(
-              color: isEnabled
-                  ? AppColors.secondary.withValues(alpha: 0.4)
-                  : AppColors.secondary.withValues(alpha: 0.2),
-              width: 1.5,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              hint: Text(
-                isEnabled ? 'Select $label' : 'Select parent first',
-                style: TextStyle(
-                  color: isEnabled
-                      ? AppColors.secondary
-                      : AppColors.secondary.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
-              ),
-              isExpanded: true,
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: isEnabled
-                    ? AppColors.textSecondary
-                    : AppColors.secondary.withValues(alpha: 0.5),
-              ),
-              items: items.map((item) {
-                return DropdownMenuItem<String>(
-                  value: item.uuid,
-                  child: Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: isEnabled ? onChanged : null,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- Step 2 ---
-
-  Widget _buildStep2(AddOutletViewModel viewModel) {
-    return _buildSectionCard(
-      icon: Icons.folder_open,
-      title: 'Classification with Beats',
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildFieldLayout(
-                  label: 'Sub Type',
-                  isRequired: true,
-                  child: Obx(
-                    () => _buildLookupDropdown(
-                      value: viewModel.selectedSubTypeUuid.value,
-                      hint: 'Select sub type',
-                      items: viewModel.subTypeList,
-                      onChanged: viewModel.onSubTypeSelected,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildFieldLayout(
-                  label: 'Channel',
-                  isRequired: true,
-                  child: Obx(
-                    () => _buildLookupDropdown(
-                      value: viewModel.selectedChannelUuid.value,
-                      hint: 'Select channel',
-                      items: viewModel.channelList,
-                      onChanged: viewModel.onChannelSelected,
-                      isEnabled: viewModel.selectedSubTypeUuid.value != null,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildFieldLayout(
-                  label: 'Segment',
-                  isRequired: true,
-                  child: Obx(
-                    () => _buildLookupDropdown(
-                      value: viewModel.selectedSegmentUuid.value,
-                      hint: 'Select segment',
-                      items: viewModel.segmentList,
-                      onChanged: viewModel.onSegmentSelected,
-                      isEnabled: viewModel.selectedChannelUuid.value != null,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildFieldLayout(
-                  label: 'Category',
-                  isRequired: true,
-                  child: Obx(
-                    () => _buildLookupDropdown(
-                      value: viewModel.selectedCategoryUuid.value,
-                      hint: 'Select category',
-                      items: viewModel.categoryList,
-                      onChanged: viewModel.onCategorySelected,
-                      isEnabled: viewModel.selectedSegmentUuid.value != null,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildFieldLayout(
-            label: 'Class',
-            isRequired: true,
-            child: Obx(
-              () => _buildLookupDropdown(
-                value: viewModel.selectedClassUuid.value,
-                hint: 'Select class',
-                items: viewModel.classList,
-                onChanged: viewModel.onClassSelected,
-                isEnabled: viewModel.selectedCategoryUuid.value != null,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildFieldLayout(
-            label: 'Beat Area',
-            isRequired: true,
-            child: Obx(
-              () => _buildLookupDropdown(
-                value: viewModel.selectedBeatUuid.value,
-                hint: 'Select beat area',
-                items: viewModel.beatList,
-                onChanged: viewModel.onBeatSelected,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- Step 3 ---
-
-  Widget _buildStep3(AddOutletViewModel viewModel) {
-    return Column(
-      children: [
-        _buildCollapsibleSection(
-          icon: Icons.business,
-          title: 'Business Information',
-          isExpanded: viewModel.isBusinessInfoExpanded,
-          child: Column(
-            children: [
-              _buildFieldLayout(
-                label: 'Registration Number',
-                child: _buildTextField(
-                  viewModel.regNumberController,
-                  'e.g. UDYAM-MP-23-0001234',
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFieldLayout(
-                      label: 'Business Type',
-                      child: Obx(
-                        () => _buildLookupDropdown(
-                          value: viewModel.selectedBusinessTypeUuid.value,
-                          hint: 'Select type',
-                          items: viewModel.businessTypeList,
-                          onChanged: viewModel.onBusinessTypeSelected,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildFieldLayout(
-                      label: 'Est. Year',
-                      child: _buildTextField(
-                        viewModel.estYearController,
-                        '2015',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        _buildTypeSpecificDetails(viewModel),
-        _buildCollapsibleSection(
-          icon: Icons.badge_outlined,
-          title: 'KYC / Tax',
-          isExpanded: viewModel.isKycExpanded,
-          child: Column(
-            children: [
-              _buildFieldLayout(
-                label: 'PAN',
-                child: _buildTextField(
-                  viewModel.panController,
-                  'ABCDE1234F',
-                  maxLength: 10,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildFieldLayout(
-                label: 'GST Registration Type',
-                child: Obx(
-                  () => _buildDropdown(
-                    value: viewModel.gstRegistrationType.value,
-                    items: const ['REGISTERED', 'UNREGISTERED'],
-                    onChanged: (val) {
-                      if (val != null) {
-                        viewModel.gstRegistrationType.value = val;
-                      }
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildFieldLayout(
-                label: 'GSTIN',
-                child: _buildTextField(
-                  viewModel.gstController,
-                  '23ABCDE1234F1Z5',
-                  maxLength: 15,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildFieldLayout(
-                label: 'KYC Document',
-                child: Obx(
-                  () => _buildLookupDropdown(
-                    value: viewModel.selectedKycDocTypeUuid.value,
-                    hint: 'Select document',
-                    items: viewModel.kycDocTypeList,
-                    onChanged: viewModel.onKycDocTypeSelected,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        _buildCollapsibleSection(
-          icon: Icons.account_balance,
-          title: 'Bank Details',
-          isExpanded: viewModel.isBankExpanded,
-          child: Column(
-            children: [
-              _buildFieldLayout(
-                label: 'Bank Name',
-                child: _buildTextField(
-                  viewModel.bankNameController,
-                  'e.g. State Bank of India',
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildFieldLayout(
-                label: 'Account Holder Name',
-                child: _buildTextField(
-                  viewModel.accHolderController,
-                  'As per bank records',
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFieldLayout(
-                      label: 'Account Number',
-                      child: _buildTextField(
-                        viewModel.accNumberController,
-                        '9–18 digits',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildFieldLayout(
-                      label: 'IFSC Code',
-                      child: _buildTextField(
-                        viewModel.ifscController,
-                        'SBIN0001234',
-                        maxLength: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        _buildAttachmentSection(viewModel),
-        _buildReviewSection(viewModel),
-      ],
-    );
-  }
-
-  Widget _buildTypeSpecificDetails(AddOutletViewModel viewModel) {
-    if (viewModel.customerTypeCode.value.toUpperCase() == 'RETAILER' ||
-        viewModel.customerType.value.toUpperCase() == 'RETAILER') {
-      return _buildSectionCard(
-        icon: Icons.storefront,
-        title: 'Retailer Details',
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFieldLayout(
-                    label: 'Shop Size',
-                    child: Obx(
-                      () => _buildLookupDropdown(
-                        value: viewModel.selectedShopSizeUuid.value,
-                        hint: 'Select size',
-                        items: viewModel.shopSizeList,
-                        onChanged: viewModel.onShopSizeSelected,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildFieldLayout(
-                    label: 'Monthly Potential',
-                    child: Obx(
-                      () => _buildLookupDropdown(
-                        value: viewModel.selectedMonthlyPotentialUuid.value,
-                        hint: 'Select potential',
-                        items: viewModel.monthlyPotentialList,
-                        onChanged: viewModel.onMonthlyPotentialSelected,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildFieldLayout(
-              label: 'Brands Stocked',
-              child: _buildMultiSelectBrandsDropdown(Get.context!, viewModel),
-            ),
-            const SizedBox(height: 12),
-            _buildFieldLayout(
-              label: 'Shop Timings',
-              child: _buildTextField(
-                viewModel.shopTimingsController,
-                '10:00 AM – 8:00 PM',
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (viewModel.customerTypeCode.value.toUpperCase() == 'MECHANIC' ||
-        viewModel.customerType.value.toUpperCase() == 'MECHANIC') {
-      return _buildSectionCard(
-        icon: Icons.handyman,
-        title: 'Mechanic Details',
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFieldLayout(
-                    label: 'Workshop Type',
-                    child: _buildDropdown(
-                      value: viewModel.workshopType.value,
-                      items: ['Two-wheeler', 'Four-wheeler', 'Commercial'],
-                      onChanged: (val) => viewModel.workshopType.value = val!,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildFieldLayout(
-                    label: 'Experience (yrs)',
-                    child: _buildTextField(
-                      viewModel.experienceController,
-                      '8',
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildFieldLayout(
-              label: 'Specialization',
-              child: _buildTextField(
-                viewModel.specializationController,
-                'Engine, Electrical…',
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildFieldLayout(
-              label: 'Mechanics in Workshop',
-              child: _buildTextField(
-                viewModel.mechanicsCountController,
-                '3',
-                keyboardType: TextInputType.number,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildAttachmentSection(AddOutletViewModel viewModel) {
-    return _buildSectionCard(
-      icon: Icons.attach_file,
-      title: 'Attachment',
-      isRequired: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              viewModel.pickFile();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.primaryPurple,
-              elevation: 0,
-              side: const BorderSide(
-                color: AppColors.primaryPurple,
-                width: 1.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(99),
-              ),
-              minimumSize: const Size(120, 44),
-            ),
-            child: Obx(
-              () => Text(
-                viewModel.selectedFileName.value.isEmpty
-                    ? '＋ Choose file'
-                    : '＋ Change file',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-          Obx(() {
-            if (viewModel.selectedFileName.value.isNotEmpty) {
-              return Container(
-                margin: const EdgeInsets.only(top: 12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    const Text('📄 '),
-                    Expanded(
-                      child: Text(
-                        viewModel.selectedFileName.value,
-                        style: const TextStyle(fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => viewModel.removeFile(),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(50, 30),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'Remove',
-                        style: TextStyle(
-                          color: AppColors.primaryPurple,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-          const SizedBox(height: 8),
-          const Text(
-            'PDF, JPG, JPEG or PNG · max 5 MB',
-            style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReviewSection(AddOutletViewModel viewModel) {
-    return _buildSectionCard(
-      icon: Icons.check_circle_outline,
-      title: 'Review',
-      child: Column(
-        children: [
-          _buildReviewRow('Type', viewModel.customerType.value),
-          _buildReviewRow('Shop Name', viewModel.shopNameController.text),
-          _buildReviewRow(
-            'Contact',
-            '${viewModel.contactPersonController.text} · ${viewModel.mobileController.text}',
-          ),
-          _buildReviewRow(
-            'Address',
-            '${viewModel.addressController.text}, ${viewModel.selectedCityUuid.value ?? ''} ${viewModel.pinCodeController.text}',
-          ),
-          _buildReviewRow(
-            'Territory',
-            viewModel.selectedTerritoryUuid.value ?? '',
-          ),
-          _buildReviewRow(
-            'Classification',
-            '${viewModel.subTypeName} / ${viewModel.channelName} / ${viewModel.segmentName} / ${viewModel.categoryName} / ${viewModel.className}',
-          ),
-          if (viewModel.customerTypeCode.value.toUpperCase() == 'RETAILER' ||
-              viewModel.customerType.value.toUpperCase() == 'RETAILER') ...[
-            _buildReviewRow('Shop Size', viewModel.shopSizeName),
-            _buildReviewRow(
-              'Monthly Potential',
-              viewModel.monthlyPotentialName,
-            ),
-          ],
-          _buildReviewRow('Business Type', viewModel.businessTypeName),
-          _buildReviewRow('KYC Document', viewModel.kycDocTypeName),
-          _buildReviewRow('Beat Area', viewModel.beatName),
-          _buildReviewRow(
-            'Attachment',
-            viewModel.selectedFileName.value.isNotEmpty
-                ? viewModel.selectedFileName.value
-                : '—',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReviewRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6, top: 4),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: AppColors.secondary.withValues(alpha: 0.3),
-              style: BorderStyle.solid,
-            ),
-          ),
-        ),
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 3,
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
               ),
             ),
           ],
         ),
       ),
+      bottomSheet: _buildBottomNav(viewModel),
     );
   }
 
-  // --- Reusable Components ---
-
-  Widget _buildSectionCard({
-    required IconData icon,
-    required String title,
-    required Widget child,
-    bool isRequired = false,
-  }) {
+  Widget _buildHeader(AddOutletViewModel viewModel) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: HtmlColors.pri,
+        gradient: const LinearGradient(
+          colors: [HtmlColors.acc, HtmlColors.pri, HtmlColors.sec],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0x1114283C),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
+            color: HtmlColors.pri.withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          )
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.lightBlueBackground,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 18, color: AppColors.primaryPurple),
-                ),
-                const SizedBox(width: 10),
-                RichText(
-                  text: TextSpan(
-                    text: title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    children: isRequired
-                        ? const [
-                            TextSpan(
-                              text: ' *',
-                              style: TextStyle(color: Color(0xFFD93A3A)),
-                            ),
-                          ]
-                        : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: AppColors.secondary.withValues(alpha: 0.3)),
-          Padding(padding: const EdgeInsets.all(14.0), child: child),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCollapsibleSection({
-    required IconData icon,
-    required String title,
-    required RxBool isExpanded,
-    required Widget child,
-  }) {
-    return Obx(
-      () => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0x1114283C),
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 16, 18, 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            InkWell(
-              onTap: () => isExpanded.toggle(),
-              borderRadius: BorderRadius.circular(isExpanded.value ? 0 : 18),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 13,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: AppColors.lightBlueBackground,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 18,
-                        color: AppColors.primaryPurple,
-                      ),
+            // 1. Home Icon (Largest)
+            IconButton(
+              padding: EdgeInsets.zero,
+              icon: Image.asset('assets/images/queue.png', width: 64, height: 64),
+              onPressed: () {
+                final dashboardViewModel = Get.find<DashboardViewModel>();
+                dashboardViewModel.changeTabIndex(0);
+              },
+            ),
+            const SizedBox(width: 12),
+            // 2. Camera Circle (Medium)
+            _buildAvatar(viewModel),
+            const SizedBox(width: 16),
+            // 3. Text/Heading
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'New customer',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                  ),
+                  const SizedBox(height: 2),
+                  Obx(() => Text(
+                    'Step ${viewModel.currentStep.value + 1} of 3',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 13,
+                    ),
+                  )),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Obx(() {
+                      return FractionallySizedBox(
+                        widthFactor: (viewModel.maxStepReached.value + 1) / 3,
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: HtmlColors.acc,
+                            borderRadius: BorderRadius.circular(9),
+                          ),
                         ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: const Text(
-                        'Optional',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+                      );
+                    }),
+                  ),
+                  Obx(() {
+                    if (viewModel.avatarError.value.isNotEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: Text(
+                          'Shop photo required. Tap the camera circle.',
+                          style: TextStyle(
+                            color: Color(0xFFFFD166),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    AnimatedRotation(
-                      turns: isExpanded.value ? 0.5 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                ],
               ),
             ),
-            if (isExpanded.value)
-              Divider(
-                height: 1,
-                color: AppColors.secondary.withValues(alpha: 0.3),
-              ),
-            if (isExpanded.value)
-              Padding(padding: const EdgeInsets.all(14.0), child: child),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFieldLayout({
-    required String label,
-    required Widget child,
-    bool isRequired = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 4),
-          child: RichText(
-            text: TextSpan(
-              text: label,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-              ),
-              children: isRequired
-                  ? const [
-                      TextSpan(
-                        text: ' *',
-                        style: TextStyle(color: Color(0xFFD93A3A)),
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
-        ),
-        child,
-      ],
-    );
-  }
-
-  Widget _buildTextField(
-    TextEditingController controller,
-    String hint, {
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-    int? maxLength,
-    bool isTextArea = false,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
-      decoration: InputDecoration(
-        hintText: hint,
-        counterText: '',
-        hintStyle: const TextStyle(color: AppColors.secondary, fontSize: 15),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: isTextArea ? 10 : 0,
-        ),
-        constraints: BoxConstraints(minHeight: isTextArea ? 64 : 42),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(isTextArea ? 18 : 99),
-          borderSide: BorderSide(
-            color: AppColors.secondary.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(isTextArea ? 18 : 99),
-          borderSide: BorderSide(
-            color: AppColors.secondary.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(isTextArea ? 18 : 99),
-          borderSide: const BorderSide(
-            color: AppColors.primaryPurple,
-            width: 1.5,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLookupDropdown({
-    required String? value,
-    String? hint,
-    required List<dynamic> items,
-    required void Function(String?) onChanged,
-    bool isEnabled = true,
-  }) {
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.white : AppColors.background,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(
-          color: isEnabled
-              ? AppColors.secondary.withValues(alpha: 0.4)
-              : AppColors.secondary.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          hint: hint != null
-              ? Text(
-                  hint,
-                  style: TextStyle(
-                    color: isEnabled
-                        ? AppColors.secondary
-                        : AppColors.secondary.withValues(alpha: 0.5),
-                    fontSize: 14,
-                  ),
-                )
-              : null,
-          isExpanded: true,
-          icon: Icon(
-            Icons.arrow_drop_down,
-            color: isEnabled
-                ? AppColors.textSecondary
-                : AppColors.secondary.withValues(alpha: 0.5),
-          ),
-          items: items.map((dynamic item) {
-            return DropdownMenuItem<String>(
-              value: item.uuid,
-              child: Text(
-                item.name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: isEnabled ? onChanged : null,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String? value,
-    String? hint,
-    required List<String> items,
-    required void Function(String?) onChanged,
-  }) {
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          hint: hint != null
-              ? Text(
-                  hint,
-                  style: const TextStyle(
-                    color: AppColors.secondary,
-                    fontSize: 15,
-                  ),
-                )
-              : null,
-          isExpanded: true,
-          icon: const Icon(
-            Icons.arrow_drop_down,
-            color: AppColors.textSecondary,
-          ),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                item,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMultiSelectBrandsDropdown(
-      BuildContext context, AddOutletViewModel viewModel) {
+  Widget _buildAvatar(AddOutletViewModel viewModel) {
     return Obx(() {
-      final selectedCount = viewModel.selectedBrands.length;
-      final displayText = selectedCount == 0
-          ? 'Select brands'
-          : viewModel.selectedBrands.join(', ');
-
-      return InkWell(
-        onTap: () {
-          _showBrandsMultiSelectDialog(context, viewModel);
-        },
-        borderRadius: BorderRadius.circular(99),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 42),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(99),
-            border: Border.all(
-              color: AppColors.secondary.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      final hasAvatar = viewModel.avatarPath.value != null;
+      final isError = viewModel.avatarError.isNotEmpty;
+      return GestureDetector(
+        onTap: () => viewModel.pickFile(viewModel.avatarPath, isImage: true),
+        child: SizedBox(
+          width: 56, // Medium size
+          height: 56,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  displayText,
-                  style: TextStyle(
-                    color: selectedCount == 0
-                        ? AppColors.secondary
-                        : AppColors.textPrimary,
-                    fontSize: 15,
+              if (!hasAvatar)
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
                   ),
+                  child: CustomPaint(painter: _DottedCirclePainter()),
                 ),
-              ),
-              const Icon(
-                Icons.arrow_drop_down,
-                color: AppColors.textSecondary,
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: hasAvatar ? Colors.transparent : Colors.white.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: isError ? HtmlColors.bad : (hasAvatar ? HtmlColors.acc : Colors.transparent),
+                    width: 2,
+                  ),
+                  image: hasAvatar
+                      ? DecorationImage(image: FileImage(File(viewModel.avatarPath.value!)), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: hasAvatar ? null : const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 22),
               ),
             ],
           ),
@@ -1627,203 +219,727 @@ class AddOutletScreen extends StatelessWidget {
     });
   }
 
-  void _showBrandsMultiSelectDialog(
-      BuildContext context, AddOutletViewModel viewModel) {
-    final tempSelectedBrands = <String>[...viewModel.selectedBrands].obs;
+  Widget _buildTabs(AddOutletViewModel viewModel) {
+    final tabs = ['Shop & address', 'Classification', 'KYC, bank & licences'];
+    return Obx(() {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(tabs.length, (index) {
+            final isCur = viewModel.currentStep.value == index;
+            final isDone = viewModel.maxStepReached.value >= index && !isCur;
+            
+            Color bgColor = HtmlColors.card;
+            Color borderColor = HtmlColors.line;
+            Color textColor = HtmlColors.mut;
+            
+            if (isCur) {
+              bgColor = HtmlColors.pri;
+              borderColor = HtmlColors.pri;
+              textColor = Colors.white;
+            } else if (isDone) {
+              borderColor = HtmlColors.ok;
+              textColor = HtmlColors.ok;
+            }
 
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Select Brands',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+            return Padding(
+              padding: const EdgeInsets.only(right: 6, bottom: 12),
+              child: GestureDetector(
+                onTap: () => viewModel.goStep(index),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    border: Border.all(color: borderColor),
+                    borderRadius: BorderRadius.circular(99),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Obx(
-                      () => Column(
-                        children: viewModel.availableBrands.map((brand) {
-                          final isSelected = tempSelectedBrands.contains(brand);
-                          return CheckboxListTile(
-                            title: Text(brand),
-                            value: isSelected,
-                            activeColor: AppColors.primaryPurple,
-                            dense: true,
-                            controlAffinity: ListTileControlAffinity.leading,
-                            contentPadding: EdgeInsets.zero,
-                            onChanged: (bool? value) {
-                              if (value == true) {
-                                tempSelectedBrands.add(brand);
-                              } else {
-                                tempSelectedBrands.remove(brand);
-                              }
-                            },
-                          );
-                        }).toList(),
-                      ),
+                  child: Text(
+                    (isDone ? '✓ ' : '') + tabs[index],
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        viewModel.selectedBrands.value =
-                            tempSelectedBrands.toList();
-                        Navigator.pop(dialogContext);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      ),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+              ),
+            );
+          }),
+        ),
+      );
+    });
+  }
+
+  Widget _buildStepCard(AddOutletViewModel viewModel, BuildContext context) {
+    return Obx(() {
+      final step = viewModel.currentStep.value;
+      String title = '';
+      String desc = '';
+      Widget content = const SizedBox.shrink();
+
+      if (step == 0) {
+        title = 'Shop & address';
+        desc = 'Photo, owner contact and location of the shop.';
+        content = _buildStep1Fields(viewModel);
+      } else if (step == 1) {
+        title = 'Classification';
+        desc = 'Classification, beat mapping and shop profile.';
+        content = _buildStep2Fields(viewModel, context);
+      } else if (step == 2) {
+        title = 'KYC, bank & licences';
+        desc = 'Identity, bank account and licences, then submit.';
+        content = _buildStep3Fields(viewModel);
+      }
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+        decoration: BoxDecoration(
+          color: HtmlColors.card,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: HtmlColors.ink.withValues(alpha: 0.08),
+              blurRadius: 28,
+              offset: const Offset(0, 6),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(desc, style: const TextStyle(color: HtmlColors.mut, fontSize: 14)),
+            const SizedBox(height: 16),
+            content,
+          ],
+        ),
+      );
+    });
+  }
+
+  // ===== WIDGET HELPERS ===== //
+  
+  Widget _sub(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 22, bottom: 4),
+      child: Container(
+        padding: const EdgeInsets.only(left: 12, top: 4),
+        decoration: const BoxDecoration(
+          border: Border(left: BorderSide(color: Color(0xFFFF9F1C), width: 4)),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+      ),
     );
   }
 
-  Widget _buildBottomDock(BuildContext context, AddOutletViewModel viewModel) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1F14283C),
-            blurRadius: 14,
-            offset: Offset(0, -4),
+  Widget _fld({
+    required AddOutletViewModel viewModel,
+    required String key,
+    required String label,
+    required Widget child,
+    bool isOpt = false,
+  }) {
+    return Obx(() {
+      final error = viewModel.getError(key);
+      final hasErr = error.isNotEmpty;
+      
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (label.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: RichText(
+                  text: TextSpan(
+                    text: label,
+                    style: const TextStyle(color: HtmlColors.mut, fontSize: 13, fontWeight: FontWeight.w600),
+                    children: [
+                      if (!isOpt) const TextSpan(text: ' *', style: TextStyle(color: HtmlColors.bad)),
+                    ]
+                  ),
+                ),
+              ),
+            child,
+            if (hasErr)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(error, style: const TextStyle(color: HtmlColors.bad, fontSize: 12)),
+              ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _textInput({
+    required AddOutletViewModel viewModel,
+    required String key,
+    required TextEditingController controller,
+    String? hint,
+    TextInputType? type,
+    bool readOnly = false,
+    VoidCallback? onTap,
+  }) {
+    return Obx(() {
+      final hasErr = viewModel.hasError(key);
+      return TextField(
+        controller: controller,
+        keyboardType: type,
+        readOnly: readOnly,
+        onTap: onTap,
+        style: const TextStyle(fontSize: 15, color: HtmlColors.ink),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: HtmlColors.ink.withValues(alpha: 0.5)),
+          filled: true,
+          fillColor: HtmlColors.bg,
+          contentPadding: const EdgeInsets.all(12),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: hasErr ? HtmlColors.bad : HtmlColors.line, width: 1.5),
           ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: hasErr ? HtmlColors.bad : HtmlColors.pri, width: 2),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _dropdown({
+    required AddOutletViewModel viewModel,
+    required String key,
+    required RxnString rxValue,
+    required List<String> options,
+  }) {
+    return Obx(() {
+      final hasErr = viewModel.hasError(key);
+      return Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: HtmlColors.bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: hasErr ? HtmlColors.bad : HtmlColors.line, width: 1.5),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: rxValue.value,
+            hint: const Text('Select', style: TextStyle(fontSize: 15)),
+            isExpanded: true,
+            items: options.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            onChanged: (val) => rxValue.value = val,
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _pills({
+    required RxString rxValue,
+    required List<String> options,
+  }) {
+    return Obx(() {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: options.map((opt) {
+          final isSelected = rxValue.value == opt;
+          return GestureDetector(
+            onTap: () => rxValue.value = opt,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+              decoration: BoxDecoration(
+                color: isSelected ? HtmlColors.pri : HtmlColors.bg,
+                border: Border.all(color: isSelected ? HtmlColors.pri : HtmlColors.line, width: 1.5),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                opt,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : HtmlColors.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    });
+  }
+  
+  Widget _chips({
+    required RxList<String> rxValues,
+    required List<String> options,
+    required AddOutletViewModel viewModel,
+    required String key,
+  }) {
+    return Obx(() {
+      final hasErr = viewModel.hasError(key);
+      return Container(
+        decoration: hasErr ? BoxDecoration(border: Border.all(color: HtmlColors.bad, width: 1.5), borderRadius: BorderRadius.circular(12)) : null,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((opt) {
+            final isSelected = rxValues.contains(opt);
+            return GestureDetector(
+              onTap: () {
+                if (isSelected) {
+                  rxValues.remove(opt);
+                } else {
+                  rxValues.add(opt);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+                decoration: BoxDecoration(
+                  color: isSelected ? HtmlColors.pri : HtmlColors.bg,
+                  border: Border.all(color: isSelected ? HtmlColors.pri : HtmlColors.line, width: 1.5),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  opt,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : HtmlColors.ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    });
+  }
+  
+  Widget _filePicker({
+    required AddOutletViewModel viewModel,
+    required String key,
+    required RxnString rxPath,
+    bool isImage = false,
+  }) {
+    return Obx(() {
+      final hasErr = viewModel.hasError(key);
+      final hasFile = rxPath.value != null;
+      return GestureDetector(
+        onTap: () => viewModel.pickFile(rxPath, isImage: isImage),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: HtmlColors.bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: hasErr ? HtmlColors.bad : (hasFile ? HtmlColors.ok : HtmlColors.line),
+              width: 1.5,
+              style: BorderStyle.solid,
+            ),
+          ),
           child: Row(
             children: [
+              Icon(Icons.upload_file, color: hasFile ? HtmlColors.ok : HtmlColors.mut, size: 20),
+              const SizedBox(width: 10),
               Expanded(
-                flex: 4,
-                child: Obx(
-                  () => ElevatedButton(
-                    onPressed: viewModel.previousStep,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.textPrimary,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      side: BorderSide(
-                        color: AppColors.secondary.withValues(alpha: 0.4),
-                        width: 1.5,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      minimumSize: const Size(0, 40),
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        viewModel.currentStep.value > 1 ? '← Back' : 'Cancel',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                flex: 5,
-                child: ElevatedButton(
-                  onPressed: () {}, // Save Draft logic
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primaryPurple,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    side: const BorderSide(
-                      color: AppColors.primaryPurple,
-                      width: 1.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    minimumSize: const Size(0, 40),
-                  ),
-                  child: const FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      'Save Draft',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                flex: 5,
-                child: Obx(
-                  () => ElevatedButton(
-                    onPressed: () => viewModel.nextStep(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryPurple,
-                      foregroundColor: Colors.white,
-                      elevation: 4,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      shadowColor: AppColors.primaryPurple.withValues(
-                        alpha: 0.3,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      minimumSize: const Size(0, 40),
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        viewModel.currentStep.value < 3 ? 'Next →' : '✓ Submit',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
+                child: Text(
+                  hasFile ? rxPath.value!.split('/').last : 'Choose file or take photo',
+                  style: TextStyle(color: hasFile ? HtmlColors.ok : HtmlColors.mut, fontSize: 14),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
         ),
+      );
+    });
+  }
+
+  // ===== STEP 1 FIELDS ===== //
+  Widget _buildStep1Fields(AddOutletViewModel vm) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _sub('Shop details'),
+        _fld(viewModel: vm, key: 'rtype', label: 'Retailer type', child: _pills(rxValue: vm.rtype, options: ['retailer', 'mechanic'])),
+        _fld(viewModel: vm, key: 'shop', label: 'Shop name', child: _textInput(viewModel: vm, key: 'shop', controller: vm.shopController)),
+        _fld(viewModel: vm, key: 'person', label: 'Contact person name', child: _textInput(viewModel: vm, key: 'person', controller: vm.personController)),
+        
+        _sub('Contact details'),
+        _fld(viewModel: vm, key: 'mobile', label: 'Mobile number', child: _textInput(viewModel: vm, key: 'mobile', controller: vm.mobileController, type: TextInputType.phone, hint: '98XXXXXXXX')),
+        
+        Row(
+          children: [
+            Obx(() => Checkbox(value: vm.wacb.value, onChanged: vm.toggleWacb, activeColor: HtmlColors.pri)),
+            const Expanded(child: Text('Mobile number is also my WhatsApp number', style: TextStyle(fontSize: 14, color: HtmlColors.ink))),
+          ],
+        ),
+        
+        _fld(viewModel: vm, key: 'wa', label: 'WhatsApp number', child: _textInput(viewModel: vm, key: 'wa', controller: vm.waController, type: TextInputType.phone)),
+        _fld(viewModel: vm, key: 'email', label: 'Email ID', child: _textInput(viewModel: vm, key: 'email', controller: vm.emailController, type: TextInputType.emailAddress)),
+        
+        _sub('Address'),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: HtmlColors.acc,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+            elevation: 0,
+          ),
+          onPressed: vm.captureLocation,
+          icon: Obx(() => vm.isLocating.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.my_location)),
+          label: const Text('Use my current location', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        ),
+        Obx(() => Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 12),
+          child: Text(
+            vm.capturedGeo.value != null ? 'Captured ${vm.capturedGeo.value}' : 'Fills address lines, state, city and pin code.',
+            style: const TextStyle(color: HtmlColors.mut, fontSize: 13),
+          ),
+        )),
+        
+        _fld(viewModel: vm, key: 'a1', label: 'Address line 1', child: _textInput(viewModel: vm, key: 'a1', controller: vm.a1Controller)),
+        _fld(viewModel: vm, key: 'a2', label: 'Address line 2', child: _textInput(viewModel: vm, key: 'a2', controller: vm.a2Controller)),
+        _fld(viewModel: vm, key: 'a3', label: 'Address line 3', child: _textInput(viewModel: vm, key: 'a3', controller: vm.a3Controller)),
+        _fld(viewModel: vm, key: 'state', label: 'State', child: _dropdown(viewModel: vm, key: 'state', rxValue: vm.selectedState, options: vm.statesList)),
+        _fld(viewModel: vm, key: 'city', label: 'City', child: _textInput(viewModel: vm, key: 'city', controller: vm.cityController)),
+        _fld(viewModel: vm, key: 'pin', label: 'Pin code', child: _textInput(viewModel: vm, key: 'pin', controller: vm.pinController, type: TextInputType.number)),
+      ],
+    );
+  }
+
+  // ===== STEP 2 FIELDS ===== //
+  Widget _buildStep2Fields(AddOutletViewModel vm, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _fld(viewModel: vm, key: 'sub', label: 'Sub type', child: _dropdown(viewModel: vm, key: 'sub', rxValue: vm.subType, options: vm.subTypes)),
+        _fld(viewModel: vm, key: 'chan', label: 'Channel', child: _dropdown(viewModel: vm, key: 'chan', rxValue: vm.channel, options: vm.channels)),
+        _fld(viewModel: vm, key: 'seg', label: 'Segment', child: _dropdown(viewModel: vm, key: 'seg', rxValue: vm.segment, options: vm.segments)),
+        _fld(viewModel: vm, key: 'cat', label: 'Category', child: _dropdown(viewModel: vm, key: 'cat', rxValue: vm.category, options: vm.categories)),
+        _fld(viewModel: vm, key: 'cls', label: 'Class', child: _dropdown(viewModel: vm, key: 'cls', rxValue: vm.cls, options: vm.classes)),
+        _fld(viewModel: vm, key: 'beat', label: 'Beat', child: _dropdown(viewModel: vm, key: 'beat', rxValue: vm.beat, options: vm.beats)),
+        
+        _sub('Shop profile'),
+        _fld(viewModel: vm, key: 'size', label: 'Shop size (sq ft)', child: _textInput(viewModel: vm, key: 'size', controller: vm.sizeController, type: TextInputType.number)),
+        _fld(viewModel: vm, key: 'pot', label: 'Monthly potential (₹)', child: _textInput(viewModel: vm, key: 'pot', controller: vm.potController, type: TextInputType.number)),
+        _fld(viewModel: vm, key: 'brands', label: 'Brands stocked', child: _chips(viewModel: vm, key: 'brands', rxValues: vm.selectedBrands, options: vm.brands)),
+        
+        Row(
+          children: [
+            Expanded(
+              child: _fld(viewModel: vm, key: 'open', label: 'Shop opens', child: _textInput(
+                viewModel: vm, key: 'open', controller: TextEditingController(text: vm.openTime.value?.format(context) ?? ''), readOnly: true,
+                onTap: () async {
+                  final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
+                  if (t != null) vm.openTime.value = t;
+                }
+              )),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _fld(viewModel: vm, key: 'close', label: 'Shop closes', child: _textInput(
+                viewModel: vm, key: 'close', controller: TextEditingController(text: vm.closeTime.value?.format(context) ?? ''), readOnly: true,
+                onTap: () async {
+                  final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 20, minute: 0));
+                  if (t != null) vm.closeTime.value = t;
+                }
+              )),
+            ),
+          ],
+        ),
+
+        Obx(() {
+          if (vm.rtype.value == 'mechanic') {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _sub('Workshop details'),
+                _fld(viewModel: vm, key: 'wtype', label: 'Workshop type', child: _dropdown(viewModel: vm, key: 'wtype', rxValue: vm.wtype, options: vm.wtypes)),
+                _fld(viewModel: vm, key: 'exp', label: 'Experience (years)', child: _textInput(viewModel: vm, key: 'exp', controller: vm.expController, type: TextInputType.number)),
+                _fld(viewModel: vm, key: 'eng', label: 'Engine specialty', child: _dropdown(viewModel: vm, key: 'eng', rxValue: vm.eng, options: vm.engs)),
+                _fld(viewModel: vm, key: 'mechs', label: 'Mechanics in workshop', child: _textInput(viewModel: vm, key: 'mechs', controller: vm.mechsController, type: TextInputType.number)),
+              ],
+            );
+          }
+          return const SizedBox.shrink();
+        }),
+      ],
+    );
+  }
+
+  // ===== STEP 3 FIELDS ===== //
+  Widget _buildStep3Fields(AddOutletViewModel vm) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _sub('KYC'),
+        _fld(viewModel: vm, key: 'doctype', label: 'Document type', child: _pills(rxValue: vm.doctype, options: ['Aadhaar', 'Driving Licence'])),
+        _fld(viewModel: vm, key: 'fn', label: 'First name', child: _textInput(viewModel: vm, key: 'fn', controller: vm.fnController)),
+        _fld(viewModel: vm, key: 'ln', label: 'Last name', child: _textInput(viewModel: vm, key: 'ln', controller: vm.lnController)),
+        
+        _fld(
+          viewModel: vm, 
+          key: 'docno', 
+          label: 'Document number', 
+          child: _textInput(
+            viewModel: vm, 
+            key: 'docno', 
+            controller: vm.docnoController,
+          ),
+        ),
+        
+        Obx(() {
+          if (vm.doctype.value == 'Aadhaar') {
+            return _fld(viewModel: vm, key: 'otp', label: 'Aadhaar OTP verification', child: _buildOtpBox(vm));
+          }
+          return const SizedBox.shrink();
+        }),
+
+        _fld(viewModel: vm, key: 'docf', label: 'Document attachment', child: _filePicker(viewModel: vm, key: 'docf', rxPath: vm.docfPath)),
+        
+        _sub('Bank details'),
+        _fld(viewModel: vm, key: 'bank', label: 'Bank name', child: _textInput(viewModel: vm, key: 'bank', controller: vm.bankController)),
+        _fld(viewModel: vm, key: 'holder', label: 'Account holder name', child: _textInput(viewModel: vm, key: 'holder', controller: vm.holderController)),
+        _fld(viewModel: vm, key: 'acc', label: 'Account number', child: _textInput(viewModel: vm, key: 'acc', controller: vm.accController, type: TextInputType.number)),
+        _fld(viewModel: vm, key: 'ifsc', label: 'IFSC code', child: _textInput(viewModel: vm, key: 'ifsc', controller: vm.ifscController)),
+        _fld(viewModel: vm, key: 'bankf', label: 'Bank document (cheque / passbook)', child: _filePicker(viewModel: vm, key: 'bankf', rxPath: vm.bankfPath)),
+        
+        _sub('GST & licences (GST required, others optional)'),
+        _fld(viewModel: vm, key: 'gst', label: 'GST type', child: _pills(rxValue: vm.gst, options: ['Registered', 'Unregistered'])),
+        
+        Obx(() {
+          if (vm.gst.value == 'Registered') {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _fld(viewModel: vm, key: 'gstcat', label: 'GST category', child: _pills(rxValue: vm.gstcat, options: ['Regular', 'Composition', 'Both'])),
+                _fld(viewModel: vm, key: 'gstno', label: 'GST number', child: _textInput(viewModel: vm, key: 'gstno', controller: vm.gstnoController)),
+              ],
+            );
+          }
+          return const SizedBox.shrink();
+        }),
+
+        _sub('Optional licences'),
+        _fld(viewModel: vm, key: 'fssai', label: 'FSSAI number', isOpt: true, child: _textInput(viewModel: vm, key: 'fssai', controller: vm.fssaiController, type: TextInputType.number)),
+        _fld(viewModel: vm, key: 'ff', label: 'FSSAI attachment', isOpt: true, child: _filePicker(viewModel: vm, key: 'ff', rxPath: vm.ffPath)),
+        
+        _fld(viewModel: vm, key: 'drug', label: 'Drug licence number', isOpt: true, child: _textInput(viewModel: vm, key: 'drug', controller: vm.drugController)),
+        _fld(viewModel: vm, key: 'df', label: 'Drug licence attachment', isOpt: true, child: _filePicker(viewModel: vm, key: 'df', rxPath: vm.dfPath)),
+        
+        _fld(viewModel: vm, key: 'shopl', label: 'Shop licence number', isOpt: true, child: _textInput(viewModel: vm, key: 'shopl', controller: vm.shoplController)),
+        _fld(viewModel: vm, key: 'sf', label: 'Shop licence attachment', isOpt: true, child: _filePicker(viewModel: vm, key: 'sf', rxPath: vm.sfPath)),
+      ],
+    );
+  }
+
+  Widget _buildOtpBox(AddOutletViewModel vm) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: HtmlColors.bg,
+        border: Border.all(color: vm.otpVerified.value ? HtmlColors.ok : HtmlColors.line, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: vm.otpVerified.value ? [BoxShadow(color: HtmlColors.ok.withValues(alpha: 0.2), spreadRadius: 4)] : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46, height: 46,
+                decoration: BoxDecoration(
+                  color: vm.otpVerified.value ? HtmlColors.ok : HtmlColors.pri,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.verified_user, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Aadhaar verification', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('Enter the 12-digit Aadhaar number above, then send an OTP.', style: TextStyle(fontSize: 13, color: HtmlColors.mut)),
+                  ],
+                ),
+              )
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (vm.otpVerified.value)
+            ElevatedButton(
+              onPressed: null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: HtmlColors.ok, disabledBackgroundColor: HtmlColors.ok,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+              ),
+              child: const Text('Aadhaar verified ✓', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            )
+              else if (!vm.otpSent.value)
+                ElevatedButton(
+                  onPressed: vm.sendOtp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HtmlColors.pri,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Send OTP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                )
+          else
+            Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(6, (i) => Container(
+                    width: 45, height: 56,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    child: TextField(
+                      controller: vm.otpInputs[i],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      maxLength: 1,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        filled: true, fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: HtmlColors.line)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: HtmlColors.pri)),
+                      ),
+                      onChanged: (val) {
+                        if (val.isNotEmpty && i < 5) FocusScope.of(Get.context!).nextFocus();
+                      },
+                    ),
+                  )),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: vm.verifyOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: HtmlColors.pri,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                    ),
+                    child: const Text('Verify OTP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
+            ),
+          
+          Obx(() {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (vm.docnoError.value.isNotEmpty) 
+                  Padding(padding: const EdgeInsets.only(top: 8), child: Text(vm.docnoError.value, style: const TextStyle(color: HtmlColors.bad, fontSize: 13))),
+                if (vm.otpError.value.isNotEmpty) 
+                  Padding(padding: const EdgeInsets.only(top: 8), child: Text(vm.otpError.value, style: TextStyle(color: vm.otpError.value.contains('Demo OTP') ? HtmlColors.mut : HtmlColors.bad, fontSize: 13))),
+              ],
+            );
+          }),
+        ],
       ),
     );
   }
+
+  Widget _buildBottomNav(AddOutletViewModel viewModel) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: HtmlColors.card,
+        border: Border(top: BorderSide(color: HtmlColors.line)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 30),
+      child: Obx(() {
+        final step = viewModel.currentStep.value;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (step > 0)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: ElevatedButton(
+                    onPressed: viewModel.previousStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: HtmlColors.bg,
+                      foregroundColor: HtmlColors.pri,
+                      elevation: 0,
+                      side: const BorderSide(color: HtmlColors.line),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                    ),
+                    child: const Text('Back', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: viewModel.nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: step == 2 ? HtmlColors.ok : HtmlColors.pri,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                ),
+                child: Text(
+                  step == 2 ? 'Submit for approval' : 'Next',
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
 }
+
+class _DottedCirclePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    const dashWidth = 4.0;
+    const dashSpace = 4.0;
+
+    double circumference = 2 * math.pi * radius;
+    int dashCount = (circumference / (dashWidth + dashSpace)).floor();
+
+    double sweepAngle = (2 * math.pi) / dashCount;
+    double dashAngle = (dashWidth / circumference) * 2 * math.pi;
+
+    for (int i = 0; i < dashCount; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        i * sweepAngle,
+        dashAngle,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

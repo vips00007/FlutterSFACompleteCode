@@ -1,123 +1,176 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-class AiGoal {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-
-  AiGoal({required this.title, required this.subtitle, required this.icon});
-}
+import 'package:intl/intl.dart';
 
 class CreatePlanViewModel extends GetxController {
-  final selectedTabIndex = 0.obs; // 0 for AI Smart Plan, 1 for Manual Select
-
-  final aiGoals = [
-    AiGoal(
-      title: 'Recent Buyers',
-      subtitle: 'Follow up with recent buyers',
-      icon: Icons.shopping_bag_outlined,
-    ),
-    AiGoal(
-      title: 'Visit Due',
-      subtitle: 'Customers waiting for a visit',
-      icon: Icons.calendar_today_outlined,
-    ),
-    AiGoal(
-      title: 'New Customers',
-      subtitle: 'First visits for new customers',
-      icon: Icons.person_add_outlined,
-    ),
-    AiGoal(
-      title: 'Reconnect',
-      subtitle: 'Win back customers',
-      icon: Icons.history,
-    ),
-    AiGoal(
-      title: 'VIP / Top Revenue',
-      subtitle: 'Highest-value customers',
-      icon: Icons.star_outline,
-    ),
-    AiGoal(
-      title: 'First-Time Buyer',
-      subtitle: 'Just placed their first order',
-      icon: Icons.new_releases_outlined,
-    ),
-    AiGoal(
-      title: 'Big Order Follow-up',
-      subtitle: 'Customers with large orders',
-      icon: Icons.local_shipping_outlined,
-    ),
-    AiGoal(
-      title: 'Frequent Buyer',
-      subtitle: 'High-touch regular customers',
-      icon: Icons.sync_alt,
-    ),
-    AiGoal(
-      title: 'Hot Leads',
-      subtitle: 'Active leads requiring action',
-      icon: Icons.whatshot_outlined,
-    ),
-    AiGoal(
-      title: 'Quota Catch-Up',
-      subtitle: 'Help meet your targets',
-      icon: Icons.outlined_flag,
-    ),
-    AiGoal(
-      title: 'By Area / City',
-      subtitle: 'Pick a city, AI plans route',
-      icon: Icons.map_outlined,
-    ),
-    AiGoal(
-      title: 'By Customer Type',
-      subtitle: 'Pick a type, AI plans route',
-      icon: Icons.label_important_outline,
-    ),
-    AiGoal(
-      title: 'Plan Around a Customer',
-      subtitle: 'Pick a customer as anchor',
-      icon: Icons.gps_fixed,
-    ),
-    AiGoal(
-      title: 'Pending Payment',
-      subtitle: 'Customers with dues',
-      icon: Icons.payments_outlined,
-    ),
-    AiGoal(
-      title: 'Birthday / Anniversary',
-      subtitle: 'Upcoming birthdays',
-      icon: Icons.cake_outlined,
-    ),
+  // Screens: 'list', 'retailers', 'details', 'done'
+  final currentScreen = 'list'.obs;
+  
+  // Data mocks
+  final List<List<String>> retailersList = [
+    ["Sharma General Store", "Arera Colony", "Bhopal"],
+    ["Gupta Kirana", "MP Nagar", "Bhopal"],
+    ["Raj Medical & Provision", "Kolar Road", "Bhopal"],
+    ["Jain Super Mart", "Habibganj", "Bhopal"],
+    ["Annapurna Traders", "Itwara", "Bhopal"],
+    ["Mehta Departmental", "Vijay Nagar", "Indore"],
+    ["Shree Balaji Stores", "Sarafa", "Indore"],
+    ["Khan Wholesale", "Old City", "Bhopal"],
   ];
+  
+  final territoryList = ["Bhopal North", "Bhopal South", "Bhopal Central", "Indore East"];
+  final cityList = ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar"];
+  final remarksList = ["Supervisor visit", "New outlet drive", "Stock audit", "Collection follow-up"];
 
-  final selectedGoalIndex = (-1).obs; // -1 for none or Smart Pick
-  final isSmartPickSelected = true.obs;
-
-  final visitObjective = ''.obs;
-  final selectedDate = DateTime.now().obs;
-
-  void changeTab(int index) {
-    selectedTabIndex.value = index;
+  // Form State
+  final searchQuery = ''.obs;
+  final selectedRetailers = <int>{}.obs;
+  final planType = ''.obs; // 'Local' or 'Upcountry'
+  
+  final mode = 'Territory'.obs; // 'Territory' or 'City'
+  final fromDate = ''.obs;
+  final toDate = ''.obs;
+  final selectedPlace = ''.obs;
+  final remark = ''.obs;
+  
+  // Validation Errors
+  final errors = <String, String>{}.obs;
+  
+  // Plans State
+  final plans = <Map<String, dynamic>>[
+    {
+      "id": "PLN-1042",
+      "type": "Local",
+      "n": 3,
+      "when": "20 Oct 2026",
+      "status": "Approved"
+    }
+  ].obs;
+  
+  // Navigation
+  void go(String screen) {
+    currentScreen.value = screen;
+    errors.clear();
   }
 
-  void selectGoal(int index) {
-    selectedGoalIndex.value = index;
-    isSmartPickSelected.value = false;
+  // List Screen actions
+  void toggleRetailer(int index) {
+    if (selectedRetailers.contains(index)) {
+      selectedRetailers.remove(index);
+    } else {
+      selectedRetailers.add(index);
+    }
   }
 
-  void toggleSmartPick() {
-    isSmartPickSelected.value = true;
-    selectedGoalIndex.value = -1;
+  void selectAll(bool on) {
+    if (on) {
+      for (int i = 0; i < retailersList.length; i++) {
+        final r = retailersList[i];
+        final combined = "${r[0]} ${r[1]} ${r[2]}".toLowerCase();
+        if (combined.contains(searchQuery.value.toLowerCase())) {
+          selectedRetailers.add(i);
+        }
+      }
+    } else {
+      for (int i = 0; i < retailersList.length; i++) {
+        final r = retailersList[i];
+        final combined = "${r[0]} ${r[1]} ${r[2]}".toLowerCase();
+        if (combined.contains(searchQuery.value.toLowerCase())) {
+          selectedRetailers.remove(i);
+        }
+      }
+    }
   }
 
-  void createPlan() {
-    Get.back();
-    Get.snackbar(
-      'Success',
-      'Travel plan created successfully',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green.shade50,
-      colorText: Colors.green.shade900,
-    );
+  List<int> get filteredIndices {
+    List<int> result = [];
+    for (int i = 0; i < retailersList.length; i++) {
+      final r = retailersList[i];
+      final combined = "${r[0]} ${r[1]} ${r[2]}".toLowerCase();
+      if (combined.contains(searchQuery.value.toLowerCase())) {
+        result.add(i);
+      }
+    }
+    return result;
+  }
+
+  bool get isAllSelected {
+    final filtered = filteredIndices;
+    if (filtered.isEmpty) return false;
+    return filtered.every((i) => selectedRetailers.contains(i));
+  }
+
+  // Type Sheet Actions
+  void setPlanType(String type) {
+    planType.value = type;
+  }
+  
+  void continueFromTypeSheet() {
+    mode.value = planType.value == 'Upcountry' ? 'City' : 'Territory';
+    selectedPlace.value = '';
+    Get.back(); // close bottom sheet
+    go('details');
+  }
+
+  // Details Actions
+  void setMode(String newMode) {
+    mode.value = newMode;
+    selectedPlace.value = '';
+  }
+
+  void submit() {
+    final newErrors = <String, String>{};
+    
+    if (fromDate.value.isEmpty) {
+      newErrors['from'] = 'Pick a start date.';
+    }
+    if (toDate.value.isEmpty) {
+      newErrors['to'] = 'Pick an end date.';
+    }
+    if (selectedPlace.value.isEmpty) {
+      newErrors['place'] = 'Select a ${mode.value.toLowerCase()}.';
+    }
+    if (remark.value.trim().isEmpty) {
+      newErrors['remark'] = 'Add a remark.';
+    }
+
+    errors.value = newErrors;
+
+    if (newErrors.isEmpty) {
+      final when = fromDate.value == toDate.value 
+        ? _formatDate(fromDate.value) 
+        : '${_formatDate(fromDate.value)} – ${_formatDate(toDate.value)}';
+
+      plans.insert(0, {
+        "id": "PLN-${1043 + plans.length - 1}",
+        "type": planType.value,
+        "n": selectedRetailers.length,
+        "when": when,
+        "status": "Pending approval",
+        "place": "${mode.value}: ${selectedPlace.value}",
+        "remark": remark.value,
+      });
+      
+      go('done');
+    }
+  }
+
+  void reset() {
+    selectedRetailers.clear();
+    searchQuery.value = '';
+    planType.value = '';
+    fromDate.value = '';
+    toDate.value = '';
+    selectedPlace.value = '';
+    remark.value = '';
+    go('list');
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('dd MMM yyyy').format(date);
+    } catch (e) {
+      return dateString;
+    }
   }
 }

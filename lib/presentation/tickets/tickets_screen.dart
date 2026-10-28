@@ -58,30 +58,31 @@ class TicketsScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          Obx(() => GestureDetector(
-                onTap: () => viewModel.changeTab(
-                    viewModel.selectedTabIndex.value == 0 ? 1 : 0),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryPurple,
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () => Get.toNamed(RoutesName.create_plan_view),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(99),
                   ),
-                  child: Text(
-                    viewModel.selectedTabIndex.value == 0
-                        ? 'Planned'
-                        : 'Unplanned',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 0,
                   ),
+                  minimumSize: const Size(0, 36),
                 ),
-              )),
+                child: const Text(
+                  'Create Plan',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                ),
+              ),
+            ),
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -95,6 +96,40 @@ class TicketsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. Custom Tab Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Obx(
+                  () => Row(
+                    children: [
+                      Expanded(
+                        child: _buildTab(
+                          title: 'Planned',
+                          subtitle: '${viewModel.plannedTickets.length}/0 visited',
+                          isSelected: viewModel.selectedTabIndex.value == 0,
+                          onTap: () => viewModel.changeTab(0),
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildTab(
+                          title: 'Unplanned',
+                          subtitle: '${viewModel.unplannedTickets.length} customers',
+                          isSelected: viewModel.selectedTabIndex.value == 1,
+                          onTap: () => viewModel.changeTab(1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             // Search Bar & Filter Button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -287,6 +322,53 @@ class TicketsScreen extends StatelessWidget {
           color: textColor,
           fontWeight: FontWeight.w600,
           fontSize: 13,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTab({
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? AppColors.primaryPurple : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: isSelected ? Colors.grey.shade500 : Colors.grey.shade400,
+                fontSize: 10,
+              ),
+            ),
+          ],
         ),
       ),
     );

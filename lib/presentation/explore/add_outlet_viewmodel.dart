@@ -1,1164 +1,435 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart' as geocoding;
-import '../../core/colors/app_colors.dart';
-import '../../data/datasource/remote/customer_api_service.dart';
-import '../../data/models/customer_reference_data_response.dart';
-import '../../data/models/geography_response.dart';
-import '../../data/models/customer_create_request.dart';
+import 'package:geocoding/geocoding.dart';
+import 'dart:async';
 
 class AddOutletViewModel extends GetxController {
-  final CustomerApiService _customerApiService = CustomerApiService();
-
-  // Step Management
-  final currentStep = 1.obs;
-
-  // Step 1: Basics
-  final customerType = 'Retailer'.obs;
-  final customerTypeUuid = ''.obs;
-  final customerTypeCode = ''.obs;
-
-  final customerTypes = <CustomerTypeModel>[].obs;
-  final isCustomerTypesLoading = false.obs;
-  final customerTypesError = ''.obs;
-
-  // Basic Info
-  final shopNameController = TextEditingController(text: 'Sharma Auto Parts');
-  final contactPersonController = TextEditingController(text: 'Rajesh Sharma');
-  final mobileController = TextEditingController(text: '98765 43210');
-  final altMobileController = TextEditingController();
-  final emailController = TextEditingController();
-  final whatsappController = TextEditingController();
-
-  // Address
-  final addressController = TextEditingController();
-  final pinCodeController = TextEditingController();
-
-  final latitude = RxnDouble();
-  final longitude = RxnDouble();
-  final isLocationLoading = false.obs;
-
-  // Geo Data API
-  final allGeographies = <GeographyItem>[].obs;
-  final isGeographyLoading = false.obs;
-  final geographyError = ''.obs;
-
-  final selectedStateUuid = RxnString();
-  final selectedCityUuid = RxnString();
-  final selectedTerritoryUuid = RxnString();
-
-  List<GeographyItem> get stateList => allGeographies
-      .where((item) => item.type.toUpperCase() == 'STATE')
-      .toList();
-
-  List<GeographyItem> get cityList => allGeographies
-      .where(
-        (item) =>
-            item.type.toUpperCase() == 'REGION' &&
-            item.parentUuid == selectedStateUuid.value,
-      )
-      .toList();
-
-  List<GeographyItem> get territoryList => allGeographies
-      .where(
-        (item) =>
-            item.type.toUpperCase() == 'TERRITORY' &&
-            item.parentUuid == selectedCityUuid.value,
-      )
-      .toList();
-
-  String? get stateName {
-    if (selectedStateUuid.value == null) return null;
-    return allGeographies
-        .firstWhereOrNull((g) => g.uuid == selectedStateUuid.value)
-        ?.name;
-  }
-
-  String? get cityName {
-    if (selectedCityUuid.value == null) return null;
-    return allGeographies
-        .firstWhereOrNull((g) => g.uuid == selectedCityUuid.value)
-        ?.name;
-  }
-
-  // Step 2: Classification
-  final allLookups = <LookupItem>[].obs;
-  final allBeats = <BeatItem>[].obs;
-
-  final selectedSubTypeUuid = RxnString();
-  final selectedChannelUuid = RxnString();
-  final selectedSegmentUuid = RxnString();
-  final selectedCategoryUuid = RxnString();
-  final selectedClassUuid = RxnString();
-  final selectedBeatUuid = RxnString();
-
-  // Sorting helper
-  List<LookupItem> _getSortedLookups(Iterable<LookupItem> items) {
-    var list = items
-        .where(
-          (i) =>
-              i.isActive &&
-              i.uuid.isNotEmpty &&
-              i.uuid != '0' &&
-              !i.name.toLowerCase().contains('select'),
-        )
-        .toList();
-    list.sort(
-      (a, b) => (a.displayOrder ?? 999).compareTo(b.displayOrder ?? 999),
-    );
-    return list;
-  }
-
-  List<LookupItem> get subTypeList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'SUB_TYPE' &&
-          item.customerTypeUuid == customerTypeUuid.value,
-    ),
-  );
-
-  List<LookupItem> get channelList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'CHANNEL' &&
-          item.subTypeUuid == selectedSubTypeUuid.value,
-    ),
-  );
-
-  List<LookupItem> get segmentList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'SEGMENT' &&
-          item.channelUuid == selectedChannelUuid.value,
-    ),
-  );
-
-  List<LookupItem> get categoryList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'CATEGORY' &&
-          item.segmentUuid == selectedSegmentUuid.value,
-    ),
-  );
-
-  List<LookupItem> get classList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'CLASS' &&
-          item.categoryUuid == selectedCategoryUuid.value,
-    ),
-  );
-
-  List<LookupItem> get shopSizeList => _getSortedLookups(
-    allLookups.where((item) => item.lookupType == 'SHOP_SIZE'),
-  );
-
-  List<LookupItem> get monthlyPotentialList => _getSortedLookups(
-    allLookups.where((item) => item.lookupType == 'MONTHLY_POTENTIAL'),
-  );
-
-  List<LookupItem> get businessTypeList => _getSortedLookups(
-    allLookups.where((item) => item.lookupType == 'BUSINESS_TYPE'),
-  );
-
-  List<LookupItem> get kycDocTypeList => _getSortedLookups(
-    allLookups.where((item) => item.lookupType == 'KYC_DOCUMENT_TYPE'),
-  );
-
-  List<BeatItem> get beatList => allBeats.toList();
-
-  String _getLookupName(String? uuid) {
-    if (uuid == null) return 'N/A';
-    return allLookups.firstWhereOrNull((l) => l.uuid == uuid)?.name ?? 'N/A';
-  }
-
-  String get subTypeName => _getLookupName(selectedSubTypeUuid.value);
-  String get channelName => _getLookupName(selectedChannelUuid.value);
-  String get segmentName => _getLookupName(selectedSegmentUuid.value);
-  String get categoryName => _getLookupName(selectedCategoryUuid.value);
-  String get className => _getLookupName(selectedClassUuid.value);
-  String get shopSizeName => _getLookupName(selectedShopSizeUuid.value);
-  String get monthlyPotentialName =>
-      _getLookupName(selectedMonthlyPotentialUuid.value);
-  String get businessTypeName => _getLookupName(selectedBusinessTypeUuid.value);
-  String get kycDocTypeName => _getLookupName(selectedKycDocTypeUuid.value);
-  String get beatName {
-    if (selectedBeatUuid.value == null) return 'N/A';
-    return allBeats
-            .firstWhereOrNull((b) => b.uuid == selectedBeatUuid.value)
-            ?.name ??
-        'N/A';
-  }
-
-  // Step 3: Details & Docs
-
-  // Expanded states
-  final isBusinessInfoExpanded = false.obs;
-  final isKycExpanded = false.obs;
-  final isBankExpanded = false.obs;
-
-  // Business Info
-  final regNumberController = TextEditingController();
-  final selectedBusinessTypeUuid = RxnString();
-  final estYearController = TextEditingController();
-
-  // Type Specific Details
-  final selectedShopSizeUuid = RxnString(); // Retailer
-  final selectedMonthlyPotentialUuid = RxnString(); // Retailer
-
-  final availableBrands = ['MRF', 'Bosch', 'Exide'];
-  final selectedBrands = <String>[].obs; // Retailer
-
-  final shopTimingsController = TextEditingController(); // Retailer
-
-  final workshopType = 'Two-wheeler'.obs; // Mechanic
-  final experienceController = TextEditingController(); // Mechanic
-  final specializationController = TextEditingController(); // Mechanic
-  final mechanicsCountController = TextEditingController(); // Mechanic
-
-  // KYC
-  final panController = TextEditingController();
-  final gstRegistrationType = 'UNREGISTERED'.obs;
-  final gstController = TextEditingController();
-  final selectedKycDocTypeUuid = RxnString();
-
-  // Bank
-  final bankNameController = TextEditingController();
-  final accHolderController = TextEditingController();
-  final accNumberController = TextEditingController();
-  final ifscController = TextEditingController();
-
-  // Attachments
-  final selectedFileName = ''.obs;
-  PlatformFile? selectedFile;
-
+  // Common states
+  final currentStep = 0.obs; // 0-based to match arrays
+  final maxStepReached = (-1).obs;
   final isLoading = false.obs;
+  
+  // Header / Global
+  final avatarPath = RxnString();
+  final avatarError = ''.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchCustomerReferenceData();
-    fetchGeographyData().then((_) {
-      fetchCurrentLocationAndAddress();
-    });
+  // --- STEP 1 ---
+  final rtype = 'retailer'.obs;
+  final shopController = TextEditingController();
+  final personController = TextEditingController();
+  final mobileController = TextEditingController();
+  final wacb = false.obs;
+  final waController = TextEditingController();
+  final emailController = TextEditingController();
+  
+  // Address
+  final capturedGeo = RxnString();
+  final a1Controller = TextEditingController();
+  final a2Controller = TextEditingController();
+  final a3Controller = TextEditingController();
+  final selectedState = RxnString();
+  final cityController = TextEditingController();
+  final pinController = TextEditingController();
+  final isLocating = false.obs;
+
+  final statesList = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
+    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
+    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", 
+    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", 
+    "Delhi", "Jammu and Kashmir", "Chandigarh", "Puducherry"
+  ];
+
+  // --- STEP 2 ---
+  final subType = RxnString();
+  final channel = RxnString();
+  final segment = RxnString();
+  final category = RxnString();
+  final cls = RxnString();
+  final beat = RxnString();
+  
+  final sizeController = TextEditingController();
+  final potController = TextEditingController();
+  final selectedBrands = <String>[].obs;
+  final openTime = Rxn<TimeOfDay>();
+  final closeTime = Rxn<TimeOfDay>();
+  
+  // Mechanic details
+  final wtype = RxnString();
+  final expController = TextEditingController();
+  final eng = RxnString();
+  final mechsController = TextEditingController();
+
+  final subTypes = ['Retailer', 'Wholesaler'];
+  final channels = ['General Trade', 'Modern Trade'];
+  final segments = ['Two Wheeler', 'Three Wheeler', 'Four Wheeler', 'Commercial'];
+  final categories = ['A', 'B', 'C'];
+  final classes = ['Premium', 'Standard', 'Economy'];
+  final beats = ['Vijay Nagar', 'MP Nagar', 'New Market', 'Hoshangabad Road', 'Kolar Road', 'Arera Colony'];
+  final brands = ['Castrol', 'Servo', 'Motul', 'Gulf', 'Shell', 'Bosch', 'Exide', 'Genuine parts'];
+  final wtypes = ['Two Wheeler', 'Three Wheeler', 'Four Wheeler', 'Multi-brand'];
+  final engs = ['Electrical', 'Mechanical', 'Both'];
+
+  // --- STEP 3 ---
+  final doctype = 'Aadhaar'.obs;
+  final fnController = TextEditingController();
+  final lnController = TextEditingController();
+  final docnoController = TextEditingController();
+  
+  // OTP logic
+  final otpSent = false.obs;
+  final otpVerified = false.obs;
+  final demoOtp = RxnString();
+  final otpInputs = List.generate(6, (_) => TextEditingController());
+  final otpTimer = 0.obs;
+  final otpError = ''.obs;
+  final docnoError = ''.obs;
+  Timer? _timer;
+
+  final docfPath = RxnString();
+  
+  final bankController = TextEditingController();
+  final holderController = TextEditingController();
+  final accController = TextEditingController();
+  final ifscController = TextEditingController();
+  final bankfPath = RxnString();
+  
+  final gst = 'Registered'.obs;
+  final gstcat = 'Regular'.obs;
+  final gstnoController = TextEditingController();
+  
+  final fssaiController = TextEditingController();
+  final fexpDate = Rxn<DateTime>();
+  final ffPath = RxnString();
+  
+  final drugController = TextEditingController();
+  final dfPath = RxnString();
+  final shoplController = TextEditingController();
+  final sfPath = RxnString();
+
+  // Navigation
+  void goStep(int step) {
+    if (step == currentStep.value) return;
+    if (step > currentStep.value) {
+      for (int i = currentStep.value; i < step; i++) {
+        if (!validateStep(i)) return;
+        if (i > maxStepReached.value) {
+          maxStepReached.value = i;
+        }
+      }
+    }
+    currentStep.value = step;
   }
 
-  Future<void> fetchGeographyData() async {
-    isGeographyLoading.value = true;
-    geographyError.value = '';
-
-    try {
-      final response = await _customerApiService.getGeographyData();
-      allGeographies.value = response.data.items;
-    } catch (e) {
-      geographyError.value = e.toString().replaceAll('Exception: ', '');
-    } finally {
-      isGeographyLoading.value = false;
+  void nextStep() {
+    if (validateStep(currentStep.value)) {
+      if (currentStep.value > maxStepReached.value) {
+        maxStepReached.value = currentStep.value;
+      }
+      if (currentStep.value < 2) {
+        currentStep.value++;
+      } else {
+        submitForm();
+      }
+    }
+  }
+  
+  void previousStep() {
+    if (currentStep.value > 0) {
+      currentStep.value--;
     }
   }
 
-  void onStateSelected(String? uuid) {
-    selectedStateUuid.value = uuid;
-    selectedCityUuid.value = null;
-    selectedTerritoryUuid.value = null;
+  // File Picking
+  Future<void> pickFile(RxnString pathRef, {bool isImage = false}) async {
+    try {
+      PlatformFile? file = await FilePicker.pickFile(
+        type: isImage ? FileType.image : FileType.custom,
+        allowedExtensions: isImage ? null : ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      if (file != null && file.path != null) {
+        pathRef.value = file.path!;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Could not pick file');
+    }
   }
 
-  void onCitySelected(String? uuid) {
-    selectedCityUuid.value = uuid;
-    selectedTerritoryUuid.value = null;
-  }
-
-  void onTerritorySelected(String? uuid) {
-    selectedTerritoryUuid.value = uuid;
-  }
-
-  Future<void> fetchCurrentLocationAndAddress() async {
-    isLocationLoading.value = true;
+  // Location
+  Future<void> captureLocation() async {
+    isLocating.value = true;
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          Get.snackbar(
-            'Location Required',
-            'Location permission denied. Cannot auto-fetch address.',
-            backgroundColor: Colors.orangeAccent,
-            colorText: Colors.white,
-          );
-          return;
-        }
+        if (permission == LocationPermission.denied) return;
       }
-      if (permission == LocationPermission.deniedForever) {
-        Get.snackbar(
-          'Location Required',
-          'Location permissions are permanently denied. Please enable from settings to auto-fetch address.',
-          backgroundColor: Colors.orangeAccent,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      bool isLocationServiceEnabled =
-          await Geolocator.isLocationServiceEnabled();
-      if (!isLocationServiceEnabled) {
-        Get.snackbar(
-          'Location Required',
-          'GPS is disabled. Please enable location services.',
-          backgroundColor: Colors.orangeAccent,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high)
       );
-
-      latitude.value = position.latitude;
-      longitude.value = position.longitude;
-
-      List<geocoding.Placemark> placemarks = await geocoding.Geocoding()
-          .placemarkFromCoordinates(position.latitude, position.longitude);
-
+      capturedGeo.value = '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+      
+      List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(position.latitude, position.longitude);
       if (placemarks.isNotEmpty) {
-        geocoding.Placemark place = placemarks.first;
-
-        List<String> addressParts = [];
-        if (place.street != null && place.street!.isNotEmpty)
-          addressParts.add(place.street!);
-        if (place.subLocality != null && place.subLocality!.isNotEmpty)
-          addressParts.add(place.subLocality!);
-        if (place.locality != null && place.locality!.isNotEmpty)
-          addressParts.add(place.locality!);
-        if (place.administrativeArea != null &&
-            place.administrativeArea!.isNotEmpty)
-          addressParts.add(place.administrativeArea!);
-
-        if (addressController.text.trim().isEmpty) {
-          addressController.text = addressParts.join(', ');
-        }
-
-        debugPrint('\n===== AUTO-FETCHED LOCATION =====');
-        debugPrint('Address: ${addressParts.join(', ')}');
-        debugPrint('Pincode: ${place.postalCode}');
-        debugPrint('Lat/Lng: ${position.latitude}, ${position.longitude}');
-        debugPrint('=================================\n');
-
-        if (place.postalCode != null && pinCodeController.text.trim().isEmpty) {
-          pinCodeController.text = place.postalCode!;
-        }
-
-        // Try to match state
-        if (place.administrativeArea != null && allGeographies.isNotEmpty) {
-          final stateItem = allGeographies.firstWhereOrNull(
-            (g) =>
-                g.type.toUpperCase() == 'STATE' &&
-                g.name.toLowerCase() == place.administrativeArea!.toLowerCase(),
-          );
-          if (stateItem != null && selectedStateUuid.value == null) {
-            onStateSelected(stateItem.uuid);
-
-            // Try to match city
-            String? cityNameToMatch =
-                place.locality ?? place.subAdministrativeArea;
-            if (cityNameToMatch != null && cityNameToMatch.isNotEmpty) {
-              final cityItem = allGeographies.firstWhereOrNull(
-                (g) =>
-                    g.type.toUpperCase() == 'REGION' &&
-                    g.parentUuid == stateItem.uuid &&
-                    g.name.toLowerCase() == cityNameToMatch.toLowerCase(),
-              );
-              if (cityItem != null && selectedCityUuid.value == null) {
-                onCitySelected(cityItem.uuid);
-              }
-            }
-          }
+        final p = placemarks.first;
+        a1Controller.text = [p.street, p.subLocality].where((e) => e != null && e.isNotEmpty).join(', ');
+        a2Controller.text = p.locality ?? '';
+        a3Controller.text = p.subAdministrativeArea ?? '';
+        cityController.text = p.locality ?? p.subAdministrativeArea ?? '';
+        pinController.text = p.postalCode ?? '';
+        if (p.administrativeArea != null && statesList.contains(p.administrativeArea)) {
+          selectedState.value = p.administrativeArea;
         }
       }
     } catch (e) {
-      Get.snackbar(
-        'Location Notice',
-        'Could not fetch current address. Please enter manually.',
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Location', 'Could not fetch address details');
     } finally {
-      isLocationLoading.value = false;
+      isLocating.value = false;
     }
   }
 
-  Future<void> fetchCustomerReferenceData() async {
-    isCustomerTypesLoading.value = true;
-    customerTypesError.value = '';
+  void toggleWacb(bool? val) {
+    wacb.value = val ?? false;
+    if (wacb.value) {
+      waController.text = mobileController.text;
+    }
+  }
 
-    try {
-      final response = await _customerApiService.getReferenceData();
-      customerTypes.value = response.data.customerTypes;
-      allLookups.value = response.data.lookups;
-      allBeats.value = response.data.beats;
+  // Validation
+  final errors = <String, String>{}.obs;
+  
+  void setError(String key, String error) {
+    if (error.isEmpty) {
+      errors.remove(key);
+    } else {
+      errors[key] = error;
+    }
+  }
+  
+  bool hasError(String key) => errors.containsKey(key);
+  String getError(String key) => errors[key] ?? '';
+  
+  bool validateStep(int step) {
+    errors.clear();
+    avatarError.value = '';
+    
+    if (step == 0) {
+      if (avatarPath.value == null) {
+        avatarError.value = 'Shop photo required';
+      }
 
-      // Preserve current selection if it exists in the fetched list
-      if (customerTypes.isNotEmpty) {
-        final existingType = customerTypes.firstWhereOrNull(
-          (t) =>
-              t.name.toLowerCase() == customerType.value.toLowerCase() ||
-              t.code.toLowerCase() == customerType.value.toLowerCase(),
-        );
-
-        if (existingType != null) {
-          customerType.value = existingType.name;
-          customerTypeUuid.value = existingType.uuid;
-          customerTypeCode.value = existingType.code;
+      
+      if (shopController.text.trim().isEmpty) setError('shop', 'Required');
+      if (personController.text.trim().isEmpty) setError('person', 'Required');
+      
+      final mobile = mobileController.text.trim();
+      if (mobile.isEmpty) {
+        setError('mobile', 'Required');
+      } else if (!RegExp(r'^[6-9]\d{9}$').hasMatch(mobile)) {
+        setError('mobile', 'Enter a valid 10-digit mobile number');
+      }
+      
+      final wa = waController.text.trim();
+      if (wa.isEmpty) {
+        setError('wa', 'Required');
+      } else if (!RegExp(r'^[6-9]\d{9}$').hasMatch(wa)) {
+        setError('wa', 'Enter a valid 10-digit number');
+      }
+      
+      final email = emailController.text.trim();
+      if (email.isEmpty) {
+        setError('email', 'Required');
+      } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(email)) {
+        setError('email', 'Enter a valid email address');
+      }
+      
+      if (a1Controller.text.trim().isEmpty) setError('a1', 'Required');
+      if (a2Controller.text.trim().isEmpty) setError('a2', 'Required');
+      if (a3Controller.text.trim().isEmpty) setError('a3', 'Required');
+      if (selectedState.value == null) setError('state', 'Required');
+      if (cityController.text.trim().isEmpty) setError('city', 'Required');
+      
+      final pin = pinController.text.trim();
+      if (pin.isEmpty) {
+        setError('pin', 'Required');
+      } else if (!RegExp(r'^[1-9]\d{5}$').hasMatch(pin)) {
+        setError('pin', 'Enter a 6-digit pin code');
+      }
+      
+    } else if (step == 1) {
+      if (subType.value == null) setError('sub', 'Required');
+      if (channel.value == null) setError('chan', 'Required');
+      if (segment.value == null) setError('seg', 'Required');
+      if (category.value == null) setError('cat', 'Required');
+      if (cls.value == null) setError('cls', 'Required');
+      if (beat.value == null) setError('beat', 'Required');
+      
+      if (sizeController.text.trim().isEmpty) setError('size', 'Required');
+      if (potController.text.trim().isEmpty) setError('pot', 'Required');
+      if (selectedBrands.isEmpty) setError('brands', 'Required');
+      
+      if (openTime.value == null) setError('open', 'Required');
+      if (closeTime.value == null) setError('close', 'Required');
+      
+      if (rtype.value == 'mechanic') {
+        if (wtype.value == null) setError('wtype', 'Required');
+        if (expController.text.trim().isEmpty) setError('exp', 'Required');
+        if (eng.value == null) setError('eng', 'Required');
+        if (mechsController.text.trim().isEmpty) setError('mechs', 'Required');
+      }
+    } else if (step == 2) {
+      if (fnController.text.trim().isEmpty) setError('fn', 'Required');
+      if (lnController.text.trim().isEmpty) setError('ln', 'Required');
+      
+      final docno = docnoController.text.trim();
+      if (docno.isEmpty) {
+        setError('docno', 'Required');
+      } else {
+        if (doctype.value == 'Aadhaar') {
+          if (!RegExp(r'^\d{12}$').hasMatch(docno)) {
+            setError('docno', 'Enter a valid document number (Aadhaar: 12 digits)');
+          }
         } else {
-          // If default isn't found, pick the first one
-          customerType.value = customerTypes.first.name;
-          customerTypeUuid.value = customerTypes.first.uuid;
-          customerTypeCode.value = customerTypes.first.code;
-        }
-      }
-    } catch (e) {
-      customerTypesError.value = e.toString().replaceAll('Exception: ', '');
-    } finally {
-      isCustomerTypesLoading.value = false;
-    }
-  }
-
-  void toggleCustomerType(CustomerTypeModel type) {
-    if (customerTypeUuid.value != type.uuid) {
-      customerType.value = type.name;
-      customerTypeUuid.value = type.uuid;
-      customerTypeCode.value = type.code;
-      onSubTypeSelected(null);
-    }
-  }
-
-  void onSubTypeSelected(String? uuid) {
-    selectedSubTypeUuid.value = uuid;
-    onChannelSelected(null);
-  }
-
-  void onChannelSelected(String? uuid) {
-    selectedChannelUuid.value = uuid;
-    onSegmentSelected(null);
-  }
-
-  void onSegmentSelected(String? uuid) {
-    selectedSegmentUuid.value = uuid;
-    onCategorySelected(null);
-  }
-
-  void onCategorySelected(String? uuid) {
-    selectedCategoryUuid.value = uuid;
-    onClassSelected(null);
-  }
-
-  void onClassSelected(String? uuid) {
-    selectedClassUuid.value = uuid;
-  }
-
-  void onShopSizeSelected(String? uuid) {
-    selectedShopSizeUuid.value = uuid;
-  }
-
-  void onMonthlyPotentialSelected(String? uuid) {
-    selectedMonthlyPotentialUuid.value = uuid;
-  }
-
-  void onBusinessTypeSelected(String? uuid) {
-    selectedBusinessTypeUuid.value = uuid;
-  }
-
-  void onKycDocTypeSelected(String? uuid) {
-    selectedKycDocTypeUuid.value = uuid;
-  }
-
-  void onBeatSelected(String? uuid) {
-    selectedBeatUuid.value = uuid;
-  }
-
-  void nextStep(BuildContext context) {
-    if (currentStep.value < 3) {
-      if (_validateCurrentStep()) {
-        currentStep.value++;
-      }
-    } else {
-      if (_validateCurrentStep()) {
-        _showSubmitDialog(context);
-      }
-    }
-  }
-
-  void previousStep() {
-    if (currentStep.value > 1) {
-      currentStep.value--;
-    } else {
-      Get.back();
-    }
-  }
-
-  bool _validateCurrentStep() {
-    if (currentStep.value == 1) {
-      if (shopNameController.text.length < 3) {
-        Get.snackbar(
-          'Validation Error',
-          'Shop Name is required (min 3 chars)',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (contactPersonController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Validation Error',
-          'Contact Person is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (mobileController.text
-              .trim()
-              .replaceAll(RegExp(r'[^0-9]'), '')
-              .length !=
-          10) {
-        Get.snackbar(
-          'Validation Error',
-          'Valid 10-digit Mobile is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (addressController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Validation Error',
-          'Address Line 1 is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (pinCodeController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Validation Error',
-          'Pincode is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (selectedStateUuid.value == null ||
-          selectedCityUuid.value == null ||
-          selectedTerritoryUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Geography selection (State, City, Territory) is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-    } else if (currentStep.value == 2) {
-      if (subTypeList.isNotEmpty && selectedSubTypeUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Sub Type is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (channelList.isNotEmpty && selectedChannelUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Channel is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (segmentList.isNotEmpty && selectedSegmentUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Segment is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (categoryList.isNotEmpty && selectedCategoryUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Category is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (classList.isNotEmpty && selectedClassUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Class is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-      if (beatList.isNotEmpty && selectedBeatUuid.value == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Beat Area is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-    } else if (currentStep.value == 3) {
-      if (selectedFile == null) {
-        Get.snackbar(
-          'Validation Error',
-          'Attachment is required',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
-        return false;
-      }
-    }
-    return true;
-  }
-
-  Future<void> pickFile() async {
-    try {
-      PlatformFile? file = await FilePicker.pickFile(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-      );
-
-      if (file != null) {
-        // Max 5 MB validation
-        int size = file.lengthSync() ?? 0;
-        if (size == 0) {
-          size = await file.length() ?? 0;
-        }
-
-        if (size > 5 * 1024 * 1024) {
-          Get.snackbar(
-            'Error',
-            'File must be under 5 MB',
-            backgroundColor: Colors.redAccent,
-            colorText: Colors.white,
-          );
-          return;
-        }
-
-        selectedFile = file;
-        selectedFileName.value = file.name;
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to pick file',
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
-    }
-  }
-
-  void removeFile() {
-    selectedFile = null;
-    selectedFileName.value = '';
-  }
-
-  void _showSubmitDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(22.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('❓', style: TextStyle(fontSize: 34)),
-                const SizedBox(height: 8),
-                const Text(
-                  'Submit Customer?',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B2733),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Are you sure you want to submit this customer?',
-                  style: TextStyle(fontSize: 14, color: Color(0xFF6B7A8C)),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F6FA),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF1B2733),
-                          ),
-                          children: [
-                            TextSpan(
-                              text: customerType.value,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextSpan(text: ' · ${shopNameController.text}'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$beatName · ${selectedFileName.value}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF1B2733),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF1B2733),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          side: const BorderSide(
-                            color: Color(0xFFD9E1EA),
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          minimumSize: const Size(0, 40),
-                        ),
-                        child: const FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 6,
-                      child: Obx(
-                        () => ElevatedButton(
-                          onPressed: isLoading.value
-                              ? null
-                              : () {
-                                  Navigator.pop(dialogContext);
-                                  submitOutlet(context);
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryPurple,
-                            foregroundColor: Colors.white,
-                            elevation: 4,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            shadowColor: AppColors.primaryPurple.withValues(
-                              alpha: 0.3,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            minimumSize: const Size(0, 40),
-                          ),
-                          child: isLoading.value
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'Confirm & Submit',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> submitOutlet(BuildContext context) async {
-    if (isLoading.value) return;
-
-    isLoading.value = true;
-    try {
-      // 1. Get Location (fallback if not fetched initially)
-      if (latitude.value == null || longitude.value == null) {
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-          if (permission == LocationPermission.denied) {
-            Get.snackbar(
-              'Location Required',
-              'Please allow location access to create a customer',
-              backgroundColor: Colors.redAccent,
-              colorText: Colors.white,
-            );
-            isLoading.value = false;
-            return;
+          if (!RegExp(r'^[A-Z]{2}[0-9]{2}[ -]?[A-Z0-9]{11,13}$', caseSensitive: false).hasMatch(docno)) {
+            setError('docno', 'Enter a valid document number');
           }
         }
-
-        if (permission == LocationPermission.deniedForever) {
-          Get.snackbar(
-            'Location Required',
-            'Location permissions are permanently denied, please enable from settings',
-            backgroundColor: Colors.redAccent,
-            colorText: Colors.white,
-          );
-          isLoading.value = false;
-          return;
-        }
-
-        bool isLocationServiceEnabled =
-            await Geolocator.isLocationServiceEnabled();
-        if (!isLocationServiceEnabled) {
-          Get.snackbar(
-            'Location Required',
-            'GPS is disabled. Please enable location services.',
-            backgroundColor: Colors.redAccent,
-            colorText: Colors.white,
-          );
-          isLoading.value = false;
-          return;
-        }
-
-        Position position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 10),
-          ),
-        );
-        latitude.value = position.latitude;
-        longitude.value = position.longitude;
       }
-
-      // 2. Build Request Payload
-      final request = CustomerCreateRequest(
-        customerType: customerTypeUuid.value,
-        shopName: shopNameController.text.trim(),
-        contactPerson: contactPersonController.text.trim(),
-        mobile: mobileController.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
-        alternateMobile: altMobileController.text.trim().isNotEmpty
-            ? altMobileController.text.trim().replaceAll(RegExp(r'[^0-9]'), '')
-            : null,
-        email: emailController.text.trim().isNotEmpty
-            ? emailController.text.trim()
-            : null,
-        addressLine1: addressController.text.trim(),
-        pincode: pinCodeController.text.trim(),
-        city: cityName,
-        state: stateName,
-        latitude: latitude.value!,
-        longitude: longitude.value!,
-        gstRegistrationType: gstRegistrationType.value,
-        pan: panController.text.trim().isNotEmpty
-            ? panController.text.trim()
-            : null,
-        gst: gstController.text.trim().isNotEmpty
-            ? gstController.text.trim()
-            : null,
-        subTypeUuid: selectedSubTypeUuid.value ?? '',
-        channelUuid: selectedChannelUuid.value ?? '',
-        segmentUuid: selectedSegmentUuid.value ?? '',
-        categoryUuid: selectedCategoryUuid.value ?? '',
-        classUuid: selectedClassUuid.value ?? '',
-        source: 'EMPLOYEE',
-        territoryUuid: selectedTerritoryUuid.value ?? '',
-        beatUuid: selectedBeatUuid.value,
-        clientRequestId: _customerApiService.generateUuidV4(),
-        shopSizeCode: selectedShopSizeUuid.value,
-        monthlyPotentialCode: selectedMonthlyPotentialUuid.value,
-        businessTypeCode: selectedBusinessTypeUuid.value,
-        kycDocTypeUuid: selectedKycDocTypeUuid.value,
-        regNumber: regNumberController.text.trim().isNotEmpty
-            ? regNumberController.text.trim()
-            : null,
-        estYear: estYearController.text.trim().isNotEmpty
-            ? estYearController.text.trim()
-            : null,
-        brandsStocked: selectedBrands.isNotEmpty
-            ? selectedBrands.toList()
-            : null,
-        shopTimings: shopTimingsController.text.trim().isNotEmpty
-            ? shopTimingsController.text.trim()
-            : null,
-        workshopType: workshopType.value.isNotEmpty ? workshopType.value : null,
-        experience: experienceController.text.trim().isNotEmpty
-            ? experienceController.text.trim()
-            : null,
-        specialization: specializationController.text.trim().isNotEmpty
-            ? specializationController.text.trim()
-            : null,
-        mechanicsCount: mechanicsCountController.text.trim().isNotEmpty
-            ? mechanicsCountController.text.trim()
-            : null,
-        bankName: bankNameController.text.trim().isNotEmpty
-            ? bankNameController.text.trim()
-            : null,
-        accHolder: accHolderController.text.trim().isNotEmpty
-            ? accHolderController.text.trim()
-            : null,
-        accNumber: accNumberController.text.trim().isNotEmpty
-            ? accNumberController.text.trim()
-            : null,
-        ifsc: ifscController.text.trim().isNotEmpty
-            ? ifscController.text.trim()
-            : null,
-      );
-
-      // --- DEBUG LOGGING ---
-      try {
-        final jsonPayload = const JsonEncoder.withIndent(
-          '  ',
-        ).convert(request.toJson());
-        debugPrint(
-          '\n===== CUSTOMER_CREATE_REQUEST =====\n$jsonPayload\n===================================\n',
-        );
-      } catch (logError) {
-        debugPrint('Failed to encode CUSTOMER_CREATE_REQUEST: $logError');
+      
+      if (doctype.value == 'Aadhaar' && !otpVerified.value) {
+        setError('otp', 'Verify the Aadhaar number with OTP');
       }
-      // ---------------------
+      if (docfPath.value == null) setError('docf', 'Attachment required');
+      
+      if (bankController.text.trim().isEmpty) setError('bank', 'Required');
+      if (holderController.text.trim().isEmpty) setError('holder', 'Required');
+      
+      final acc = accController.text.trim();
+      if (acc.isEmpty) {
+        setError('acc', 'Required');
+      } else if (!RegExp(r'^\d{9,18}$').hasMatch(acc)) {
+        setError('acc', 'Enter 9–18 digits');
+      }
+      
+      final ifsc = ifscController.text.trim();
+      if (ifsc.isEmpty) {
+        setError('ifsc', 'Required');
+      } else if (!RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$', caseSensitive: false).hasMatch(ifsc)) {
+        setError('ifsc', 'Format: SBIN0001234');
+      }
+      
+      if (bankfPath.value == null) setError('bankf', 'Attachment required');
+      
+      if (gst.value == 'Registered') {
+        final gstno = gstnoController.text.trim();
+        if (gstno.isEmpty) {
+          setError('gstno', 'Required');
+        } else if (!RegExp(r'^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$', caseSensitive: false).hasMatch(gstno)) {
+          setError('gstno', 'Enter the 15-character GSTIN');
+        }
+      }
+      
+      final fssai = fssaiController.text.trim();
+      if (fssai.isNotEmpty && !RegExp(r'^\d{14}$').hasMatch(fssai)) {
+        setError('fssai', 'FSSAI number is 14 digits');
+      }
+    }
+    
+    return errors.isEmpty && avatarError.isEmpty;
+  }
 
-      // 3. Call API
-      final response = await _customerApiService.createCustomer(request);
+  // OTP functions
+  void sendOtp() {
+    final docno = docnoController.text.trim();
+    if (!RegExp(r'^[2-9]\d{11}$').hasMatch(docno)) {
+      docnoError.value = 'Enter a valid 12-digit Aadhaar number above first.';
+      return;
+    }
+    docnoError.value = '';
+    demoOtp.value = (100000 + DateTime.now().millisecondsSinceEpoch % 900000).toString();
+    otpSent.value = true;
+    otpError.value = 'Demo OTP: ${demoOtp.value}';
+    for (var c in otpInputs) {
+      c.clear();
+    }
+    
+    otpTimer.value = 30;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (otpTimer.value > 0) {
+        otpTimer.value--;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
 
-      if (!context.mounted) return;
-
-      String customerCode = response.data?.customerCode ?? 'N/A';
-
-      // Show success dialog
-      _showSuccessDialog(context, customerCode);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString().replaceAll('Exception: ', ''),
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
+  void verifyOtp() {
+    String entered = otpInputs.map((e) => e.text).join();
+    if (entered.length < 6) {
+      otpError.value = 'Enter all 6 digits of the OTP.';
+      return;
+    }
+    if (entered == demoOtp.value) {
+      otpVerified.value = true;
+      otpError.value = '';
+      _timer?.cancel();
+    } else {
+      otpError.value = 'Incorrect OTP. Try again.';
+      for (var c in otpInputs) {
+        c.clear();
+      }
     }
   }
 
-  void _showSuccessDialog(BuildContext context, String customerCode) {
-    showDialog(
-      context: context,
+  void resetOtpIfAadhaarChanged() {
+    if (otpVerified.value) {
+      otpVerified.value = false;
+      otpSent.value = false;
+      demoOtp.value = null;
+      docnoError.value = 'Aadhaar number changed. Verify again.';
+    }
+  }
+
+  void submitForm() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_outline, color: Color(0xFF1B9A6C), size: 100),
+              const SizedBox(height: 16),
+              const Text('Sent for approval', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text('${shopController.text.isNotEmpty ? shopController.text : "The customer"} is now with your manager.', textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2B2F87)),
+                  onPressed: () {
+                    Get.back();
+                    Get.back();
+                  },
+                  child: const Text('Add another customer', style: TextStyle(color: Colors.white)),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
       barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(22.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(
-                    color: AppColors.lightBlueBackground,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '✓',
-                      style: TextStyle(
-                        fontSize: 34,
-                        color: AppColors.primaryPurple,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Customer Submitted',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B2733),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B7A8C),
-                      height: 1.4,
-                    ),
-                    children: [
-                      TextSpan(
-                        text:
-                            '${shopNameController.text} has been sent for approval.\n',
-                      ),
-                      const TextSpan(text: 'Ref: '),
-                      TextSpan(
-                        text: customerCode,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B2733),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          // Reset form and go back to step 1
-                          currentStep.value = 1;
-                          shopNameController.clear();
-                          contactPersonController.clear();
-                          removeFile();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primaryPurple,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          side: const BorderSide(
-                            color: AppColors.primaryPurple,
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          minimumSize: const Size(0, 40),
-                        ),
-                        child: const FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'Add Another',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          Get.back(); // Or navigate to customer list
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryPurple,
-                          foregroundColor: Colors.white,
-                          elevation: 4,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          shadowColor: AppColors.primaryPurple.withValues(
-                            alpha: 0.3,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          minimumSize: const Size(0, 40),
-                        ),
-                        child: const FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            'View Customer',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
   @override
   void onClose() {
-    shopNameController.dispose();
-    contactPersonController.dispose();
-    mobileController.dispose();
-    altMobileController.dispose();
-    emailController.dispose();
-    whatsappController.dispose();
-    addressController.dispose();
-    pinCodeController.dispose();
-    regNumberController.dispose();
-    estYearController.dispose();
-    shopTimingsController.dispose();
-    experienceController.dispose();
-    specializationController.dispose();
-    mechanicsCountController.dispose();
-    panController.dispose();
-    gstController.dispose();
-    bankNameController.dispose();
-    accHolderController.dispose();
-    accNumberController.dispose();
-    ifscController.dispose();
+    _timer?.cancel();
     super.onClose();
   }
 }

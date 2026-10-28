@@ -1,10 +1,4 @@
-- [ ] Compact `tickets_screen.dart` layout
-    - [ ] Optimize AppBar and Create Plan button
-    - [ ] Compact Tab selector
-    - [ ] Reduce Search bar and Status text spacing
-    - [ ] Compact Warning Banner
-- [ ] Compact `ticket_card.dart` layout
-    - [ ] Reduce card margins and padding
-    - [ ] Tighten text row gaps
-    - [ ] Adjust button and summary link spacing
-- [ ] Verify build and layout responsiveness
+- [ ] Update `CreatePlanViewModel` with new state and logic for the interactive flow.
+- [ ] Overhaul `CreatePlanScreen` to replicate the 4 screens + bottom sheet from the HTML.
+- [ ] Add custom styling to match the HTML green theme.
+- [ ] Verify validation and navigation flow.
