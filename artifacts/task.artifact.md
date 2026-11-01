@@ -1,0 +1,4 @@
+- `[x]` Add `uploadFile` method in `CustomerApiService`.
+- `[x]` Add `files` property in `CustomerCreateRequest`.
+- `[x]` Update `AddOutletViewModel` for image upload logic.
+- `[x]` Update `ExploreScreen` (`AddOutletScreen`) to show uploading state for the avatar.

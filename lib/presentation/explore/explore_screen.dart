@@ -5,16 +5,15 @@ import 'package:get/get.dart';
 import 'add_outlet_viewmodel.dart';
 import '../dashboard/dashboard_viewmodel.dart';
 
-// HTML Colors mapped to the existing purple theme tokens
 class HtmlColors {
-  static const Color bg = Color(0xFFF9FAFB); // grey.shade50
+  static const Color bg = Color(0xFFF9FAFB);
   static const Color card = Colors.white;
   static const Color ink = Color(0xFF1B2733);
-  static const Color mut = Color(0xFF64748B); // Text secondary
+  static const Color mut = Color(0xFF64748B);
   static const Color line = Color(0xFFE2E8F0);
-  static const Color pri = Color(0xFF8A2BE2); // Primary
-  static const Color acc = Color(0xFF6D28D9); // Accent
-  static const Color sec = Color(0xFFB197FC); // Secondary
+  static const Color pri = Color(0xFF8A2BE2);
+  static const Color acc = Color(0xFF6D28D9);
+  static const Color sec = Color(0xFFB197FC);
   static const Color bad = Color(0xFFD32F2F);
   static const Color ok = Color(0xFF1B873F);
 }
@@ -36,34 +35,48 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(backgroundColor: HtmlColors.bg,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _buildHeader(viewModel),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTabs(viewModel),
-                    const SizedBox(height: 12),
-                    _buildStepCard(viewModel, context),
-                    const SizedBox(height: 100), // Padding for bottom nav
-                  ],
+    return Scaffold(
+      backgroundColor: HtmlColors.bg,
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _buildHeader(viewModel),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 18,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildTabs(viewModel),
+                        const SizedBox(height: 12),
+                        _buildStepCard(viewModel, context),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Obx(() {
+            if (viewModel.isRefDataLoading.value) {
+              return Container(
+                color: Colors.black.withValues(alpha: 0.3),
+                child: const Center(
+                  child: CircularProgressIndicator(color: HtmlColors.pri),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
       ),
       bottomSheet: _buildBottomNav(viewModel),
     );
@@ -87,7 +100,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             color: HtmlColors.pri.withValues(alpha: 0.3),
             blurRadius: 24,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
       ),
       child: Padding(
@@ -95,20 +108,21 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 1. Home Icon (Largest)
             IconButton(
               padding: EdgeInsets.zero,
-              icon: Image.asset('assets/images/queue.png', width: 64, height: 64),
+              icon: Image.asset(
+                'assets/images/queue.png',
+                width: 64,
+                height: 64,
+              ),
               onPressed: () {
                 final dashboardViewModel = Get.find<DashboardViewModel>();
                 dashboardViewModel.changeTabIndex(0);
               },
             ),
             const SizedBox(width: 12),
-            // 2. Camera Circle (Medium)
             _buildAvatar(viewModel),
             const SizedBox(width: 16),
-            // 3. Text/Heading
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,13 +137,15 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Obx(() => Text(
-                    'Step ${viewModel.currentStep.value + 1} of 3',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: 13,
+                  Obx(
+                    () => Text(
+                      'Step ${viewModel.currentStep.value + 1} of 3',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 13,
+                      ),
                     ),
-                  )),
+                  ),
                   const SizedBox(height: 8),
                   Container(
                     height: 6,
@@ -179,10 +195,18 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     return Obx(() {
       final hasAvatar = viewModel.avatarPath.value != null;
       final isError = viewModel.avatarError.isNotEmpty;
+      final isUploading = viewModel.isUploadingImage.value;
+
       return GestureDetector(
-        onTap: () => viewModel.pickFile(viewModel.avatarPath, isImage: true),
+        onTap: isUploading
+            ? null
+            : () => viewModel.pickFile(
+                viewModel.avatarPath,
+                isImage: true,
+                kind: 'SHOP_IMAGE',
+              ),
         child: SizedBox(
-          width: 56, // Medium size
+          width: 56,
           height: 56,
           child: Stack(
             alignment: Alignment.center,
@@ -191,9 +215,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 Container(
                   width: 56,
                   height: 56,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
                   child: CustomPaint(painter: _DottedCirclePainter()),
                 ),
               Container(
@@ -201,16 +223,37 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 height: 46,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: hasAvatar ? Colors.transparent : Colors.white.withValues(alpha: 0.15),
+                  color: hasAvatar
+                      ? Colors.transparent
+                      : Colors.white.withValues(alpha: 0.15),
                   border: Border.all(
-                    color: isError ? HtmlColors.bad : (hasAvatar ? HtmlColors.acc : Colors.transparent),
+                    color: isError
+                        ? HtmlColors.bad
+                        : (hasAvatar ? HtmlColors.acc : Colors.transparent),
                     width: 2,
                   ),
                   image: hasAvatar
-                      ? DecorationImage(image: FileImage(File(viewModel.avatarPath.value!)), fit: BoxFit.cover)
+                      ? DecorationImage(
+                          image: FileImage(File(viewModel.avatarPath.value!)),
+                          fit: BoxFit.cover,
+                        )
                       : null,
                 ),
-                child: hasAvatar ? null : const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 22),
+                child: isUploading
+                    ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : (hasAvatar
+                          ? null
+                          : const Icon(
+                              Icons.camera_alt_outlined,
+                              color: Colors.white,
+                              size: 22,
+                            )),
               ),
             ],
           ),
@@ -228,11 +271,11 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           children: List.generate(tabs.length, (index) {
             final isCur = viewModel.currentStep.value == index;
             final isDone = viewModel.maxStepReached.value >= index && !isCur;
-            
+
             Color bgColor = HtmlColors.card;
             Color borderColor = HtmlColors.line;
             Color textColor = HtmlColors.mut;
-            
+
             if (isCur) {
               bgColor = HtmlColors.pri;
               borderColor = HtmlColors.pri;
@@ -247,7 +290,10 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
               child: GestureDetector(
                 onTap: () => viewModel.goStep(index),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: bgColor,
                     border: Border.all(color: borderColor),
@@ -301,15 +347,21 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
               color: HtmlColors.ink.withValues(alpha: 0.08),
               blurRadius: 28,
               offset: const Offset(0, 6),
-            )
+            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 4),
-            Text(desc, style: const TextStyle(color: HtmlColors.mut, fontSize: 14)),
+            Text(
+              desc,
+              style: const TextStyle(color: HtmlColors.mut, fontSize: 14),
+            ),
             const SizedBox(height: 16),
             content,
           ],
@@ -318,8 +370,6 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
-  // ===== WIDGET HELPERS ===== //
-  
   Widget _sub(String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 22, bottom: 4),
@@ -346,7 +396,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     return Obx(() {
       final error = viewModel.getError(key);
       final hasErr = error.isNotEmpty;
-      
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Column(
@@ -358,10 +408,18 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 child: RichText(
                   text: TextSpan(
                     text: label,
-                    style: const TextStyle(color: HtmlColors.mut, fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: HtmlColors.mut,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                     children: [
-                      if (!isOpt) const TextSpan(text: ' *', style: TextStyle(color: HtmlColors.bad)),
-                    ]
+                      if (!isOpt)
+                        const TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: HtmlColors.bad),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -369,7 +427,10 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             if (hasErr)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(error, style: const TextStyle(color: HtmlColors.bad, fontSize: 12)),
+                child: Text(
+                  error,
+                  style: const TextStyle(color: HtmlColors.bad, fontSize: 12),
+                ),
               ),
           ],
         ),
@@ -402,11 +463,60 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           contentPadding: const EdgeInsets.all(12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: hasErr ? HtmlColors.bad : HtmlColors.line, width: 1.5),
+            borderSide: BorderSide(
+              color: hasErr ? HtmlColors.bad : HtmlColors.line,
+              width: 1.5,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: hasErr ? HtmlColors.bad : HtmlColors.pri, width: 2),
+            borderSide: BorderSide(
+              color: hasErr ? HtmlColors.bad : HtmlColors.pri,
+              width: 2,
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _dropdownRef({
+    required AddOutletViewModel viewModel,
+    required String key,
+    required RxnString rxValue,
+    required List<MapEntry<String, String>> options,
+    Function(String?)? onChanged,
+  }) {
+    return Obx(() {
+      final hasErr = viewModel.hasError(key);
+      return Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: HtmlColors.bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasErr ? HtmlColors.bad : HtmlColors.line,
+            width: 1.5,
+          ),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: rxValue.value,
+            hint: const Text('Select', style: TextStyle(fontSize: 15)),
+            isExpanded: true,
+            items: options
+                .map(
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                )
+                .toList(),
+            onChanged: (val) {
+              if (onChanged != null) {
+                onChanged(val);
+              } else {
+                rxValue.value = val;
+              }
+            },
           ),
         ),
       );
@@ -427,14 +537,19 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         decoration: BoxDecoration(
           color: HtmlColors.bg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: hasErr ? HtmlColors.bad : HtmlColors.line, width: 1.5),
+          border: Border.all(
+            color: hasErr ? HtmlColors.bad : HtmlColors.line,
+            width: 1.5,
+          ),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: rxValue.value,
             hint: const Text('Select', style: TextStyle(fontSize: 15)),
             isExpanded: true,
-            items: options.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            items: options
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
             onChanged: (val) => rxValue.value = val,
           ),
         ),
@@ -442,10 +557,51 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
-  Widget _pills({
-    required RxString rxValue,
-    required List<String> options,
+  Widget _pillsRef({
+    required RxnString rxValue,
+    required List<MapEntry<String, String>> options,
+    Function(String, String)? onChanged,
   }) {
+    return Obx(() {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: options.map((opt) {
+          final isSelected = rxValue.value == opt.key;
+          return GestureDetector(
+            onTap: () {
+              if (onChanged != null) {
+                onChanged(opt.key, opt.value);
+              } else {
+                rxValue.value = opt.key;
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+              decoration: BoxDecoration(
+                color: isSelected ? HtmlColors.pri : HtmlColors.bg,
+                border: Border.all(
+                  color: isSelected ? HtmlColors.pri : HtmlColors.line,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                opt.value,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : HtmlColors.ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    });
+  }
+
+  Widget _pills({required RxString rxValue, required List<String> options}) {
     return Obx(() {
       return Wrap(
         spacing: 8,
@@ -458,7 +614,10 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
               decoration: BoxDecoration(
                 color: isSelected ? HtmlColors.pri : HtmlColors.bg,
-                border: Border.all(color: isSelected ? HtmlColors.pri : HtmlColors.line, width: 1.5),
+                border: Border.all(
+                  color: isSelected ? HtmlColors.pri : HtmlColors.line,
+                  width: 1.5,
+                ),
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(
@@ -475,7 +634,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
       );
     });
   }
-  
+
   Widget _chips({
     required RxList<String> rxValues,
     required List<String> options,
@@ -485,7 +644,12 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     return Obx(() {
       final hasErr = viewModel.hasError(key);
       return Container(
-        decoration: hasErr ? BoxDecoration(border: Border.all(color: HtmlColors.bad, width: 1.5), borderRadius: BorderRadius.circular(12)) : null,
+        decoration: hasErr
+            ? BoxDecoration(
+                border: Border.all(color: HtmlColors.bad, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+              )
+            : null,
         child: Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -500,10 +664,16 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? HtmlColors.pri : HtmlColors.bg,
-                  border: Border.all(color: isSelected ? HtmlColors.pri : HtmlColors.line, width: 1.5),
+                  border: Border.all(
+                    color: isSelected ? HtmlColors.pri : HtmlColors.line,
+                    width: 1.5,
+                  ),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
@@ -521,38 +691,69 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
       );
     });
   }
-  
+
   Widget _filePicker({
     required AddOutletViewModel viewModel,
     required String key,
     required RxnString rxPath,
     bool isImage = false,
+    String? kind,
+    RxBool? isUploading,
   }) {
     return Obx(() {
       final hasErr = viewModel.hasError(key);
       final hasFile = rxPath.value != null;
+      final uploading = isUploading?.value ?? false;
       return GestureDetector(
-        onTap: () => viewModel.pickFile(rxPath, isImage: isImage),
+        onTap: uploading
+            ? null
+            : () => viewModel.pickFile(rxPath, isImage: isImage, kind: kind),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
             color: HtmlColors.bg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: hasErr ? HtmlColors.bad : (hasFile ? HtmlColors.ok : HtmlColors.line),
+              color: hasErr
+                  ? HtmlColors.bad
+                  : (hasFile ? HtmlColors.ok : HtmlColors.line),
               width: 1.5,
               style: BorderStyle.solid,
             ),
           ),
           child: Row(
             children: [
-              Icon(Icons.upload_file, color: hasFile ? HtmlColors.ok : HtmlColors.mut, size: 20),
+              if (uploading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: HtmlColors.pri,
+                  ),
+                )
+              else
+                Icon(
+                  Icons.upload_file,
+                  color: hasFile ? HtmlColors.ok : HtmlColors.mut,
+                  size: 20,
+                ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  hasFile ? rxPath.value!.split('/').last : 'Choose file or take photo',
-                  style: TextStyle(color: hasFile ? HtmlColors.ok : HtmlColors.mut, fontSize: 14),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  uploading
+                      ? 'Uploading...'
+                      : (hasFile
+                            ? rxPath.value!.split('/').last
+                            : 'Choose file or take photo'),
+                  style: TextStyle(
+                    color: (hasFile || uploading)
+                        ? HtmlColors.ok
+                        : HtmlColors.mut,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -562,111 +763,492 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
-  // ===== STEP 1 FIELDS ===== //
   Widget _buildStep1Fields(AddOutletViewModel vm) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _sub('Shop details'),
-        _fld(viewModel: vm, key: 'rtype', label: 'Retailer type', child: _pills(rxValue: vm.rtype, options: ['retailer', 'mechanic'])),
-        _fld(viewModel: vm, key: 'shop', label: 'Shop name', child: _textInput(viewModel: vm, key: 'shop', controller: vm.shopController)),
-        _fld(viewModel: vm, key: 'person', label: 'Contact person name', child: _textInput(viewModel: vm, key: 'person', controller: vm.personController)),
-        
+        _fld(
+          viewModel: vm,
+          key: 'rtype',
+          label: 'Customer type',
+          child: _pillsRef(
+            rxValue: vm.rtypeUuid,
+            options: vm.customerTypes
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+            onChanged: vm.onCustomerTypeChanged,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'shop',
+          label: 'Shop name',
+          child: _textInput(
+            viewModel: vm,
+            key: 'shop',
+            controller: vm.shopController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'person',
+          label: 'Contact person name',
+          child: _textInput(
+            viewModel: vm,
+            key: 'person',
+            controller: vm.personController,
+          ),
+        ),
+
         _sub('Contact details'),
-        _fld(viewModel: vm, key: 'mobile', label: 'Mobile number', child: _textInput(viewModel: vm, key: 'mobile', controller: vm.mobileController, type: TextInputType.phone, hint: '98XXXXXXXX')),
-        
+        _fld(
+          viewModel: vm,
+          key: 'mobile',
+          label: 'Mobile number',
+          child: _textInput(
+            viewModel: vm,
+            key: 'mobile',
+            controller: vm.mobileController,
+            type: TextInputType.phone,
+            hint: '98XXXXXXXX',
+          ),
+        ),
+
         Row(
           children: [
-            Obx(() => Checkbox(value: vm.wacb.value, onChanged: vm.toggleWacb, activeColor: HtmlColors.pri)),
-            const Expanded(child: Text('Mobile number is also my WhatsApp number', style: TextStyle(fontSize: 14, color: HtmlColors.ink))),
+            Obx(
+              () => Checkbox(
+                value: vm.wacb.value,
+                onChanged: vm.toggleWacb,
+                activeColor: HtmlColors.pri,
+              ),
+            ),
+            const Expanded(
+              child: Text(
+                'Mobile number is also my WhatsApp number',
+                style: TextStyle(fontSize: 14, color: HtmlColors.ink),
+              ),
+            ),
           ],
         ),
-        
-        _fld(viewModel: vm, key: 'wa', label: 'WhatsApp number', child: _textInput(viewModel: vm, key: 'wa', controller: vm.waController, type: TextInputType.phone)),
-        _fld(viewModel: vm, key: 'email', label: 'Email ID', child: _textInput(viewModel: vm, key: 'email', controller: vm.emailController, type: TextInputType.emailAddress)),
-        
+
+        _fld(
+          viewModel: vm,
+          key: 'wa',
+          label: 'WhatsApp number',
+          child: _textInput(
+            viewModel: vm,
+            key: 'wa',
+            controller: vm.waController,
+            type: TextInputType.phone,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'email',
+          label: 'Email ID',
+          child: _textInput(
+            viewModel: vm,
+            key: 'email',
+            controller: vm.emailController,
+            type: TextInputType.emailAddress,
+          ),
+        ),
+
         _sub('Address'),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: HtmlColors.acc,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 13),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(13),
+            ),
             elevation: 0,
           ),
           onPressed: vm.captureLocation,
-          icon: Obx(() => vm.isLocating.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.my_location)),
-          label: const Text('Use my current location', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        ),
-        Obx(() => Padding(
-          padding: const EdgeInsets.only(top: 6, bottom: 12),
-          child: Text(
-            vm.capturedGeo.value != null ? 'Captured ${vm.capturedGeo.value}' : 'Fills address lines, state, city and pin code.',
-            style: const TextStyle(color: HtmlColors.mut, fontSize: 13),
+          icon: Obx(
+            () => vm.isLocating.value
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.my_location),
           ),
-        )),
-        
-        _fld(viewModel: vm, key: 'a1', label: 'Address line 1', child: _textInput(viewModel: vm, key: 'a1', controller: vm.a1Controller)),
-        _fld(viewModel: vm, key: 'a2', label: 'Address line 2', child: _textInput(viewModel: vm, key: 'a2', controller: vm.a2Controller)),
-        _fld(viewModel: vm, key: 'a3', label: 'Address line 3', child: _textInput(viewModel: vm, key: 'a3', controller: vm.a3Controller)),
-        _fld(viewModel: vm, key: 'state', label: 'State', child: _dropdown(viewModel: vm, key: 'state', rxValue: vm.selectedState, options: vm.statesList)),
-        _fld(viewModel: vm, key: 'city', label: 'City', child: _textInput(viewModel: vm, key: 'city', controller: vm.cityController)),
-        _fld(viewModel: vm, key: 'pin', label: 'Pin code', child: _textInput(viewModel: vm, key: 'pin', controller: vm.pinController, type: TextInputType.number)),
+          label: const Text(
+            'Use my current location',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+        Obx(
+          () => Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 12),
+            child: Text(
+              vm.capturedGeo.value != null
+                  ? 'Captured ${vm.capturedGeo.value}'
+                  : 'Fills address lines, state, city and pin code.',
+              style: const TextStyle(color: HtmlColors.mut, fontSize: 13),
+            ),
+          ),
+        ),
+
+        _fld(
+          viewModel: vm,
+          key: 'a1',
+          label: 'Address line 1',
+          child: _textInput(
+            viewModel: vm,
+            key: 'a1',
+            controller: vm.a1Controller,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'a2',
+          label: 'Address line 2',
+          child: _textInput(
+            viewModel: vm,
+            key: 'a2',
+            controller: vm.a2Controller,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'a3',
+          label: 'Address line 3',
+          child: _textInput(
+            viewModel: vm,
+            key: 'a3',
+            controller: vm.a3Controller,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'state',
+          label: 'State',
+          child: _dropdown(
+            viewModel: vm,
+            key: 'state',
+            rxValue: vm.selectedState,
+            options: vm.statesList,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'city',
+          label: 'City',
+          child: _textInput(
+            viewModel: vm,
+            key: 'city',
+            controller: vm.cityController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'pin',
+          label: 'Pin code',
+          child: _textInput(
+            viewModel: vm,
+            key: 'pin',
+            controller: vm.pinController,
+            type: TextInputType.number,
+          ),
+        ),
       ],
     );
   }
 
-  // ===== STEP 2 FIELDS ===== //
   Widget _buildStep2Fields(AddOutletViewModel vm, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _fld(viewModel: vm, key: 'sub', label: 'Sub type', child: _dropdown(viewModel: vm, key: 'sub', rxValue: vm.subType, options: vm.subTypes)),
-        _fld(viewModel: vm, key: 'chan', label: 'Channel', child: _dropdown(viewModel: vm, key: 'chan', rxValue: vm.channel, options: vm.channels)),
-        _fld(viewModel: vm, key: 'seg', label: 'Segment', child: _dropdown(viewModel: vm, key: 'seg', rxValue: vm.segment, options: vm.segments)),
-        _fld(viewModel: vm, key: 'cat', label: 'Category', child: _dropdown(viewModel: vm, key: 'cat', rxValue: vm.category, options: vm.categories)),
-        _fld(viewModel: vm, key: 'cls', label: 'Class', child: _dropdown(viewModel: vm, key: 'cls', rxValue: vm.cls, options: vm.classes)),
-        _fld(viewModel: vm, key: 'beat', label: 'Beat', child: _dropdown(viewModel: vm, key: 'beat', rxValue: vm.beat, options: vm.beats)),
-        
+        _fld(
+          viewModel: vm,
+          key: 'sub',
+          label: 'Sub type',
+          child: _dropdownRef(
+            viewModel: vm,
+            key: 'sub',
+            rxValue: vm.subTypeUuid,
+            options: vm.subTypeList
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+            onChanged: vm.onSubTypeChanged,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'chan',
+          label: 'Channel',
+          child: _dropdownRef(
+            viewModel: vm,
+            key: 'chan',
+            rxValue: vm.channelUuid,
+            options: vm.channelList
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+            onChanged: vm.onChannelChanged,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'seg',
+          label: 'Segment',
+          child: _dropdownRef(
+            viewModel: vm,
+            key: 'seg',
+            rxValue: vm.segmentUuid,
+            options: vm.segmentList
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+            onChanged: vm.onSegmentChanged,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'cat',
+          label: 'Category',
+          child: _dropdownRef(
+            viewModel: vm,
+            key: 'cat',
+            rxValue: vm.categoryUuid,
+            options: vm.categoryList
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+            onChanged: vm.onCategoryChanged,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'cls',
+          label: 'Class',
+          child: _dropdownRef(
+            viewModel: vm,
+            key: 'cls',
+            rxValue: vm.clsUuid,
+            options: vm.classList.map((e) => MapEntry(e.uuid, e.name)).toList(),
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'beat',
+          label: 'Beat',
+          child: _dropdownRef(
+            viewModel: vm,
+            key: 'beat',
+            rxValue: vm.beatUuid,
+            options: vm.activeBeats
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+          ),
+        ),
+
         _sub('Shop profile'),
-        _fld(viewModel: vm, key: 'size', label: 'Shop size (sq ft)', child: _textInput(viewModel: vm, key: 'size', controller: vm.sizeController, type: TextInputType.number)),
-        _fld(viewModel: vm, key: 'pot', label: 'Monthly potential (₹)', child: _textInput(viewModel: vm, key: 'pot', controller: vm.potController, type: TextInputType.number)),
-        _fld(viewModel: vm, key: 'brands', label: 'Brands stocked', child: _chips(viewModel: vm, key: 'brands', rxValues: vm.selectedBrands, options: vm.brands)),
-        
+        _fld(
+          viewModel: vm,
+          key: 'estYear',
+          label: 'Established Year',
+          child: _textInput(
+            viewModel: vm,
+            key: 'estYear',
+            controller: vm.establishedYearController,
+            type: TextInputType.number,
+            hint: 'e.g. 2015',
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'dob',
+          label: 'Date of Birth',
+          child: _textInput(
+            viewModel: vm,
+            key: 'dob',
+            controller: vm.dobController,
+            readOnly: true,
+            hint: 'Select Date',
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: vm.dob.value ?? DateTime(1990),
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+              );
+              if (date != null) {
+                vm.dob.value = date;
+                vm.dobController.text = "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
+                vm.setError('dob', '');
+              }
+            },
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'anniversary',
+          label: 'Anniversary Date',
+          child: _textInput(
+            viewModel: vm,
+            key: 'anniversary',
+            controller: vm.anniversaryController,
+            readOnly: true,
+            hint: 'Select Date',
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: vm.anniversary.value ?? DateTime(2010),
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+              );
+              if (date != null) {
+                vm.anniversary.value = date;
+                vm.anniversaryController.text = "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
+                vm.setError('anniversary', '');
+              }
+            },
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'size',
+          label: 'Shop size (Sq Ft)',
+          child: _textInput(
+            viewModel: vm,
+            key: 'size',
+            controller: vm.shopSizeController,
+            type: TextInputType.number,
+            hint: 'e.g. 850',
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'pot',
+          label: 'Monthly potential (₹)',
+          child: _textInput(
+            viewModel: vm,
+            key: 'pot',
+            controller: vm.monthlyPotentialController,
+            type: TextInputType.number,
+            hint: 'e.g. 150000',
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'brands',
+          label: 'Brands stocked',
+          child: _chips(
+            viewModel: vm,
+            key: 'brands',
+            rxValues: vm.selectedBrands,
+            options: vm.brands,
+          ),
+        ),
+
         Row(
           children: [
             Expanded(
-              child: _fld(viewModel: vm, key: 'open', label: 'Shop opens', child: _textInput(
-                viewModel: vm, key: 'open', controller: TextEditingController(text: vm.openTime.value?.format(context) ?? ''), readOnly: true,
-                onTap: () async {
-                  final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
-                  if (t != null) vm.openTime.value = t;
-                }
-              )),
+              child: _fld(
+                viewModel: vm,
+                key: 'open',
+                label: 'Shop opens',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'open',
+                  controller: TextEditingController(
+                    text: vm.openTime.value?.format(context) ?? '',
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final t = await showTimePicker(
+                      context: context,
+                      initialTime: const TimeOfDay(hour: 9, minute: 0),
+                    );
+                    if (t != null) vm.openTime.value = t;
+                  },
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _fld(viewModel: vm, key: 'close', label: 'Shop closes', child: _textInput(
-                viewModel: vm, key: 'close', controller: TextEditingController(text: vm.closeTime.value?.format(context) ?? ''), readOnly: true,
-                onTap: () async {
-                  final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 20, minute: 0));
-                  if (t != null) vm.closeTime.value = t;
-                }
-              )),
+              child: _fld(
+                viewModel: vm,
+                key: 'close',
+                label: 'Shop closes',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'close',
+                  controller: TextEditingController(
+                    text: vm.closeTime.value?.format(context) ?? '',
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final t = await showTimePicker(
+                      context: context,
+                      initialTime: const TimeOfDay(hour: 20, minute: 0),
+                    );
+                    if (t != null) vm.closeTime.value = t;
+                  },
+                ),
+              ),
             ),
           ],
         ),
 
         Obx(() {
-          if (vm.rtype.value == 'mechanic') {
+          if (vm.rtypeName.value.toLowerCase() == 'mechanic') {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _sub('Workshop details'),
-                _fld(viewModel: vm, key: 'wtype', label: 'Workshop type', child: _dropdown(viewModel: vm, key: 'wtype', rxValue: vm.wtype, options: vm.wtypes)),
-                _fld(viewModel: vm, key: 'exp', label: 'Experience (years)', child: _textInput(viewModel: vm, key: 'exp', controller: vm.expController, type: TextInputType.number)),
-                _fld(viewModel: vm, key: 'eng', label: 'Engine specialty', child: _dropdown(viewModel: vm, key: 'eng', rxValue: vm.eng, options: vm.engs)),
-                _fld(viewModel: vm, key: 'mechs', label: 'Mechanics in workshop', child: _textInput(viewModel: vm, key: 'mechs', controller: vm.mechsController, type: TextInputType.number)),
+                _fld(
+                  viewModel: vm,
+                  key: 'wtype',
+                  label: 'Workshop type',
+                  child: _dropdownRef(
+                    viewModel: vm,
+                    key: 'wtype',
+                    rxValue: vm.wtypeUuid,
+                    options: vm.workshopTypeList
+                        .map((e) => MapEntry(e.uuid, e.name))
+                        .toList(),
+                  ),
+                ),
+                _fld(
+                  viewModel: vm,
+                  key: 'exp',
+                  label: 'Experience (years)',
+                  child: _textInput(
+                    viewModel: vm,
+                    key: 'exp',
+                    controller: vm.expController,
+                    type: TextInputType.number,
+                  ),
+                ),
+                _fld(
+                  viewModel: vm,
+                  key: 'eng',
+                  label: 'Engine specialty',
+                  child: _dropdown(
+                    viewModel: vm,
+                    key: 'eng',
+                    rxValue: vm.eng,
+                    options: vm.engs,
+                  ),
+                ),
+                _fld(
+                  viewModel: vm,
+                  key: 'mechs',
+                  label: 'Mechanics in workshop',
+                  child: _textInput(
+                    viewModel: vm,
+                    key: 'mechs',
+                    controller: vm.mechsController,
+                    type: TextInputType.number,
+                  ),
+                ),
               ],
             );
           }
@@ -676,53 +1258,152 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     );
   }
 
-  // ===== STEP 3 FIELDS ===== //
   Widget _buildStep3Fields(AddOutletViewModel vm) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _sub('KYC'),
-        _fld(viewModel: vm, key: 'doctype', label: 'Document type', child: _pills(rxValue: vm.doctype, options: ['Aadhaar', 'Driving Licence'])),
-        _fld(viewModel: vm, key: 'fn', label: 'First name', child: _textInput(viewModel: vm, key: 'fn', controller: vm.fnController)),
-        _fld(viewModel: vm, key: 'ln', label: 'Last name', child: _textInput(viewModel: vm, key: 'ln', controller: vm.lnController)),
-        
         _fld(
-          viewModel: vm, 
-          key: 'docno', 
-          label: 'Document number', 
+          viewModel: vm,
+          key: 'doctype',
+          label: 'Document type',
+          child: _pillsRef(
+            rxValue: vm.kycDocTypeUuid,
+            options: vm.kycDocTypeList
+                .map((e) => MapEntry(e.uuid, e.name))
+                .toList(),
+            onChanged: vm.onKycDocTypeChanged,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'fn',
+          label: 'First name',
           child: _textInput(
-            viewModel: vm, 
-            key: 'docno', 
+            viewModel: vm,
+            key: 'fn',
+            controller: vm.fnController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'ln',
+          label: 'Last name',
+          child: _textInput(
+            viewModel: vm,
+            key: 'ln',
+            controller: vm.lnController,
+          ),
+        ),
+
+        _fld(
+          viewModel: vm,
+          key: 'docno',
+          label: 'Document number',
+          child: _textInput(
+            viewModel: vm,
+            key: 'docno',
             controller: vm.docnoController,
           ),
         ),
-        
-        Obx(() {
-          if (vm.doctype.value == 'Aadhaar') {
-            return _fld(viewModel: vm, key: 'otp', label: 'Aadhaar OTP verification', child: _buildOtpBox(vm));
-          }
-          return const SizedBox.shrink();
-        }),
 
-        _fld(viewModel: vm, key: 'docf', label: 'Document attachment', child: _filePicker(viewModel: vm, key: 'docf', rxPath: vm.docfPath)),
-        
+        _fld(
+          viewModel: vm,
+          key: 'docf',
+          label: 'Document attachment',
+          child: _filePicker(
+            viewModel: vm,
+            key: 'docf',
+            rxPath: vm.docfPath,
+            kind: 'DOCUMENT',
+            isUploading: vm.isUploadingDoc,
+          ),
+        ),
+
         _sub('Bank details'),
-        _fld(viewModel: vm, key: 'bank', label: 'Bank name', child: _textInput(viewModel: vm, key: 'bank', controller: vm.bankController)),
-        _fld(viewModel: vm, key: 'holder', label: 'Account holder name', child: _textInput(viewModel: vm, key: 'holder', controller: vm.holderController)),
-        _fld(viewModel: vm, key: 'acc', label: 'Account number', child: _textInput(viewModel: vm, key: 'acc', controller: vm.accController, type: TextInputType.number)),
-        _fld(viewModel: vm, key: 'ifsc', label: 'IFSC code', child: _textInput(viewModel: vm, key: 'ifsc', controller: vm.ifscController)),
-        _fld(viewModel: vm, key: 'bankf', label: 'Bank document (cheque / passbook)', child: _filePicker(viewModel: vm, key: 'bankf', rxPath: vm.bankfPath)),
-        
+        _fld(
+          viewModel: vm,
+          key: 'bank',
+          label: 'Bank name',
+          child: _textInput(
+            viewModel: vm,
+            key: 'bank',
+            controller: vm.bankController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'holder',
+          label: 'Account holder name',
+          child: _textInput(
+            viewModel: vm,
+            key: 'holder',
+            controller: vm.holderController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'acc',
+          label: 'Account number',
+          child: _textInput(
+            viewModel: vm,
+            key: 'acc',
+            controller: vm.accController,
+            type: TextInputType.number,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'ifsc',
+          label: 'IFSC code',
+          child: _textInput(
+            viewModel: vm,
+            key: 'ifsc',
+            controller: vm.ifscController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'bankf',
+          label: 'Bank document (cheque / passbook)',
+          child: _filePicker(viewModel: vm, key: 'bankf', rxPath: vm.bankfPath),
+        ),
+
         _sub('GST & licences (GST required, others optional)'),
-        _fld(viewModel: vm, key: 'gst', label: 'GST type', child: _pills(rxValue: vm.gst, options: ['Registered', 'Unregistered'])),
-        
+        _fld(
+          viewModel: vm,
+          key: 'gst',
+          label: 'GST type',
+          child: _pills(
+            rxValue: vm.gst,
+            options: ['Registered', 'Unregistered'],
+          ),
+        ),
+
         Obx(() {
           if (vm.gst.value == 'Registered') {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _fld(viewModel: vm, key: 'gstcat', label: 'GST category', child: _pills(rxValue: vm.gstcat, options: ['Regular', 'Composition', 'Both'])),
-                _fld(viewModel: vm, key: 'gstno', label: 'GST number', child: _textInput(viewModel: vm, key: 'gstno', controller: vm.gstnoController)),
+                _fld(
+                  viewModel: vm,
+                  key: 'gstcat',
+                  label: 'GST category',
+                  child: _pills(
+                    rxValue: vm.gstcat,
+                    options: ['Regular', 'Composition', 'Both'],
+                  ),
+                ),
+                _fld(
+                  viewModel: vm,
+                  key: 'gstno',
+                  label: 'GST number',
+                  child: _textInput(
+                    viewModel: vm,
+                    key: 'gstno',
+                    controller: vm.gstnoController,
+                  ),
+                ),
               ],
             );
           }
@@ -730,129 +1411,64 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         }),
 
         _sub('Optional licences'),
-        _fld(viewModel: vm, key: 'fssai', label: 'FSSAI number', isOpt: true, child: _textInput(viewModel: vm, key: 'fssai', controller: vm.fssaiController, type: TextInputType.number)),
-        _fld(viewModel: vm, key: 'ff', label: 'FSSAI attachment', isOpt: true, child: _filePicker(viewModel: vm, key: 'ff', rxPath: vm.ffPath)),
-        
-        _fld(viewModel: vm, key: 'drug', label: 'Drug licence number', isOpt: true, child: _textInput(viewModel: vm, key: 'drug', controller: vm.drugController)),
-        _fld(viewModel: vm, key: 'df', label: 'Drug licence attachment', isOpt: true, child: _filePicker(viewModel: vm, key: 'df', rxPath: vm.dfPath)),
-        
-        _fld(viewModel: vm, key: 'shopl', label: 'Shop licence number', isOpt: true, child: _textInput(viewModel: vm, key: 'shopl', controller: vm.shoplController)),
-        _fld(viewModel: vm, key: 'sf', label: 'Shop licence attachment', isOpt: true, child: _filePicker(viewModel: vm, key: 'sf', rxPath: vm.sfPath)),
-      ],
-    );
-  }
-
-  Widget _buildOtpBox(AddOutletViewModel vm) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: HtmlColors.bg,
-        border: Border.all(color: vm.otpVerified.value ? HtmlColors.ok : HtmlColors.line, width: 1.5),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: vm.otpVerified.value ? [BoxShadow(color: HtmlColors.ok.withValues(alpha: 0.2), spreadRadius: 4)] : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46, height: 46,
-                decoration: BoxDecoration(
-                  color: vm.otpVerified.value ? HtmlColors.ok : HtmlColors.pri,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.verified_user, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Aadhaar verification', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text('Enter the 12-digit Aadhaar number above, then send an OTP.', style: TextStyle(fontSize: 13, color: HtmlColors.mut)),
-                  ],
-                ),
-              )
-            ],
+        _fld(
+          viewModel: vm,
+          key: 'fssai',
+          label: 'FSSAI number',
+          isOpt: true,
+          child: _textInput(
+            viewModel: vm,
+            key: 'fssai',
+            controller: vm.fssaiController,
+            type: TextInputType.number,
           ),
-          const SizedBox(height: 16),
-          if (vm.otpVerified.value)
-            ElevatedButton(
-              onPressed: null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: HtmlColors.ok, disabledBackgroundColor: HtmlColors.ok,
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-              ),
-              child: const Text('Aadhaar verified ✓', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            )
-              else if (!vm.otpSent.value)
-                ElevatedButton(
-                  onPressed: vm.sendOtp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: HtmlColors.pri,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                    elevation: 0,
-                  ),
-                  child: const Text('Send OTP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                )
-          else
-            Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(6, (i) => Container(
-                    width: 45, height: 56,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    child: TextField(
-                      controller: vm.otpInputs[i],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      maxLength: 1,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true, fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: HtmlColors.line)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: HtmlColors.pri)),
-                      ),
-                      onChanged: (val) {
-                        if (val.isNotEmpty && i < 5) FocusScope.of(Get.context!).nextFocus();
-                      },
-                    ),
-                  )),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: vm.verifyOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: HtmlColors.pri,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                    ),
-                    child: const Text('Verify OTP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                )
-              ],
-            ),
-          
-          Obx(() {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (vm.docnoError.value.isNotEmpty) 
-                  Padding(padding: const EdgeInsets.only(top: 8), child: Text(vm.docnoError.value, style: const TextStyle(color: HtmlColors.bad, fontSize: 13))),
-                if (vm.otpError.value.isNotEmpty) 
-                  Padding(padding: const EdgeInsets.only(top: 8), child: Text(vm.otpError.value, style: TextStyle(color: vm.otpError.value.contains('Demo OTP') ? HtmlColors.mut : HtmlColors.bad, fontSize: 13))),
-              ],
-            );
-          }),
-        ],
-      ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'ff',
+          label: 'FSSAI attachment',
+          isOpt: true,
+          child: _filePicker(viewModel: vm, key: 'ff', rxPath: vm.ffPath),
+        ),
+
+        _fld(
+          viewModel: vm,
+          key: 'drug',
+          label: 'Drug licence number',
+          isOpt: true,
+          child: _textInput(
+            viewModel: vm,
+            key: 'drug',
+            controller: vm.drugController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'df',
+          label: 'Drug licence attachment',
+          isOpt: true,
+          child: _filePicker(viewModel: vm, key: 'df', rxPath: vm.dfPath),
+        ),
+
+        _fld(
+          viewModel: vm,
+          key: 'shopl',
+          label: 'Shop licence number',
+          isOpt: true,
+          child: _textInput(
+            viewModel: vm,
+            key: 'shopl',
+            controller: vm.shoplController,
+          ),
+        ),
+        _fld(
+          viewModel: vm,
+          key: 'sf',
+          label: 'Shop licence attachment',
+          isOpt: true,
+          child: _filePicker(viewModel: vm, key: 'sf', rxPath: vm.sfPath),
+        ),
+      ],
     );
   }
 
@@ -880,24 +1496,51 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                       elevation: 0,
                       side: const BorderSide(color: HtmlColors.line),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
                     ),
-                    child: const Text('Back', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Back',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
             Expanded(
-              child: ElevatedButton(
-                onPressed: viewModel.nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: step == 2 ? HtmlColors.ok : HtmlColors.pri,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                ),
-                child: Text(
-                  step == 2 ? 'Submit for approval' : 'Next',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              child: Obx(
+                () => ElevatedButton(
+                  onPressed: viewModel.isLoading.value
+                      ? null
+                      : viewModel.nextStep,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: step == 2 ? HtmlColors.ok : HtmlColors.pri,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  child: viewModel.isLoading.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          step == 2 ? 'Submit for approval' : 'Next',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -942,4 +1585,3 @@ class _DottedCirclePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
