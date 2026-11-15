@@ -12,7 +12,6 @@ class LoginViewModel extends GetxController {
 
   final isLoading = false.obs;
   final rememberMe = false.obs;
-  final isPasswordVisible = false.obs;
 
   @override
   void onInit() {
@@ -20,11 +19,15 @@ class LoginViewModel extends GetxController {
     rememberMe.value = SharedPrefsManager.isRememberMeEnabled();
   }
 
+  void toggleRememberMe() {
+    rememberMe.value = !rememberMe.value;
+  }
+
   Future<void> login(String identifier) async {
     if (identifier.isEmpty) {
       Get.snackbar(
         "Error",
-        "Please enter your identifier",
+        "Please enter your Username",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade50,
         colorText: Colors.red.shade900,
@@ -75,13 +78,5 @@ class LoginViewModel extends GetxController {
         colorText: Colors.red.shade900,
       );
     }
-  }
-
-  void toggleRememberMe() {
-    rememberMe.value = !rememberMe.value;
-  }
-
-  void togglePasswordVisibility() {
-    isPasswordVisible.value = !isPasswordVisible.value;
   }
 }

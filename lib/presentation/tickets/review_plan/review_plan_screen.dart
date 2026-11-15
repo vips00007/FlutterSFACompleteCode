@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/colors/app_colors.dart';
-import '../../../domain/entities/outlet.dart';
 import 'review_plan_viewmodel.dart';
 
 class ReviewPlanScreen extends StatelessWidget {

@@ -735,8 +735,7 @@ class AddOutletViewModel extends GetxController {
         attachments: [],
       );
 
-      final res = await _apiService.createCustomer(
-        request,
+      final res = await _apiService.createCustomer(request,
         shopImagePath: avatarPath.value,
         aadhaarPath: docfPath.value,
         bankProofPath: bankfPath.value,

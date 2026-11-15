@@ -83,6 +83,7 @@ import 'package:flutter_practice_sr_level/data/repositories/auth_repository_impl
 import 'package:flutter_practice_sr_level/data/repositories/event_repository_impl.dart';
 import 'package:flutter_practice_sr_level/data/repositories/ticket_repository_impl.dart';
 import 'package:flutter_practice_sr_level/data/datasource/remote/auth_api_service.dart';
+import 'package:flutter_practice_sr_level/data/datasource/remote/visit_plans_api_service.dart';
 import 'package:flutter_practice_sr_level/routes/route_names.dart';
 
 class AppRoutes {
@@ -152,7 +153,8 @@ class AppRoutes {
         Get.lazyPut(() => HomeViewModel(Get.find<AttendanceRepository>()));
 
         // Tickets (Visits) Dependencies
-        Get.lazyPut(() => TicketRepositoryImpl());
+        Get.lazyPut(() => VisitPlansApiService());
+        Get.lazyPut(() => TicketRepositoryImpl(Get.find<VisitPlansApiService>()));
         Get.lazyPut(() => GetTicketsUseCase(Get.find<TicketRepositoryImpl>()));
         Get.lazyPut(() => TicketsViewModel(Get.find<GetTicketsUseCase>()));
 

@@ -146,21 +146,35 @@ class TicketsScreen extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search name, area or owner',
-                          hintStyle: TextStyle(
-                            color: AppColors.textSecondary
-                                .withValues(alpha: 0.7),
-                            fontSize: 15,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: viewModel.searchController,
+                              onChanged: viewModel.onSearchQueryChanged,
+                              decoration: InputDecoration(
+                                hintText: 'Search name, area or owner',
+                                hintStyle: TextStyle(
+                                  color: AppColors.textSecondary
+                                      .withValues(alpha: 0.7),
+                                  fontSize: 15,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                isDense: true,
+                              ),
+                            ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          isDense: true,
-                        ),
+                          Obx(() => viewModel.searchQuery.value.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 20, color: AppColors.textSecondary),
+                                  onPressed: viewModel.clearSearch,
+                                )
+                              : const SizedBox.shrink()),
+                        ],
                       ),
                     ),
                   ),
@@ -236,6 +250,22 @@ class TicketsScreen extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
 
+                if (viewModel.state.value == TicketsState.error) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Error loading data', style: TextStyle(color: Colors.red)),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: viewModel.fetchTickets,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 final tickets = viewModel.selectedTabIndex.value == 0
                     ? viewModel.plannedTickets
                     : viewModel.unplannedTickets;
@@ -244,43 +274,59 @@ class TicketsScreen extends StatelessWidget {
                   return const EmptyStateWidget(message: 'No results found');
                 }
 
-                return ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: tickets.length,
-                  itemBuilder: (context, index) {
-                    VoidCallback? onCheckIn;
-                    
-                    if (viewModel.selectedTabIndex.value == 1) {
-                      // Logic for Unplanned list (Index 1)
-                      if (index == 0) {
-                        onCheckIn = () {
-                          Get.toNamed(RoutesName.visit_check_in_view,
-                              arguments: tickets[index]);
-                        };
-                      } else if (index == 1) {
-                        onCheckIn = () {
-                          Get.bottomSheet(
-                            OutsideRadiusBottomSheet(
-                                outlet: tickets[index], isInside: false),
-                            isScrollControlled: true,
-                          );
-                        };
-                      } else if (index == 2) {
-                        onCheckIn = () {
-                          Get.bottomSheet(
-                            OutsideRadiusBottomSheet(
-                                outlet: tickets[index], isInside: true),
-                            isScrollControlled: true,
-                          );
-                        };
+                return RefreshIndicator(
+                  onRefresh: viewModel.fetchTickets,
+                  child: ListView.builder(
+                    controller: viewModel.scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: tickets.length + (viewModel.isLoadingMore.value ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == tickets.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
                       }
-                    }
 
-                    return TicketCard(
-                      outlet: tickets[index],
-                      onCheckIn: onCheckIn,
-                    );
-                  },
+                      VoidCallback? onCheckIn;
+                      
+                      if (viewModel.selectedTabIndex.value == 1) {
+                        // Logic for Unplanned list (Index 1)
+                        if (index == 0) {
+                          onCheckIn = () {
+                            Get.toNamed(RoutesName.visit_check_in_view,
+                                arguments: tickets[index]);
+                          };
+                        } else if (index == 1) {
+                          onCheckIn = () {
+                            Get.bottomSheet(
+                              OutsideRadiusBottomSheet(
+                                  outlet: tickets[index], isInside: false),
+                              isScrollControlled: true,
+                            );
+                          };
+                        } else if (index == 2) {
+                          onCheckIn = () {
+                            Get.bottomSheet(
+                              OutsideRadiusBottomSheet(
+                                  outlet: tickets[index], isInside: true),
+                              isScrollControlled: true,
+                            );
+                          };
+                        } else {
+                          onCheckIn = () {
+                            Get.toNamed(RoutesName.visit_check_in_view,
+                                arguments: tickets[index]);
+                          };
+                        }
+                      }
+
+                      return TicketCard(
+                        outlet: tickets[index],
+                        onCheckIn: onCheckIn,
+                      );
+                    },
+                  ),
                 );
               }),
             ),

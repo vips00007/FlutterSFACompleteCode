@@ -26,7 +26,7 @@ class TicketCard extends StatelessWidget {
     final String outstanding = isAtRisk ? '₹94,000' : '₹58,000';
     final Color outstandingColor = const Color(0xFFD93A3A); // Red color from design
     final String locationText = '${outlet.city.isNotEmpty ? outlet.city : 'Vijay Nagar'} · 1.8km';
-    final String id = 'KAH00456541215'; // Mock ID based on design
+    final String id = outlet.mobileNumber.isNotEmpty ? outlet.mobileNumber : 'KAH00456541215'; // Using mobileNumber as customerCode based on repository mapping
 
     return GestureDetector(
       onTap: onCheckIn ?? () {

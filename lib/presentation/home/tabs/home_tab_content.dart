@@ -268,7 +268,9 @@ class _HomeTabContentState extends State<HomeTabContent>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
                           children: [
                             Text(
                               title,
@@ -278,8 +280,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                                 fontSize: 14,
                               ),
                             ),
-                            if (timeText.isNotEmpty) ...[
-                              const SizedBox(width: 8),
+                            if (timeText.isNotEmpty)
                               Text(
                                 timeText,
                                 style: const TextStyle(
@@ -287,7 +288,6 @@ class _HomeTabContentState extends State<HomeTabContent>
                                   fontSize: 13,
                                 ),
                               ),
-                            ],
                           ],
                         ),
                         const SizedBox(height: 4),
