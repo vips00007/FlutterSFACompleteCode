@@ -254,7 +254,7 @@ class VisitCheckInScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
@@ -430,10 +430,10 @@ class VisitCheckInScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    if (statusIcon != null) ...[
-                      Icon(statusIcon, size: 14, color: statusTextColor),
-                      const SizedBox(width: 4),
-                    ],
+                    ...[
+                    Icon(statusIcon, size: 14, color: statusTextColor),
+                    const SizedBox(width: 4),
+                  ],
                     Text(
                       status,
                       style: TextStyle(
@@ -563,11 +563,11 @@ class VisitCheckInScreen extends StatelessWidget {
                 children: [
                   Container(
                     width: 120, height: 120,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green.withOpacity(0.1)),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green.withValues(alpha: 0.1)),
                   ),
                   Container(
                     width: 90, height: 90,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green.withOpacity(0.2)),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.green.withValues(alpha: 0.2)),
                   ),
                   Container(
                     width: 60, height: 60,

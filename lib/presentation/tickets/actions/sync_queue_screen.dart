@@ -135,7 +135,7 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                           _isOnline = val;
                         });
                       },
-                      activeColor: Colors.white,
+                      activeThumbColor: Colors.white,
                       activeTrackColor: const Color(0xFF00C853),
                     ),
                     const Text(

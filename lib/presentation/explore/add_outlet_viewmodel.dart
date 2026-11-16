@@ -1,15 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'dart:async';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 
 import '../../data/datasource/remote/customer_api_service.dart';
 import '../../data/models/customer_reference_data_response.dart';
 import '../../data/models/customer_create_request.dart';
+import 'dart:io';
 
-  import 'dart:io';
+// Top-level function for background isolate image processing
+Future<Uint8List?> _compressImageInIsolate(Uint8List originalBytes) async {
+  img.Image? decodedImage = img.decodeImage(originalBytes);
+  if (decodedImage == null) return null;
+
+  img.Image resizedImage = decodedImage;
+  if (decodedImage.width > 1280 || decodedImage.height > 1280) {
+    if (decodedImage.width > decodedImage.height) {
+      resizedImage = img.copyResize(
+        decodedImage,
+        width: 1280,
+        interpolation: img.Interpolation.linear,
+      );
+    } else {
+      resizedImage = img.copyResize(
+        decodedImage,
+        height: 1280,
+        interpolation: img.Interpolation.linear,
+      );
+    }
+  }
+  return img.encodeJpg(resizedImage, quality: 75);
+}
 
 class AddOutletViewModel extends GetxController {
   final CustomerApiService _apiService = CustomerApiService();
@@ -342,6 +368,20 @@ class AddOutletViewModel extends GetxController {
           Get.snackbar('Error', 'File size exceeds 5 MB');
           return;
         }
+
+        if (isImage) {
+          final originalBytes = await ioFile.readAsBytes();
+          final Uint8List? compressedBytes = await compute(_compressImageInIsolate, originalBytes);
+          if (compressedBytes != null) {
+            final tempDir = await getTemporaryDirectory();
+            final targetPath = '${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+            final compressedFile = File(targetPath);
+            await compressedFile.writeAsBytes(compressedBytes);
+            pathRef.value = compressedFile.path;
+            return;
+          }
+        }
+
         pathRef.value = file.path!;
       }
     } catch (e) {
@@ -461,18 +501,24 @@ class AddOutletViewModel extends GetxController {
         setError('pin', 'Enter a 6-digit pin code');
       }
     } else if (step == 1) {
-      if (subTypeList.isNotEmpty && subTypeUuid.value == null)
+      if (subTypeList.isNotEmpty && subTypeUuid.value == null) {
         setError('sub', 'Required');
-      if (channelList.isNotEmpty && channelUuid.value == null)
+      }
+      if (channelList.isNotEmpty && channelUuid.value == null) {
         setError('chan', 'Required');
-      if (segmentList.isNotEmpty && segmentUuid.value == null)
+      }
+      if (segmentList.isNotEmpty && segmentUuid.value == null) {
         setError('seg', 'Required');
-      if (categoryList.isNotEmpty && categoryUuid.value == null)
+      }
+      if (categoryList.isNotEmpty && categoryUuid.value == null) {
         setError('cat', 'Required');
-      if (classList.isNotEmpty && clsUuid.value == null)
+      }
+      if (classList.isNotEmpty && clsUuid.value == null) {
         setError('cls', 'Required');
-      if (activeBeats.isNotEmpty && beatUuid.value == null)
+      }
+      if (activeBeats.isNotEmpty && beatUuid.value == null) {
         setError('beat', 'Required');
+      }
 
       final estYear = establishedYearController.text.trim();
       if (estYear.isEmpty) {
@@ -508,8 +554,9 @@ class AddOutletViewModel extends GetxController {
       if (closeTime.value == null) setError('close', 'Required');
 
       if (rtypeName.value.toLowerCase() == 'mechanic') {
-        if (workshopTypeList.isNotEmpty && wtypeUuid.value == null)
+        if (workshopTypeList.isNotEmpty && wtypeUuid.value == null) {
           setError('wtype', 'Required');
+        }
         if (expController.text.trim().isEmpty) setError('exp', 'Required');
         if (eng.value == null) setError('eng', 'Required');
         if (mechsController.text.trim().isEmpty) setError('mechs', 'Required');

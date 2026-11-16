@@ -31,7 +31,7 @@ class ReviewPlanScreen extends StatelessWidget {
         titleSpacing: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.primaryPurple.withOpacity(0.1), height: 1),
+          child: Container(color: AppColors.primaryPurple.withValues(alpha: 0.1), height: 1),
         ),
       ),
       body: Column(
@@ -103,8 +103,9 @@ class ReviewPlanScreen extends StatelessWidget {
 
   Widget _buildStep(int number, String label, bool isActive, {bool isCompleted = false}) {
     Color color = Colors.grey.shade400;
-    if (isCompleted) color = Colors.green;
-    else if (isActive) color = AppColors.primaryPurple;
+    if (isCompleted) {
+      color = Colors.green;
+    } else if (isActive) color = AppColors.primaryPurple;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -512,7 +513,7 @@ class ReviewPlanScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
       ),
       child: Obx(() {
         return Column(

@@ -46,6 +46,7 @@ dependencies:
   file_picker: ^13.1.0
   geocoding: ^5.0.0
 
+  http_parser: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -76,4 +77,12 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/
+    - assets/images/authentication.png
+    - assets/images/automation.png
+    - assets/images/background_only.png
+    - assets/images/forgot_password.png
+    - assets/images/logo.png
+    - assets/images/queue.png
+    - assets/images/sales_person.png
+    - assets/images/sfa_illustration.png
+    - assets/images/sfa_illustration_2.png

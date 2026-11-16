@@ -10,8 +10,7 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Get.put(ProfileViewModel());
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+    return Scaffold(backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,

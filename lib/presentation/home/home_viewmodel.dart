@@ -10,6 +10,30 @@ import '../../core/utils/shared_prefs_manager.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../../data/models/attendance_request.dart';
 
+// Top-level function for background isolate image processing
+Future<Uint8List?> _compressImageInIsolate(Uint8List originalBytes) async {
+  img.Image? decodedImage = img.decodeImage(originalBytes);
+  if (decodedImage == null) return null;
+
+  img.Image resizedImage = decodedImage;
+  if (decodedImage.width > 1280 || decodedImage.height > 1280) {
+    if (decodedImage.width > decodedImage.height) {
+      resizedImage = img.copyResize(
+        decodedImage,
+        width: 1280,
+        interpolation: img.Interpolation.linear,
+      );
+    } else {
+      resizedImage = img.copyResize(
+        decodedImage,
+        height: 1280,
+        interpolation: img.Interpolation.linear,
+      );
+    }
+  }
+  return img.encodeJpg(resizedImage, quality: 75);
+}
+
 class HomeViewModel extends GetxController {
   final AttendanceRepository _attendanceRepository;
 
@@ -196,34 +220,11 @@ class HomeViewModel extends GetxController {
       }
 
       // Perform Compression and Resizing
-      img.Image? decodedImage = img.decodeImage(originalBytes);
-      if (decodedImage == null) {
+      final Uint8List? compressedBytes = await compute(_compressImageInIsolate, originalBytes);
+      if (compressedBytes == null) {
         throw Exception("Failed to decode captured image for compression.");
       }
 
-      // Resize: max 1280px on longest side
-      img.Image resizedImage = decodedImage;
-      if (decodedImage.width > 1280 || decodedImage.height > 1280) {
-        if (decodedImage.width > decodedImage.height) {
-          resizedImage = img.copyResize(
-            decodedImage,
-            width: 1280,
-            interpolation: img.Interpolation.linear,
-          );
-        } else {
-          resizedImage = img.copyResize(
-            decodedImage,
-            height: 1280,
-            interpolation: img.Interpolation.linear,
-          );
-        }
-      }
-
-      // Compress as JPEG with quality 75 and save to temp file
-      final Uint8List compressedBytes = img.encodeJpg(
-        resizedImage,
-        quality: 75,
-      );
       final tempDir = await getTemporaryDirectory();
       final targetPath =
           '${tempDir.path}/selfie_${DateTime.now().millisecondsSinceEpoch}.jpg';

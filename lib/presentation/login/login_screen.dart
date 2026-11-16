@@ -255,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       borderRadius: BorderRadius.circular(24),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
+                                          color: Colors.black.withValues(alpha: 0.08),
                                           blurRadius: 20,
                                           offset: const Offset(0, 4),
                                         ),
@@ -291,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             boxShadow: [
                                               BoxShadow(
                                                 color: const Color(0xFF311B92)
-                                                    .withOpacity(0.05),
+                                                    .withValues(alpha: 0.05),
                                                 blurRadius: 10,
                                                 offset: const Offset(0, 4),
                                               ),
@@ -431,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             boxShadow: [
                                               BoxShadow(
                                                 color: const Color(0xFF311B92)
-                                                    .withOpacity(0.3),
+                                                    .withValues(alpha: 0.3),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 4),
                                               ),
@@ -517,7 +517,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         boxShadow: [
                                           BoxShadow(
                                             color:
-                                            Colors.black.withOpacity(0.15),
+                                            Colors.black.withValues(alpha: 0.15),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           ),
@@ -569,7 +569,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 1,
                                     width: 40,
                                     color: const Color(0xFF311B92)
-                                        .withOpacity(0.3),
+                                        .withValues(alpha: 0.3),
                                   ),
                                   const Padding(
                                     padding:
@@ -588,7 +588,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 1,
                                     width: 40,
                                     color: const Color(0xFF311B92)
-                                        .withOpacity(0.3),
+                                        .withValues(alpha: 0.3),
                                   ),
                                 ],
                               ),
@@ -626,7 +626,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Icon(
         Icons.circle,
         size: 5,
-        color: const Color(0xFF673AB7).withOpacity(0.6),
+        color: const Color(0xFF673AB7).withValues(alpha: 0.6),
       ),
     );
   }
@@ -683,8 +683,8 @@ class _TopWavePainter extends CustomPainter {
       Paint()
         ..shader = LinearGradient(
           colors: [
-            const Color(0xFF673AB7).withOpacity(0.3),
-            const Color(0xFF8A2BE2).withOpacity(0.1),
+            const Color(0xFF673AB7).withValues(alpha: 0.3),
+            const Color(0xFF8A2BE2).withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -715,7 +715,7 @@ class _TopWavePainter extends CustomPainter {
       ..close();
     canvas.drawPath(
       path3,
-      Paint()..color = const Color(0xFF673AB7).withOpacity(0.25),
+      Paint()..color = const Color(0xFF673AB7).withValues(alpha: 0.25),
     );
   }
 
@@ -737,8 +737,8 @@ class _MiddleWavePainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF673AB7).withOpacity(0.5),
-          const Color(0xFF311B92).withOpacity(0.8),
+          const Color(0xFF673AB7).withValues(alpha: 0.5),
+          const Color(0xFF311B92).withValues(alpha: 0.8),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,

@@ -17,23 +17,6 @@ class OnboardingScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Skip Button
-            Positioned(
-              top: 10,
-              right: 20,
-              child: TextButton(
-                onPressed: viewModel.skip,
-                child: const Text(
-                  'Skip',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-
             // PageView
             PageView.builder(
               controller: viewModel.pageController,
@@ -74,24 +57,42 @@ class OnboardingScreen extends StatelessWidget {
                       () => ElevatedButton(
                         onPressed: viewModel.nextPage,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.sfaBlue,
+                          backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
-                          elevation: 2,
+                          elevation: 4,
+                          shadowColor: AppColors.primary.withValues(alpha: 0.3),
                         ),
                         child: Text(
                           viewModel.isLastPage ? 'Get Started' : 'Next',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // Skip Button
+            Positioned(
+              top: 10,
+              right: 20,
+              child: TextButton(
+                onPressed: viewModel.skip,
+                child: const Text(
+                  'Skip',
+                  style: TextStyle(
+                    color: Color(0xFF311B92),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],

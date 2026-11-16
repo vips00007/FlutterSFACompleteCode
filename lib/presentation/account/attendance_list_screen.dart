@@ -19,7 +19,6 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   @override
   void initState() {
     super.initState();
-    // Ensure dependencies are injected, or instantiate manually for now
     if (Get.isRegistered<AttendanceViewModel>()) {
       viewModel = Get.find<AttendanceViewModel>();
     } else {

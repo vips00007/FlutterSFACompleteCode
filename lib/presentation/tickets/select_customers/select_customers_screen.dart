@@ -53,7 +53,7 @@ class SelectCustomersScreen extends StatelessWidget {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.primaryPurple.withOpacity(0.1), height: 1),
+          child: Container(color: AppColors.primaryPurple.withValues(alpha: 0.1), height: 1),
         ),
       ),
       body: Column(
@@ -117,7 +117,7 @@ class SelectCustomersScreen extends StatelessWidget {
           boxShadow: [
             if (!isSelected)
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),

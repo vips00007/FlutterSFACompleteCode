@@ -8,18 +8,16 @@ class OnboardingViewModel extends GetxController {
   final pageController = PageController();
   final currentPageIndex = 0.obs;
 
-  final List<OnboardingContent> onboardingPages = [
+  final List<OnboardingContent> onboardingPages = [OnboardingContent(
+    title: 'Simplify Your Sales Journey',
+    description:
+    'Manage customer visits, track daily activities, and streamline your entire sales process with one smart application.',
+    imageUrl: 'assets/images/sfa_illustration.png',
+  ),
     OnboardingContent(
-      title: 'Discover Amazing Events',
-      description:
-          'Find concerts, sports, theatre and more events happening around you.',
-      imageUrl: 'assets/images/automation.png',
-    ),
-    OnboardingContent(
-      title: 'Manage Your Schedule',
-      description:
-          'Never miss an event with our smart calendar integration and reminders.',
-      imageUrl: 'assets/images/authentication.png',
+      title: 'Track Performance & Grow',
+      description: 'Monitor sales performance, manage orders, track customer interactions, and achieve your business goals effortlessly.',
+      imageUrl: 'assets/images/sfa_illustration_2.png',
     ),
   ];
 
