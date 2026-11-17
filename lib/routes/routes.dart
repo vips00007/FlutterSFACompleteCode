@@ -48,8 +48,22 @@ import 'package:flutter_practice_sr_level/presentation/onboarding/onboarding_vie
 import 'package:flutter_practice_sr_level/presentation/home/widgets/attendance_camera_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/account/attendance_list_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/account/attendance_viewmodel.dart';
-import 'package:flutter_practice_sr_level/presentation/account/leave_management_screen.dart';
-import 'package:flutter_practice_sr_level/presentation/account/leave_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/attendance_calendar_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/attendance_calendar_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/attendance_regularization_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/attendance_regularization_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/apply_regularization_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/apply_regularization_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/regularization_request_status_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/attendance/regularization_request_status_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/leave/leave_dashboard_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/leave/leave_dashboard_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/leave/apply_leave_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/leave/apply_leave_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/leave/leave_request_details_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/leave/leave_request_details_viewmodel.dart';
+import 'package:flutter_practice_sr_level/data/datasource/remote/leave_api_service.dart';
+import 'package:flutter_practice_sr_level/data/repositories/leave_repository_impl.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/daily_visit_plans_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/visit_plans_viewmodel.dart';
 import 'package:flutter_practice_sr_level/presentation/tickets/monthly_journey_plan_screen.dart';
@@ -72,6 +86,10 @@ import 'package:flutter_practice_sr_level/presentation/profile/profile_screen.da
 import 'package:flutter_practice_sr_level/presentation/profile/profile_viewmodel.dart';
 import 'package:flutter_practice_sr_level/presentation/reset_password/reset_password_screen.dart';
 import 'package:flutter_practice_sr_level/presentation/reset_password/reset_password_viewmodel.dart';
+import 'package:flutter_practice_sr_level/presentation/reports/reports_screen.dart';
+import 'package:flutter_practice_sr_level/presentation/reports/reports_viewmodel.dart';
+import 'package:flutter_practice_sr_level/data/datasource/remote/reports_api_service.dart';
+import 'package:flutter_practice_sr_level/data/repositories/reports_repository_impl.dart';
 import 'package:flutter_practice_sr_level/domain/usecases/login_usecase.dart';
 import 'package:flutter_practice_sr_level/domain/usecases/forgot_password_usecase.dart';
 import 'package:flutter_practice_sr_level/domain/usecases/verify_otp_usecase.dart';
@@ -307,10 +325,64 @@ class AppRoutes {
       }),
     ),
     GetPage(
-      name: RoutesName.leave_management_view,
-      page: () => const LeaveManagementScreen(),
+      name: RoutesName.attendance_calendar_view,
+      page: () => const AttendanceCalendarScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => LeaveViewModel());
+        Get.lazyPut(() => AttendanceCalendarViewModel(Get.find<AttendanceRepository>()));
+      }),
+    ),
+    GetPage(
+      name: RoutesName.attendance_regularization_view,
+      page: () => const AttendanceRegularizationScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => AttendanceRegularizationViewModel());
+      }),
+    ),
+    GetPage(
+      name: RoutesName.apply_regularization_view,
+      page: () => const ApplyRegularizationScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => ApplyRegularizationViewModel(Get.find<AttendanceRepository>()));
+      }),
+    ),
+    GetPage(
+      name: RoutesName.regularization_request_status_view,
+      page: () => const RegularizationRequestStatusScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => RegularizationRequestStatusViewModel(Get.find<AttendanceRepository>()));
+      }),
+    ),
+    GetPage(
+      name: RoutesName.leave_management_view,
+      page: () => const LeaveDashboardScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() {
+          final apiService = LeaveApiService();
+          final repository = LeaveRepositoryImpl(apiService);
+          return LeaveDashboardViewModel(repository);
+        });
+      }),
+    ),
+    GetPage(
+      name: RoutesName.apply_leave_view,
+      page: () => const ApplyLeaveScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() {
+          final apiService = LeaveApiService();
+          final repository = LeaveRepositoryImpl(apiService);
+          return ApplyLeaveViewModel(repository);
+        });
+      }),
+    ),
+    GetPage(
+      name: RoutesName.leave_request_details_view,
+      page: () => const LeaveRequestDetailsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() {
+          final apiService = LeaveApiService();
+          final repository = LeaveRepositoryImpl(apiService);
+          return LeaveRequestDetailsViewModel(repository);
+        });
       }),
     ),
     GetPage(
@@ -390,6 +462,17 @@ class AppRoutes {
             updatePasswordUseCase: Get.find<UpdatePasswordUseCase>(),
           ),
         );
+      }),
+    ),
+    GetPage(
+      name: RoutesName.reports_view,
+      page: () => const ReportsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() {
+          final apiService = ReportsApiService();
+          final repository = ReportsRepositoryImpl(apiService);
+          return ReportsViewModel(repository);
+        });
       }),
     ),
   ];

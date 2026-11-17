@@ -42,7 +42,7 @@ class FavoritesScreen extends StatelessWidget {
                   'Attendance',
                   const Color(0xFFF3E8FF),
                   const Color(0xFF8A2BE2),
-                  onTap: () => Get.toNamed(RoutesName.attendance_list_view),
+                  onTap: () => Get.toNamed(RoutesName.attendance_calendar_view),
                 ),
                 _buildMenuItem(
                   Icons.beach_access_outlined,

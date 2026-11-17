@@ -35,7 +35,13 @@ class RoutesName {
 
   // Menu Routes
   static const String attendance_list_view = '/attendance_list_view';
+  static const String attendance_calendar_view = '/attendance_calendar_view';
+  static const String attendance_regularization_view = '/attendance_regularization_view';
+  static const String apply_regularization_view = '/apply_regularization_view';
+  static const String regularization_request_status_view = '/regularization_request_status_view';
   static const String leave_management_view = '/leave_management_view';
+  static const String apply_leave_view = '/apply_leave_view';
+  static const String leave_request_details_view = '/leave_request_details_view';
   static const String daily_visit_plans_view = '/daily_visit_plans_view';
   static const String monthly_journey_plan_view = '/monthly_journey_plan_view';
   static const String visit_history_view = '/visit-history';
@@ -46,4 +52,5 @@ class RoutesName {
   static const String expense_claim_view = '/expense-claim';
   static const String help_support_view = '/help-support';
   static const String profile_view = '/profile-view';
+  static const String reports_view = '/reports-view';
 }

@@ -6,6 +6,8 @@ import '../../models/attendance_request.dart';
 import '../../models/attendance_response.dart';
 import '../../models/attendance_history_response.dart';
 import '../../models/today_attendance_response.dart';
+import '../../models/regularization_request.dart';
+import '../../models/regularization_status_response.dart';
 
 class AttendanceApiService {
   final String baseUrl = "https://api-staging.rahulpatel.online";
@@ -16,6 +18,40 @@ class AttendanceApiService {
       validateStatus: (status) => status != null,
     ),
   );
+
+  Future<RegularizationStatusResponse> applyRegularization(RegularizationRequest request) async {
+    // Simulated API Call
+    await Future.delayed(const Duration(seconds: 1));
+    return RegularizationStatusResponse(
+      success: true,
+      message: 'Request submitted successfully',
+      data: RegularizationStatusData(
+        requestId: 'REG-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+        attendanceDate: request.date,
+        correctedTime: '${request.correctLogin} - ${request.correctLogout}',
+        reason: request.reason,
+        approverName: 'Manager',
+        status: 'Pending',
+      ),
+    );
+  }
+
+  Future<RegularizationStatusResponse> getRegularizationStatus(String requestId) async {
+    // Simulated API Call
+    await Future.delayed(const Duration(seconds: 1));
+    return RegularizationStatusResponse(
+      success: true,
+      message: 'Status fetched',
+      data: RegularizationStatusData(
+        requestId: requestId,
+        attendanceDate: '2026-09-22',
+        correctedTime: '09:00 AM - 06:00 PM',
+        reason: 'Missed checkout',
+        approverName: 'Neha Sharma',
+        status: 'Pending',
+      ),
+    );
+  }
 
   Future<AttendanceResponse> checkIn(AttendanceRequest request) async {
     return _sendRequest("/api/v1/sfa/attendance/check-in", request);
