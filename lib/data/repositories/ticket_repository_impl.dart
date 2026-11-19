@@ -11,7 +11,6 @@ class TicketRepositoryImpl implements TicketRepository {
   @override
   Future<List<Outlet>> getPlannedTickets() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    // Returning empty list to show empty state as per design screenshot 1
     return [];
   }
 
@@ -23,11 +22,13 @@ class TicketRepositoryImpl implements TicketRepository {
     String planType = 'LOCAL',
     String? searchQuery,
   }) async {
-    final response = await apiService.getUnplannedCustomers(
+    final response = await apiService.getVisitPlanCustomers(
+      planType: planType,
+      type: 'ALL',
       date: date,
       page: page,
       size: size,
-      planType: planType,
+      search: searchQuery,
     );
 
     if (response.data == null) {
@@ -40,25 +41,12 @@ class TicketRepositoryImpl implements TicketRepository {
       );
     }
 
-    var customers = response.data!.content;
-
-    // Apply local search filtering across fields (API doesn't have search)
-    // Note: Actually, filtering in ViewModel over all loaded pages is better for user experience,
-    // but if the API returns a massive list, doing some pre-filter could be okay.
-    // Since ViewModel does filtering, we skip it here.
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      final query = searchQuery.toLowerCase();
-      customers = customers.where((c) {
-        final name = c.shopName?.toLowerCase() ?? '';
-        final code = c.customerCode?.toLowerCase() ?? '';
-        return name.contains(query) || code.contains(query);
-      }).toList();
-    }
+    final customers = response.data!.content;
 
     final outlets = customers.map((c) {
       return Outlet(
         id: c.uuid,
-        customerType: 'Retailer', // Default value
+        customerType: 'Retailer',
         firstName: c.shopName ?? 'Unknown',
         lastName: '',
         firmName: c.shopName ?? 'Unknown',
@@ -67,9 +55,10 @@ class TicketRepositoryImpl implements TicketRepository {
         address: '',
         state: '',
         district: '',
-        city: '',
+        city: c.city ?? '',
         pinCode: '',
         photos: [],
+        area: c.area,
       );
     }).toList();
 
