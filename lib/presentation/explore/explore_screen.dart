@@ -200,9 +200,8 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
       return GestureDetector(
         onTap: isUploading
             ? null
-            : () => viewModel.pickFile(
+            : () => viewModel.showImageSourceSheet(
                 viewModel.avatarPath,
-                isImage: true,
                 kind: 'SHOP_IMAGE',
               ),
         child: SizedBox(
@@ -232,7 +231,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                         : (hasAvatar ? HtmlColors.acc : Colors.transparent),
                     width: 2,
                   ),
-                  image: hasAvatar
+                  image: hasAvatar && !isUploading
                       ? DecorationImage(
                           image: FileImage(File(viewModel.avatarPath.value!)),
                           fit: BoxFit.cover,
@@ -241,10 +240,10 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 ),
                 child: isUploading
                     ? const Padding(
-                        padding: EdgeInsets.all(12.0),
+                        padding: EdgeInsets.all(10.0),
                         child: CircularProgressIndicator(
                           color: Colors.white,
-                          strokeWidth: 2,
+                          strokeWidth: 2.5,
                         ),
                       )
                     : (hasAvatar
@@ -703,11 +702,17 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     return Obx(() {
       final hasErr = viewModel.hasError(key);
       final hasFile = rxPath.value != null;
-      final uploading = isUploading?.value ?? false;
+      final uploading = (isUploading?.value ?? false) || (isImage && viewModel.isUploadingImage.value);
       return GestureDetector(
         onTap: uploading
             ? null
-            : () => viewModel.pickFile(rxPath, isImage: isImage, kind: kind),
+            : () {
+                if (isImage) {
+                  viewModel.showImageSourceSheet(rxPath, kind: kind);
+                } else {
+                  viewModel.pickFile(rxPath, isImage: isImage, kind: kind);
+                }
+              },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
@@ -742,7 +747,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
               Expanded(
                 child: Text(
                   uploading
-                      ? 'Uploading...'
+                      ? 'Processing & uploading...'
                       : (hasFile
                             ? rxPath.value!.split('/').last
                             : 'Choose file or take photo'),

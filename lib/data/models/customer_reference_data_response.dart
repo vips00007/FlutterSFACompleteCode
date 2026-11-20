@@ -11,8 +11,8 @@ class CustomerReferenceDataResponse {
 
   factory CustomerReferenceDataResponse.fromJson(Map<String, dynamic> json) {
     return CustomerReferenceDataResponse(
-      status: json['status'] ?? '',
-      message: json['message'] ?? '',
+      status: json['status']?.toString() ?? json['code']?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
       data: ReferenceData.fromJson(json['data'] ?? {}),
     );
   }
@@ -34,16 +34,16 @@ class ReferenceData {
   factory ReferenceData.fromJson(Map<String, dynamic> json) {
     return ReferenceData(
       customerTypes: (json['customerTypes'] as List?)
-              ?.map((e) => CustomerTypeModel.fromJson(e))
+              ?.map((e) => CustomerTypeModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       groups: json['groups'] ?? [],
       lookups: (json['lookups'] as List?)
-              ?.map((e) => LookupItem.fromJson(e))
+              ?.map((e) => LookupItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       beats: (json['beats'] as List?)
-              ?.map((e) => BeatItem.fromJson(e))
+              ?.map((e) => BeatItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
@@ -63,9 +63,9 @@ class CustomerTypeModel {
 
   factory CustomerTypeModel.fromJson(Map<String, dynamic> json) {
     return CustomerTypeModel(
-      uuid: json['uuid'] ?? '',
-      code: json['code'] ?? '',
-      name: json['name'] ?? '',
+      uuid: (json['uuid'] ?? json['id'] ?? '').toString(),
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
     );
   }
 }
@@ -101,22 +101,22 @@ class LookupItem {
 
   factory LookupItem.fromJson(Map<String, dynamic> json) {
     return LookupItem(
-      uuid: json['uuid'] ?? '',
-      code: json['code'] ?? '',
-      name: json['name'] ?? '',
-      lookupType: json['lookupType'] ?? '',
-      status: json['status'],
-      displayOrder: json['displayOrder'],
-      parentUuid: json['parentUuid'],
-      customerTypeUuid: json['customerTypeUuid'],
-      subTypeUuid: json['subTypeUuid'],
-      channelUuid: json['channelUuid'],
-      segmentUuid: json['segmentUuid'],
-      categoryUuid: json['categoryUuid'],
+      uuid: (json['uuid'] ?? json['id'] ?? '').toString(),
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      lookupType: (json['lookupType'] ?? json['type'] ?? '').toString(),
+      status: json['status']?.toString(),
+      displayOrder: json['displayOrder'] is int ? json['displayOrder'] as int : (json['displayOrder'] as num?)?.toInt(),
+      parentUuid: json['parentUuid']?.toString() ?? json['parentId']?.toString(),
+      customerTypeUuid: json['customerTypeUuid']?.toString() ?? json['customerTypeId']?.toString(),
+      subTypeUuid: json['subTypeUuid']?.toString() ?? json['subTypeId']?.toString(),
+      channelUuid: json['channelUuid']?.toString() ?? json['channelId']?.toString(),
+      segmentUuid: json['segmentUuid']?.toString() ?? json['segmentId']?.toString(),
+      categoryUuid: json['categoryUuid']?.toString() ?? json['categoryId']?.toString(),
     );
   }
 
-  bool get isActive => status == 'ACTIVE';
+  bool get isActive => status == null || status?.toUpperCase() == 'ACTIVE' || status?.isEmpty == true;
 }
 
 class BeatItem {
@@ -134,12 +134,12 @@ class BeatItem {
 
   factory BeatItem.fromJson(Map<String, dynamic> json) {
     return BeatItem(
-      uuid: json['uuid'] ?? '',
-      name: json['name'] ?? '',
-      status: json['status'],
-      territoryUuid: json['territoryUuid'],
+      uuid: (json['uuid'] ?? json['id'] ?? '').toString(),
+      name: (json['name'] ?? json['title'] ?? 'Unknown Beat').toString(),
+      status: json['status']?.toString(),
+      territoryUuid: json['territoryUuid']?.toString() ?? json['territoryId']?.toString(),
     );
   }
 
-  bool get isActive => status == 'ACTIVE';
+  bool get isActive => status == null || status?.toUpperCase() == 'ACTIVE' || status?.isEmpty == true;
 }

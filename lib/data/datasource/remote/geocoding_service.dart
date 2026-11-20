@@ -5,6 +5,10 @@ class GeocodingService {
   final Dio _dio = Dio();
 
   Future<String> getAddressFromCoordinates(double lat, double lon) async {
+    if (lat == 0 && lon == 0) {
+      return "Location not available";
+    }
+
     try {
       final response = await _dio.get(
         'https://nominatim.openstreetmap.org/reverse',
@@ -14,7 +18,6 @@ class GeocodingService {
             'User-Agent': 'FlutterPracticeSrLevel/1.0',
             'Accept-Language': 'en-US,en;q=0.5',
           },
-          // Increase timeout slightly for Geocoding API if needed
           receiveTimeout: const Duration(seconds: 10),
           sendTimeout: const Duration(seconds: 10),
         ),
@@ -22,16 +25,16 @@ class GeocodingService {
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        if (data['display_name'] != null) {
-          return data['display_name'].toString();
+        if (data['display_name'] != null && data['display_name'].toString().trim().isNotEmpty) {
+          return data['display_name'].toString().trim();
         }
       }
-      return "$lat, $lon";
+      return "Location not available";
     } catch (e) {
       if (kDebugMode) {
-        debugPrint("Geocoding failed: $e");
+        debugPrint("Geocoding failed for ($lat, $lon): $e");
       }
-      return "$lat, $lon"; // Fallback to coordinates
+      return "Location not available";
     }
   }
 }

@@ -14,7 +14,7 @@ class AttendanceRecord {
   final bool isPresent;
   final String? photoUrl;
 
-  // Locations can be observable to update asynchronously
+  // Locations are observable to update asynchronously
   final RxString checkInLocation;
   final RxString checkOutLocation;
 
@@ -105,6 +105,15 @@ class AttendanceViewModel extends GetxController {
     }
   }
 
+  bool _isCoordinateString(String input) {
+    final trimmed = input.trim().toLowerCase();
+    if (trimmed.contains('lat') || trimmed.contains('lng') || trimmed.contains('gps')) {
+      return true;
+    }
+    final coordRegex = RegExp(r'^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$');
+    return coordRegex.hasMatch(input.trim());
+  }
+
   AttendanceRecord _mapToRecord(AttendanceData data) {
     // 1. Format dates (API returns UTC: 2026-09-14T15:20:08.898226Z)
     String displayDate = '';
@@ -129,7 +138,6 @@ class AttendanceViewModel extends GetxController {
       }
     } else {
       try {
-        // Fallback to business date if checkInAt is null
         DateTime bDate = DateTime.parse(data.businessDate);
         displayDate = DateFormat('dd MMM yyyy').format(bDate);
       } catch (_) {
@@ -137,20 +145,37 @@ class AttendanceViewModel extends GetxController {
       }
     }
 
-    // 2. Resolve locations
-    String initialCheckInLoc =
-        data.checkInLatitude != null && data.checkInLongitude != null
-        ? "${data.checkInLatitude}, ${data.checkInLongitude}"
-        : "Unknown Location";
+    // 2. Resolve Check-In & Check-Out location addresses independently
+    final bool hasCheckInAddress = data.checkInAddress != null &&
+        data.checkInAddress!.trim().isNotEmpty &&
+        !_isCoordinateString(data.checkInAddress!);
 
-    String initialCheckOutLoc =
-        data.checkOutLatitude != null && data.checkOutLongitude != null
-        ? "${data.checkOutLatitude}, ${data.checkOutLongitude}"
-        : "Unknown Location";
+    String initialCheckInLoc;
+    if (hasCheckInAddress) {
+      initialCheckInLoc = data.checkInAddress!.trim();
+    } else {
+      initialCheckInLoc = "Location not available";
+    }
+
+    final bool hasCheckedOut = data.checkOutAt != null ||
+        data.status == 'CHECKED_OUT' ||
+        data.checkOutLatitude != null;
+
+    final bool hasCheckOutAddress = data.checkOutAddress != null &&
+        data.checkOutAddress!.trim().isNotEmpty &&
+        !_isCoordinateString(data.checkOutAddress!);
+
+    String initialCheckOutLoc;
+    if (!hasCheckedOut && data.status != 'CHECKED_OUT') {
+      initialCheckOutLoc = "Not Checked Out";
+    } else if (hasCheckOutAddress) {
+      initialCheckOutLoc = data.checkOutAddress!.trim();
+    } else {
+      initialCheckOutLoc = "Location not available";
+    }
 
     // 3. Status mapping
-    bool isPresent =
-        data.status == 'CHECKED_IN' || data.status == 'CHECKED_OUT';
+    bool isPresent = data.status == 'CHECKED_IN' || data.status == 'CHECKED_OUT';
     String displayStatus = isPresent
         ? 'Present'
         : (data.status.isNotEmpty ? data.status : 'Absent');
@@ -161,29 +186,44 @@ class AttendanceViewModel extends GetxController {
       checkOutTime: checkOutStr,
       checkInLocation: initialCheckInLoc,
       checkOutLocation: initialCheckOutLoc,
-      duration: '', // Or compute duration if needed
+      duration: '',
       status: displayStatus,
       isPresent: isPresent,
-      photoUrl: null, // As per requirement, no image URL from API
+      photoUrl: null,
     );
 
-    // Asynchronously update locations using Reverse Geocoding
-    if (data.checkInLatitude != null && data.checkInLongitude != null) {
+    // Reverse geocode if readable address string is missing but coordinates are available
+    if (!hasCheckInAddress &&
+        data.checkInLatitude != null &&
+        data.checkInLongitude != null &&
+        (data.checkInLatitude != 0 || data.checkInLongitude != 0)) {
       _geocodingService
           .getAddressFromCoordinates(
             data.checkInLatitude!,
             data.checkInLongitude!,
           )
-          .then((address) => record.checkInLocation.value = address);
+          .then((address) {
+            if (address.isNotEmpty && !_isCoordinateString(address)) {
+              record.checkInLocation.value = address;
+            }
+          });
     }
 
-    if (data.checkOutLatitude != null && data.checkOutLongitude != null) {
+    if (hasCheckedOut &&
+        !hasCheckOutAddress &&
+        data.checkOutLatitude != null &&
+        data.checkOutLongitude != null &&
+        (data.checkOutLatitude != 0 || data.checkOutLongitude != 0)) {
       _geocodingService
           .getAddressFromCoordinates(
             data.checkOutLatitude!,
             data.checkOutLongitude!,
           )
-          .then((address) => record.checkOutLocation.value = address);
+          .then((address) {
+            if (address.isNotEmpty && !_isCoordinateString(address)) {
+              record.checkOutLocation.value = address;
+            }
+          });
     }
 
     return record;

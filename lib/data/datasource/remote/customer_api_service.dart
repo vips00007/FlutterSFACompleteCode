@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import '../../models/customer_reference_data_response.dart';
@@ -34,15 +35,37 @@ class CustomerApiService {
   }
 
   Future<CustomerReferenceDataResponse> getReferenceData() async {
-    final response = await http.get(
-      Uri.parse("$baseUrl/api/v1/sfa/customers/reference-data"),
-      headers: await _getHeaders(),
-    );
+    final headers = await _getHeaders();
+    final uri = Uri.parse("$baseUrl/api/v1/sfa/customers/reference-data");
+
+    if (kDebugMode) {
+      final token = headers['Authorization'] ?? 'No Token';
+      final maskedToken = token.length > 20
+          ? '${token.substring(0, 15)}...${token.substring(token.length - 5)}'
+          : token;
+      print("=== GET REFERENCE DATA REQUEST ===");
+      print("URL: $uri");
+      print("Method: GET");
+      print("Headers: {Accept: ${headers['Accept']}, Content-Type: ${headers['Content-Type']}, X-Correlation-ID: ${headers['X-Correlation-ID']}, Authorization: $maskedToken}");
+      print("Request Body: None (GET request)");
+      print("=================================");
+    }
+
+    final response = await http.get(uri, headers: headers);
+
+    if (kDebugMode) {
+      final corrId = response.headers['x-correlation-id'] ?? headers['X-Correlation-ID'];
+      print("=== GET REFERENCE DATA RESPONSE ===");
+      print("Status Code: ${response.statusCode}");
+      print("Correlation ID: $corrId");
+      print("Response Body: ${response.body}");
+      print("==================================");
+    }
 
     if (response.statusCode == 200) {
       return CustomerReferenceDataResponse.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception("Failed to load reference data: ${response.statusCode}");
+      throw Exception("Failed to load reference data: ${response.statusCode} - ${response.body}");
     }
   }
 

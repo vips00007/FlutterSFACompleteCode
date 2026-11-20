@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 class HelpSupportViewModel extends GetxController {
-  final supportPhone = '+918069105250';
-  final supportEmail = 'support.danaanand@imastdesk.com';
-  final supportWebsite = 'www.anandgroupindia.com';
+  final supportPhone = '+918349254726';
+  final supportEmail = 'support.demo@dhruve.com';
+  final supportWebsite = 'www.dhruve.AI.com';
 
   void callSupport() {
     // Implement call logic (e.g., url_launcher)

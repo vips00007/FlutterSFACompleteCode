@@ -7,10 +7,12 @@ import 'package:geocoding/geocoding.dart';
 import 'dart:async';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/datasource/remote/customer_api_service.dart';
 import '../../data/models/customer_reference_data_response.dart';
 import '../../data/models/customer_create_request.dart';
+import 'widgets/shop_camera_preview_screen.dart';
 import 'dart:io';
 
 // Top-level function for background isolate image processing
@@ -231,38 +233,76 @@ class AddOutletViewModel extends GetxController {
     return list;
   }
 
-  List<LookupItem> get subTypeList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'SUB_TYPE' &&
-          item.customerTypeUuid == rtypeUuid.value,
-    ),
-  );
-  List<LookupItem> get channelList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'CHANNEL' && item.subTypeUuid == subTypeUuid.value,
-    ),
-  );
-  List<LookupItem> get segmentList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'SEGMENT' && item.channelUuid == channelUuid.value,
-    ),
-  );
-  List<LookupItem> get categoryList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'CATEGORY' &&
-          item.segmentUuid == segmentUuid.value,
-    ),
-  );
-  List<LookupItem> get classList => _getSortedLookups(
-    allLookups.where(
-      (item) =>
-          item.lookupType == 'CLASS' && item.categoryUuid == categoryUuid.value,
-    ),
-  );
+  List<LookupItem> get subTypeList {
+    var items = allLookups.where((item) => item.lookupType == 'SUB_TYPE');
+    if (rtypeUuid.value != null && rtypeUuid.value!.isNotEmpty) {
+      var filtered = items.where(
+        (item) =>
+            item.customerTypeUuid == rtypeUuid.value ||
+            item.parentUuid == rtypeUuid.value ||
+            item.customerTypeUuid == null,
+      );
+      if (filtered.isNotEmpty) return _getSortedLookups(filtered);
+    }
+    return _getSortedLookups(items);
+  }
+
+  List<LookupItem> get channelList {
+    var items = allLookups.where((item) => item.lookupType == 'CHANNEL');
+    if (subTypeUuid.value != null && subTypeUuid.value!.isNotEmpty) {
+      var filtered = items.where(
+        (item) =>
+            item.subTypeUuid == subTypeUuid.value ||
+            item.parentUuid == subTypeUuid.value ||
+            item.subTypeUuid == null,
+      );
+      if (filtered.isNotEmpty) return _getSortedLookups(filtered);
+    }
+    return _getSortedLookups(items);
+  }
+
+  List<LookupItem> get segmentList {
+    var items = allLookups.where((item) => item.lookupType == 'SEGMENT');
+    if (channelUuid.value != null && channelUuid.value!.isNotEmpty) {
+      var filtered = items.where(
+        (item) =>
+            item.channelUuid == channelUuid.value ||
+            item.parentUuid == channelUuid.value ||
+            item.channelUuid == null,
+      );
+      if (filtered.isNotEmpty) return _getSortedLookups(filtered);
+    }
+    return _getSortedLookups(items);
+  }
+
+  List<LookupItem> get categoryList {
+    var items = allLookups.where((item) => item.lookupType == 'CATEGORY');
+    if (segmentUuid.value != null && segmentUuid.value!.isNotEmpty) {
+      var filtered = items.where(
+        (item) =>
+            item.segmentUuid == segmentUuid.value ||
+            item.parentUuid == segmentUuid.value ||
+            item.segmentUuid == null,
+      );
+      if (filtered.isNotEmpty) return _getSortedLookups(filtered);
+    }
+    return _getSortedLookups(items);
+  }
+
+  List<LookupItem> get classList {
+    var items = allLookups.where((item) => item.lookupType == 'CLASS');
+    if (categoryUuid.value != null && categoryUuid.value!.isNotEmpty) {
+      var filtered = items.where(
+        (item) =>
+            item.categoryUuid == categoryUuid.value ||
+            item.parentUuid == categoryUuid.value ||
+            item.categoryUuid == null,
+      );
+      if (filtered.isNotEmpty) return _getSortedLookups(filtered);
+    }
+    return _getSortedLookups(items);
+  }
+
   List<LookupItem> get shopSizeList => _getSortedLookups(
     allLookups.where((item) => item.lookupType == 'SHOP_SIZE'),
   );
@@ -275,7 +315,11 @@ class AddOutletViewModel extends GetxController {
   List<LookupItem> get workshopTypeList => _getSortedLookups(
     allLookups.where((item) => item.lookupType == 'WORKSHOP_TYPE'),
   );
-  List<BeatItem> get activeBeats => allBeats.where((b) => b.isActive).toList();
+  List<BeatItem> get activeBeats {
+    var active = allBeats.where((b) => b.isActive).toList();
+    if (active.isNotEmpty) return active;
+    return allBeats.toList();
+  }
 
   void onCustomerTypeChanged(String uuid, String name) {
     if (rtypeUuid.value != uuid) {
@@ -351,37 +395,176 @@ class AddOutletViewModel extends GetxController {
     }
   }
 
-  // File Picking
+  // --- Image Source Selection Sheet (Camera vs Gallery) ---
+  void showImageSourceSheet(RxnString pathRef, {String? kind}) {
+    if (isUploadingImage.value) return;
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select Image Source',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B2733)),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF8A2BE2), size: 28),
+              title: const Text('Take Photo (Camera)', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Get.back();
+                captureImageFromCamera(pathRef);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF8A2BE2), size: 28),
+              title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Get.back();
+                pickImageFromGallery(pathRef);
+              },
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  // Camera Capture Image Handling via Live Camera Preview Screen
+  Future<void> captureImageFromCamera(RxnString pathRef) async {
+    if (isUploadingImage.value) return;
+
+    try {
+      var status = await Permission.camera.status;
+      if (!status.isGranted) {
+        status = await Permission.camera.request();
+        if (!status.isGranted) {
+          Get.snackbar('Permission Denied', 'Camera permission is required to capture photos');
+          return;
+        }
+      }
+
+      final String? result = await Get.to(() => const ShopCameraPreviewScreen());
+      if (result != null && result.isNotEmpty) {
+        final File capturedFile = File(result);
+        if (await capturedFile.exists()) {
+          await processAndSaveImage(capturedFile, pathRef);
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Camera Error', 'Could not open camera: ${e.toString()}');
+    }
+  }
+
+  // Gallery Image Selection
+  Future<void> pickImageFromGallery(RxnString pathRef) async {
+    if (isUploadingImage.value) return;
+
+    try {
+      PlatformFile? file = await FilePicker.pickFile(
+        type: FileType.image,
+      );
+
+      if (file != null && file.path != null) {
+        await processAndSaveImage(File(file.path!), pathRef);
+      }
+    } catch (e) {
+      try {
+        PlatformFile? file = await FilePicker.pickFile(
+          type: FileType.custom,
+          allowedExtensions: ['jpg', 'jpeg', 'png'],
+        );
+        if (file != null && file.path != null) {
+          await processAndSaveImage(File(file.path!), pathRef);
+        }
+      } catch (e2) {
+        Get.snackbar('Error', 'Could not pick image from gallery');
+      }
+    }
+  }
+
+  // Common Image Processing, Continuous Loading State & Timestamped Caching
+  Future<void> processAndSaveImage(File ioFile, RxnString pathRef) async {
+    if (pathRef == avatarPath) {
+      isUploadingImage.value = true;
+    } else if (pathRef == docfPath) {
+      isUploadingDoc.value = true;
+    }
+
+    try {
+      if (await ioFile.length() > 10 * 1024 * 1024) {
+        Get.snackbar('Error', 'File size exceeds 10 MB');
+        return;
+      }
+
+      final originalBytes = await ioFile.readAsBytes();
+      final Uint8List? compressedBytes = await compute(_compressImageInIsolate, originalBytes);
+
+      final tempDir = await getTemporaryDirectory();
+      final targetPath = '${tempDir.path}/shop_photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final compressedFile = File(targetPath);
+
+      if (compressedBytes != null) {
+        await compressedFile.writeAsBytes(compressedBytes);
+      } else {
+        await compressedFile.writeAsBytes(originalBytes);
+      }
+
+      // Evict ImageCache if replacing existing file
+      if (pathRef.value != null) {
+        FileImage(File(pathRef.value!)).evict();
+      }
+
+      pathRef.value = compressedFile.path;
+      if (pathRef == avatarPath) {
+        avatarError.value = '';
+      }
+    } catch (e) {
+      pathRef.value = ioFile.path;
+      if (pathRef == avatarPath) {
+        avatarError.value = '';
+      }
+      Get.snackbar('Upload Error', 'Failed to process image: ${e.toString()}');
+    } finally {
+      if (pathRef == avatarPath) {
+        isUploadingImage.value = false;
+      } else if (pathRef == docfPath) {
+        isUploadingDoc.value = false;
+      }
+    }
+  }
+
+  // File Picking for non-image attachments (PDFs etc.)
   Future<void> pickFile(
     RxnString pathRef, {
     bool isImage = false,
     String? kind,
   }) async {
+    if (isImage) {
+      showImageSourceSheet(pathRef, kind: kind);
+      return;
+    }
+
     try {
       PlatformFile? file = await FilePicker.pickFile(
-        type: isImage ? FileType.image : FileType.custom,
-        allowedExtensions: isImage ? null : ['pdf', 'jpg', 'jpeg', 'png'],
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
       );
       if (file != null && file.path != null) {
         final ioFile = File(file.path!);
-        if (await ioFile.length() > 5 * 1024 * 1024) {
-          Get.snackbar('Error', 'File size exceeds 5 MB');
+        if (await ioFile.length() > 10 * 1024 * 1024) {
+          Get.snackbar('Error', 'File size exceeds 10 MB');
           return;
         }
-
-        if (isImage) {
-          final originalBytes = await ioFile.readAsBytes();
-          final Uint8List? compressedBytes = await compute(_compressImageInIsolate, originalBytes);
-          if (compressedBytes != null) {
-            final tempDir = await getTemporaryDirectory();
-            final targetPath = '${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-            final compressedFile = File(targetPath);
-            await compressedFile.writeAsBytes(compressedBytes);
-            pathRef.value = compressedFile.path;
-            return;
-          }
-        }
-
         pathRef.value = file.path!;
       }
     } catch (e) {
