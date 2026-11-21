@@ -1,21 +1,24 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'add_outlet_viewmodel.dart';
 import '../dashboard/dashboard_viewmodel.dart';
 
 class HtmlColors {
-  static const Color bg = Color(0xFFF9FAFB);
+  static const Color bg = Color(0xFFF4F3F9);
   static const Color card = Colors.white;
-  static const Color ink = Color(0xFF1B2733);
-  static const Color mut = Color(0xFF64748B);
-  static const Color line = Color(0xFFE2E8F0);
-  static const Color pri = Color(0xFF8A2BE2);
-  static const Color acc = Color(0xFF6D28D9);
-  static const Color sec = Color(0xFFB197FC);
-  static const Color bad = Color(0xFFD32F2F);
-  static const Color ok = Color(0xFF1B873F);
+  static const Color ink = Color(0xFF17193F);
+  static const Color mut = Color(0xFF6B6F93);
+  static const Color line = Color(0xFFDCDBEA);
+  static const Color pri = Color(0xFF6A3FD6);
+  static const Color acc = Color(0xFFFF9F1C);
+  static const Color bad = Color(0xFFD62839);
+  static const Color ok = Color(0xFF1B9A6C);
+  static const Color dotBorder = Color(0xFFB4BCD9);
+  static const Color dotText = Color(0xFF8A93B2);
+  static const Color lineConnector = Color(0xFFC3C9E2);
+  static const Color stepDone = Color(0xFF22C55E);
 }
 
 class AddOutletScreen extends StatefulWidget {
@@ -45,21 +48,12 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             child: Column(
               children: [
                 _buildHeader(viewModel),
+                _buildStepper(viewModel),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 18,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildTabs(viewModel),
-                        const SizedBox(height: 12),
-                        _buildStepCard(viewModel, context),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+                    controller: viewModel.scrollController,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
+                    child: _buildStepCard(viewModel, context),
                   ),
                 ),
               ],
@@ -82,99 +76,114 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     );
   }
 
+  // Header matching compact HTML redesign specification with full-header image cover
   Widget _buildHeader(AddOutletViewModel viewModel) {
-    return Container(
-      decoration: BoxDecoration(
-        color: HtmlColors.pri,
-        gradient: const LinearGradient(
-          colors: [HtmlColors.acc, HtmlColors.pri, HtmlColors.sec],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: HtmlColors.pri.withValues(alpha: 0.3),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+    return Obx(() {
+      final avatarPath = viewModel.avatarPath.value;
+      final hasAvatar = avatarPath != null && avatarPath.isNotEmpty;
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: EdgeInsets.fromLTRB(14, hasAvatar ? 16 : 12, 14, 12),
+        constraints: BoxConstraints(minHeight: hasAvatar ? 140 : 60),
+        decoration: BoxDecoration(
+          color: HtmlColors.pri,
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(18),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 16, 18, 16),
+          boxShadow: [
+            BoxShadow(
+              color: HtmlColors.pri.withValues(alpha: 0.18),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          image: hasAvatar
+              ? DecorationImage(
+                  image: FileImage(File(avatarPath)),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.45),
+                    BlendMode.darken,
+                  ),
+                )
+              : null,
+        ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment:
+              hasAvatar ? CrossAxisAlignment.end : CrossAxisAlignment.center,
           children: [
             IconButton(
               padding: EdgeInsets.zero,
-              icon: Image.asset(
-                'assets/images/queue.png',
-                width: 64,
-                height: 64,
+              constraints: const BoxConstraints(),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 20,
               ),
               onPressed: () {
                 final dashboardViewModel = Get.find<DashboardViewModel>();
                 dashboardViewModel.changeTabIndex(0);
               },
             ),
-            const SizedBox(width: 12),
-            _buildAvatar(viewModel),
-            const SizedBox(width: 16),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'New customer',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: viewModel.shopController,
+                    builder: (context, value, child) {
+                      final text = value.text.trim();
+                      return Text(
+                        text.isNotEmpty ? text : 'New customer',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          shadows: hasAvatar
+                              ? [
+                                  const Shadow(
+                                    color: Colors.black54,
+                                    blurRadius: 4,
+                                  )
+                                ]
+                              : null,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Obx(
                     () => Text(
                       'Step ${viewModel.currentStep.value + 1} of 3',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 13,
+                        fontSize: 12,
+                        shadows: hasAvatar
+                            ? [
+                                const Shadow(
+                                  color: Colors.black54,
+                                  blurRadius: 4,
+                                )
+                              ]
+                            : null,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Obx(() {
-                      return FractionallySizedBox(
-                        widthFactor: (viewModel.maxStepReached.value + 1) / 3,
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: HtmlColors.acc,
-                            borderRadius: BorderRadius.circular(9),
-                          ),
-                        ),
-                      );
-                    }),
                   ),
                   Obx(() {
                     if (viewModel.avatarError.value.isNotEmpty) {
                       return const Padding(
-                        padding: EdgeInsets.only(top: 6),
+                        padding: EdgeInsets.only(top: 2),
                         child: Text(
-                          'Shop photo required. Tap the camera circle.',
+                          'Shop photo required - tap camera',
                           style: TextStyle(
                             color: Color(0xFFFFD166),
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -185,15 +194,17 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 ],
               ),
             ),
+            const SizedBox(width: 10),
+            _buildCameraAvatar(viewModel),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 
-  Widget _buildAvatar(AddOutletViewModel viewModel) {
+  // Right Camera Button (.hav)
+  Widget _buildCameraAvatar(AddOutletViewModel viewModel) {
     return Obx(() {
-      final hasAvatar = viewModel.avatarPath.value != null;
       final isError = viewModel.avatarError.isNotEmpty;
       final isUploading = viewModel.isUploadingImage.value;
 
@@ -201,190 +212,201 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         onTap: isUploading
             ? null
             : () => viewModel.showImageSourceSheet(
-                viewModel.avatarPath,
-                kind: 'SHOP_IMAGE',
-              ),
-        child: SizedBox(
-          width: 56,
-          height: 56,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              if (!hasAvatar)
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(shape: BoxShape.circle),
-                  child: CustomPaint(painter: _DottedCirclePainter()),
+                  viewModel.avatarPath,
+                  kind: 'SHOP_IMAGE',
                 ),
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: hasAvatar
-                      ? Colors.transparent
-                      : Colors.white.withValues(alpha: 0.15),
-                  border: Border.all(
-                    color: isError
-                        ? HtmlColors.bad
-                        : (hasAvatar ? HtmlColors.acc : Colors.transparent),
-                    width: 2,
-                  ),
-                  image: hasAvatar && !isUploading
-                      ? DecorationImage(
-                          image: FileImage(File(viewModel.avatarPath.value!)),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: isUploading
-                    ? const Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : (hasAvatar
-                          ? null
-                          : const Icon(
-                              Icons.camera_alt_outlined,
-                              color: Colors.white,
-                              size: 22,
-                            )),
-              ),
-            ],
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.25),
+            border: Border.all(
+              color: isError
+                  ? const Color(0xFFFFD166)
+                  : Colors.white.withValues(alpha: 0.8),
+              width: 1.5,
+            ),
           ),
+          child: isUploading
+              ? const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Icon(
+                  Icons.camera_alt_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
         ),
       );
     });
   }
 
-  Widget _buildTabs(AddOutletViewModel viewModel) {
-    final tabs = ['Shop & address', 'Classification', 'KYC, bank & licences'];
+  // Sticky Horizontal Stepper (.stp) with extended lines
+  Widget _buildStepper(AddOutletViewModel viewModel) {
+    final titles = ['Shop Info', 'Classification', 'KYC | Bank | License'];
+
     return Obx(() {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
+      final cur = viewModel.currentStep.value;
+
+      return Container(
+        color: HtmlColors.bg,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
-          children: List.generate(tabs.length, (index) {
-            final isCur = viewModel.currentStep.value == index;
-            final isDone = viewModel.maxStepReached.value >= index && !isCur;
+          children: List.generate(titles.length * 2 - 1, (i) {
+            if (i.isEven) {
+              final index = i ~/ 2;
+              final isCur = cur == index;
+              final isDone = viewModel.maxStepReached.value >= index && !isCur;
 
-            Color bgColor = HtmlColors.card;
-            Color borderColor = HtmlColors.line;
-            Color textColor = HtmlColors.mut;
-
-            if (isCur) {
-              bgColor = HtmlColors.pri;
-              borderColor = HtmlColors.pri;
-              textColor = Colors.white;
-            } else if (isDone) {
-              borderColor = HtmlColors.ok;
-              textColor = HtmlColors.ok;
-            }
-
-            return Padding(
-              padding: const EdgeInsets.only(right: 6, bottom: 12),
-              child: GestureDetector(
+              return GestureDetector(
                 onTap: () => viewModel.goStep(index),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    border: Border.all(color: borderColor),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    (isDone ? '✓ ' : '') + tabs[index],
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDone ? HtmlColors.stepDone : HtmlColors.card,
+                        border: Border.all(
+                          color: isDone
+                              ? HtmlColors.stepDone
+                              : (isCur
+                                  ? HtmlColors.pri
+                                  : HtmlColors.dotBorder),
+                          width: 2.5,
+                        ),
+                        boxShadow: isCur
+                            ? [
+                                BoxShadow(
+                                  color: HtmlColors.pri.withValues(alpha: 0.15),
+                                  blurRadius: 6,
+                                  spreadRadius: 2,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: isDone
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              )
+                            : Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: isCur
+                                      ? HtmlColors.pri
+                                      : HtmlColors.dotText,
+                                  fontSize: 14,
+                                  fontWeight: isCur
+                                      ? FontWeight.w800
+                                      : FontWeight.w700,
+                                ),
+                              ),
+                      ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      titles[index],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isCur ? FontWeight.w800 : FontWeight.w600,
+                        color: isCur
+                            ? HtmlColors.pri
+                            : (isDone ? HtmlColors.ink : HtmlColors.dotText),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              final prevIndex = (i - 1) ~/ 2;
+              final isLineOn =
+                  viewModel.maxStepReached.value >= prevIndex || cur > prevIndex;
+
+              return Expanded(
+                child: Container(
+                  height: 4,
+                  margin: const EdgeInsets.only(left: 6, right: 6, bottom: 18),
+                  decoration: BoxDecoration(
+                    color: isLineOn ? HtmlColors.pri : HtmlColors.lineConnector,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-              ),
-            );
+              );
+            }
           }),
         ),
       );
     });
   }
 
+  // Main Card (.card)
   Widget _buildStepCard(AddOutletViewModel viewModel, BuildContext context) {
     return Obx(() {
       final step = viewModel.currentStep.value;
-      String title = '';
-      String desc = '';
       Widget content = const SizedBox.shrink();
 
       if (step == 0) {
-        title = 'Shop & address';
-        desc = 'Photo, owner contact and location of the shop.';
         content = _buildStep1Fields(viewModel);
       } else if (step == 1) {
-        title = 'Classification';
-        desc = 'Classification, beat mapping and shop profile.';
         content = _buildStep2Fields(viewModel, context);
       } else if (step == 2) {
-        title = 'KYC, bank & licences';
-        desc = 'Identity, bank account and licences, then submit.';
         content = _buildStep3Fields(viewModel);
       }
 
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: HtmlColors.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: HtmlColors.line),
           boxShadow: [
             BoxShadow(
-              color: HtmlColors.ink.withValues(alpha: 0.08),
-              blurRadius: 28,
-              offset: const Offset(0, 6),
+              color: HtmlColors.ink.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              desc,
-              style: const TextStyle(color: HtmlColors.mut, fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            content,
-          ],
-        ),
+        child: content,
       );
     });
   }
 
+  // Section divider matching compact HTML spec (.sub)
   Widget _sub(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 22, bottom: 4),
-      child: Container(
-        padding: const EdgeInsets.only(left: 12, top: 4),
-        decoration: const BoxDecoration(
-          border: Border(left: BorderSide(color: Color(0xFFFF9F1C), width: 4)),
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 8),
+      padding: const EdgeInsets.only(left: 9, top: 1, bottom: 1),
+      decoration: const BoxDecoration(
+        border: Border(
+          left: BorderSide(color: HtmlColors.pri, width: 3),
         ),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: HtmlColors.ink,
         ),
       ),
     );
   }
 
+  // Field Wrapper (.fld)
   Widget _fld({
     required AddOutletViewModel viewModel,
     required String key,
@@ -397,19 +419,20 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
       final hasErr = error.isNotEmpty;
 
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (label.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(bottom: 5),
+                padding: const EdgeInsets.only(bottom: 4),
                 child: RichText(
                   text: TextSpan(
                     text: label,
                     style: const TextStyle(
                       color: HtmlColors.mut,
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                     children: [
@@ -425,10 +448,10 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             child,
             if (hasErr)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 3),
                 child: Text(
                   error,
-                  style: const TextStyle(color: HtmlColors.bad, fontSize: 12),
+                  style: const TextStyle(color: HtmlColors.bad, fontSize: 11),
                 ),
               ),
           ],
@@ -437,6 +460,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Input Field (Height 44px, Border Radius 10px, Strict 10-Digit Mobile Formatter)
   Widget _textInput({
     required AddOutletViewModel viewModel,
     required String key,
@@ -445,33 +469,63 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     TextInputType? type,
     bool readOnly = false,
     VoidCallback? onTap,
+    Widget? suffixIcon,
+    List<TextInputFormatter>? inputFormatters,
   }) {
+    final isPhone = type == TextInputType.phone || key == 'mobile' || key == 'wa';
+    final formatters = inputFormatters ??
+        (isPhone
+            ? [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ]
+            : null);
+
     return Obx(() {
       final hasErr = viewModel.hasError(key);
-      return TextField(
-        controller: controller,
-        keyboardType: type,
-        readOnly: readOnly,
-        onTap: onTap,
-        style: const TextStyle(fontSize: 15, color: HtmlColors.ink),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: HtmlColors.ink.withValues(alpha: 0.5)),
-          filled: true,
-          fillColor: HtmlColors.bg,
-          contentPadding: const EdgeInsets.all(12),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: hasErr ? HtmlColors.bad : HtmlColors.line,
-              width: 1.5,
+      return SizedBox(
+        height: 44,
+        child: TextField(
+          controller: controller,
+          keyboardType: type,
+          readOnly: readOnly,
+          onTap: onTap,
+          inputFormatters: formatters,
+          style: const TextStyle(fontSize: 14.5, color: HtmlColors.ink),
+          onChanged: (val) {
+            if (isPhone) {
+              final clean = val.replaceAll(RegExp(r'\D'), '');
+              if (clean.length == 10 && RegExp(r'^[6-9]\d{9}$').hasMatch(clean)) {
+                viewModel.setError(key, '');
+              }
+            } else if (viewModel.hasError(key)) {
+              if (val.trim().isNotEmpty) viewModel.setError(key, '');
+            }
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: HtmlColors.mut.withValues(alpha: 0.6),
+              fontSize: 14,
             ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: hasErr ? HtmlColors.bad : HtmlColors.pri,
-              width: 2,
+            filled: true,
+            fillColor: HtmlColors.bg,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            suffixIcon: suffixIcon,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: hasErr ? HtmlColors.bad : HtmlColors.line,
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: hasErr ? HtmlColors.bad : HtmlColors.pri,
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -479,6 +533,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Dropdown Select Ref (Height 44px)
   Widget _dropdownRef({
     required AddOutletViewModel viewModel,
     required String key,
@@ -489,11 +544,11 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     return Obx(() {
       final hasErr = viewModel.hasError(key);
       return Container(
-        height: 48,
+        height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: HtmlColors.bg,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: hasErr ? HtmlColors.bad : HtmlColors.line,
             width: 1.5,
@@ -502,11 +557,17 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: rxValue.value,
-            hint: const Text('Select', style: TextStyle(fontSize: 15)),
+            hint: const Text('Select', style: TextStyle(fontSize: 14, color: HtmlColors.mut)),
             isExpanded: true,
             items: options
                 .map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  (e) => DropdownMenuItem(
+                    value: e.key,
+                    child: Text(
+                      e.value,
+                      style: const TextStyle(fontSize: 14.5, color: HtmlColors.ink),
+                    ),
+                  ),
                 )
                 .toList(),
             onChanged: (val) {
@@ -522,6 +583,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Simple Dropdown (Height 44px)
   Widget _dropdown({
     required AddOutletViewModel viewModel,
     required String key,
@@ -531,11 +593,11 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     return Obx(() {
       final hasErr = viewModel.hasError(key);
       return Container(
-        height: 48,
+        height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: HtmlColors.bg,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: hasErr ? HtmlColors.bad : HtmlColors.line,
             width: 1.5,
@@ -544,10 +606,16 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: rxValue.value,
-            hint: const Text('Select', style: TextStyle(fontSize: 15)),
+            hint: const Text('Select', style: TextStyle(fontSize: 14, color: HtmlColors.mut)),
             isExpanded: true,
             items: options
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(
+                        e,
+                        style: const TextStyle(fontSize: 14.5, color: HtmlColors.ink),
+                      ),
+                    ))
                 .toList(),
             onChanged: (val) => rxValue.value = val,
           ),
@@ -556,14 +624,15 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
-  Widget _pillsRef({
+  // Single-select Checkbox Row (.cbs) for Retailer Type
+  Widget _checkboxRadioRef({
     required RxnString rxValue,
     required List<MapEntry<String, String>> options,
     Function(String, String)? onChanged,
   }) {
     return Obx(() {
       return Wrap(
-        spacing: 8,
+        spacing: 20,
         runSpacing: 8,
         children: options.map((opt) {
           final isSelected = rxValue.value == opt.key;
@@ -575,8 +644,67 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 rxValue.value = opt.key;
               }
             },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: isSelected ? HtmlColors.pri : HtmlColors.bg,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isSelected ? HtmlColors.pri : HtmlColors.dotBorder,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check,
+                          size: 14,
+                          color: Colors.white,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  opt.value,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: HtmlColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      );
+    });
+  }
+
+  // Rounded Pills (.pills)
+  Widget _pillsRef({
+    required RxnString rxValue,
+    required List<MapEntry<String, String>> options,
+    Function(String, String)? onChanged,
+  }) {
+    return Obx(() {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: options.map((opt) {
+          final isSelected = rxValue.value == opt.key;
+          return GestureDetector(
+            onTap: () {
+              if (onChanged != null) {
+                onChanged(opt.key, opt.value);
+              } else {
+                rxValue.value = opt.key;
+              }
+            },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected ? HtmlColors.pri : HtmlColors.bg,
                 border: Border.all(
@@ -589,7 +717,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 opt.value,
                 style: TextStyle(
                   color: isSelected ? Colors.white : HtmlColors.ink,
-                  fontSize: 14,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -600,17 +728,18 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Standard Pills (.pills)
   Widget _pills({required RxString rxValue, required List<String> options}) {
     return Obx(() {
       return Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: 6,
+        runSpacing: 6,
         children: options.map((opt) {
           final isSelected = rxValue.value == opt;
           return GestureDetector(
             onTap: () => rxValue.value = opt,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected ? HtmlColors.pri : HtmlColors.bg,
                 border: Border.all(
@@ -623,7 +752,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 opt,
                 style: TextStyle(
                   color: isSelected ? Colors.white : HtmlColors.ink,
-                  fontSize: 14,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -634,6 +763,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Multi-select Chips
   Widget _chips({
     required RxList<String> rxValues,
     required List<String> options,
@@ -646,12 +776,12 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         decoration: hasErr
             ? BoxDecoration(
                 border: Border.all(color: HtmlColors.bad, width: 1.5),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               )
             : null,
         child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 6,
+          runSpacing: 6,
           children: options.map((opt) {
             final isSelected = rxValues.contains(opt);
             return GestureDetector(
@@ -663,10 +793,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 9,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                 decoration: BoxDecoration(
                   color: isSelected ? HtmlColors.pri : HtmlColors.bg,
                   border: Border.all(
@@ -679,7 +806,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                   opt,
                   style: TextStyle(
                     color: isSelected ? Colors.white : HtmlColors.ink,
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -691,6 +818,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // File Attachment Picker (.fl)
   Widget _filePicker({
     required AddOutletViewModel viewModel,
     required String key,
@@ -714,24 +842,24 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 }
               },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: HtmlColors.bg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: hasErr
                   ? HtmlColors.bad
                   : (hasFile ? HtmlColors.ok : HtmlColors.line),
               width: 1.5,
-              style: BorderStyle.solid,
             ),
           ),
           child: Row(
             children: [
               if (uploading)
                 const SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     color: HtmlColors.pri,
@@ -739,11 +867,11 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 )
               else
                 Icon(
-                  Icons.upload_file,
+                  Icons.upload_file_outlined,
                   color: hasFile ? HtmlColors.ok : HtmlColors.mut,
-                  size: 20,
+                  size: 18,
                 ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   uploading
@@ -755,7 +883,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                     color: (hasFile || uploading)
                         ? HtmlColors.ok
                         : HtmlColors.mut,
-                    fontSize: 14,
+                    fontSize: 13.5,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -768,16 +896,16 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Step 1: Shop & Address
   Widget _buildStep1Fields(AddOutletViewModel vm) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sub('Shop details'),
         _fld(
           viewModel: vm,
           key: 'rtype',
-          label: 'Customer type',
-          child: _pillsRef(
+          label: 'Retailer type',
+          child: _checkboxRadioRef(
             rxValue: vm.rtypeUuid,
             options: vm.customerTypes
                 .map((e) => MapEntry(e.uuid, e.name))
@@ -806,7 +934,6 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           ),
         ),
 
-        _sub('Contact details'),
         _fld(
           viewModel: vm,
           key: 'mobile',
@@ -816,26 +943,30 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             key: 'mobile',
             controller: vm.mobileController,
             type: TextInputType.phone,
-            hint: '98XXXXXXXX',
+            hint: '10-digit mobile number',
           ),
         ),
 
-        Row(
-          children: [
-            Obx(
-              () => Checkbox(
-                value: vm.wacb.value,
-                onChanged: vm.toggleWacb,
-                activeColor: HtmlColors.pri,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Obx(
+                () => Checkbox(
+                  value: vm.wacb.value,
+                  onChanged: vm.toggleWacb,
+                  activeColor: HtmlColors.pri,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            const Expanded(
-              child: Text(
-                'Mobile number is also my WhatsApp number',
-                style: TextStyle(fontSize: 14, color: HtmlColors.ink),
+              const Expanded(
+                child: Text(
+                  'Mobile number is also my WhatsApp number',
+                  style: TextStyle(fontSize: 13, color: HtmlColors.ink),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         _fld(
@@ -861,47 +992,6 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           ),
         ),
 
-        _sub('Address'),
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: HtmlColors.acc,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
-            ),
-            elevation: 0,
-          ),
-          onPressed: vm.captureLocation,
-          icon: Obx(
-            () => vm.isLocating.value
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Icon(Icons.my_location),
-          ),
-          label: const Text(
-            'Use my current location',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        Obx(
-          () => Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 12),
-            child: Text(
-              vm.capturedGeo.value != null
-                  ? 'Captured ${vm.capturedGeo.value}'
-                  : 'Fills address lines, state, city and pin code.',
-              style: const TextStyle(color: HtmlColors.mut, fontSize: 13),
-            ),
-          ),
-        ),
-
         _fld(
           viewModel: vm,
           key: 'a1',
@@ -910,8 +1000,24 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             viewModel: vm,
             key: 'a1',
             controller: vm.a1Controller,
+            suffixIcon: AnimatedLocationIconButton(
+              isLocating: vm.isLocating,
+              onPressed: vm.captureLocation,
+            ),
           ),
         ),
+        Obx(
+          () => vm.capturedGeo.value != null
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Captured ${vm.capturedGeo.value}',
+                    style: const TextStyle(color: HtmlColors.mut, fontSize: 12),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+
         _fld(
           viewModel: vm,
           key: 'a2',
@@ -932,27 +1038,40 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             controller: vm.a3Controller,
           ),
         ),
-        _fld(
-          viewModel: vm,
-          key: 'state',
-          label: 'State',
-          child: _dropdown(
-            viewModel: vm,
-            key: 'state',
-            rxValue: vm.selectedState,
-            options: vm.statesList,
-          ),
+
+        // 2-Column Row for State & City
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'state',
+                label: 'State',
+                child: _dropdown(
+                  viewModel: vm,
+                  key: 'state',
+                  rxValue: vm.selectedState,
+                  options: vm.statesList,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'city',
+                label: 'City',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'city',
+                  controller: vm.cityController,
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'city',
-          label: 'City',
-          child: _textInput(
-            viewModel: vm,
-            key: 'city',
-            controller: vm.cityController,
-          ),
-        ),
+
         _fld(
           viewModel: vm,
           key: 'pin',
@@ -968,166 +1087,218 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     );
   }
 
+  // Step 2: Classification
   Widget _buildStep2Fields(AddOutletViewModel vm, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _fld(
-          viewModel: vm,
-          key: 'sub',
-          label: 'Sub type',
-          child: _dropdownRef(
-            viewModel: vm,
-            key: 'sub',
-            rxValue: vm.subTypeUuid,
-            options: vm.subTypeList
-                .map((e) => MapEntry(e.uuid, e.name))
-                .toList(),
-            onChanged: vm.onSubTypeChanged,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'sub',
+                label: 'Sub type',
+                child: _dropdownRef(
+                  viewModel: vm,
+                  key: 'sub',
+                  rxValue: vm.subTypeUuid,
+                  options: vm.subTypeList
+                      .map((e) => MapEntry(e.uuid, e.name))
+                      .toList(),
+                  onChanged: vm.onSubTypeChanged,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'chan',
+                label: 'Channel',
+                child: _dropdownRef(
+                  viewModel: vm,
+                  key: 'chan',
+                  rxValue: vm.channelUuid,
+                  options: vm.channelList
+                      .map((e) => MapEntry(e.uuid, e.name))
+                      .toList(),
+                  onChanged: vm.onChannelChanged,
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'chan',
-          label: 'Channel',
-          child: _dropdownRef(
-            viewModel: vm,
-            key: 'chan',
-            rxValue: vm.channelUuid,
-            options: vm.channelList
-                .map((e) => MapEntry(e.uuid, e.name))
-                .toList(),
-            onChanged: vm.onChannelChanged,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'seg',
+                label: 'Segment',
+                child: _dropdownRef(
+                  viewModel: vm,
+                  key: 'seg',
+                  rxValue: vm.segmentUuid,
+                  options: vm.segmentList
+                      .map((e) => MapEntry(e.uuid, e.name))
+                      .toList(),
+                  onChanged: vm.onSegmentChanged,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'cat',
+                label: 'Category',
+                child: _dropdownRef(
+                  viewModel: vm,
+                  key: 'cat',
+                  rxValue: vm.categoryUuid,
+                  options: vm.categoryList
+                      .map((e) => MapEntry(e.uuid, e.name))
+                      .toList(),
+                  onChanged: vm.onCategoryChanged,
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'seg',
-          label: 'Segment',
-          child: _dropdownRef(
-            viewModel: vm,
-            key: 'seg',
-            rxValue: vm.segmentUuid,
-            options: vm.segmentList
-                .map((e) => MapEntry(e.uuid, e.name))
-                .toList(),
-            onChanged: vm.onSegmentChanged,
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'cat',
-          label: 'Category',
-          child: _dropdownRef(
-            viewModel: vm,
-            key: 'cat',
-            rxValue: vm.categoryUuid,
-            options: vm.categoryList
-                .map((e) => MapEntry(e.uuid, e.name))
-                .toList(),
-            onChanged: vm.onCategoryChanged,
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'cls',
-          label: 'Class',
-          child: _dropdownRef(
-            viewModel: vm,
-            key: 'cls',
-            rxValue: vm.clsUuid,
-            options: vm.classList.map((e) => MapEntry(e.uuid, e.name)).toList(),
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'beat',
-          label: 'Beat',
-          child: _dropdownRef(
-            viewModel: vm,
-            key: 'beat',
-            rxValue: vm.beatUuid,
-            options: vm.activeBeats
-                .map((e) => MapEntry(e.uuid, e.name))
-                .toList(),
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'cls',
+                label: 'Class',
+                child: _dropdownRef(
+                  viewModel: vm,
+                  key: 'cls',
+                  rxValue: vm.clsUuid,
+                  options: vm.classList.map((e) => MapEntry(e.uuid, e.name)).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'beat',
+                label: 'Beat',
+                child: _dropdownRef(
+                  viewModel: vm,
+                  key: 'beat',
+                  rxValue: vm.beatUuid,
+                  options: vm.activeBeats
+                      .map((e) => MapEntry(e.uuid, e.name))
+                      .toList(),
+                ),
+              ),
+            ),
+          ],
         ),
 
-        _sub('Shop profile'),
-        _fld(
-          viewModel: vm,
-          key: 'estYear',
-          label: 'Established Year',
-          child: _textInput(
-            viewModel: vm,
-            key: 'estYear',
-            controller: vm.establishedYearController,
-            type: TextInputType.number,
-            hint: 'e.g. 2015',
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'estYear',
+                label: 'Established Year',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'estYear',
+                  controller: vm.establishedYearController,
+                  type: TextInputType.number,
+                  hint: 'e.g. 2015',
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'size',
+                label: 'Shop size (sq ft)',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'size',
+                  controller: vm.shopSizeController,
+                  type: TextInputType.number,
+                  hint: 'e.g. 850',
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'dob',
-          label: 'Date of Birth',
-          child: _textInput(
-            viewModel: vm,
-            key: 'dob',
-            controller: vm.dobController,
-            readOnly: true,
-            hint: 'Select Date',
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: vm.dob.value ?? DateTime(1990),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-              );
-              if (date != null) {
-                vm.dob.value = date;
-                vm.dobController.text = "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
-                vm.setError('dob', '');
-              }
-            },
-          ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'dob',
+                label: 'Date of Birth',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'dob',
+                  controller: vm.dobController,
+                  readOnly: true,
+                  hint: 'Select Date',
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: vm.dob.value ?? DateTime(1990),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      vm.dob.value = date;
+                      vm.dobController.text = "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
+                      vm.setError('dob', '');
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'anniversary',
+                label: 'Anniversary Date',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'anniversary',
+                  controller: vm.anniversaryController,
+                  readOnly: true,
+                  hint: 'Select Date',
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: vm.anniversary.value ?? DateTime(2010),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      vm.anniversary.value = date;
+                      vm.anniversaryController.text = "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
+                      vm.setError('anniversary', '');
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'anniversary',
-          label: 'Anniversary Date',
-          child: _textInput(
-            viewModel: vm,
-            key: 'anniversary',
-            controller: vm.anniversaryController,
-            readOnly: true,
-            hint: 'Select Date',
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: vm.anniversary.value ?? DateTime(2010),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-              );
-              if (date != null) {
-                vm.anniversary.value = date;
-                vm.anniversaryController.text = "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
-                vm.setError('anniversary', '');
-              }
-            },
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'size',
-          label: 'Shop size (Sq Ft)',
-          child: _textInput(
-            viewModel: vm,
-            key: 'size',
-            controller: vm.shopSizeController,
-            type: TextInputType.number,
-            hint: 'e.g. 850',
-          ),
-        ),
+
         _fld(
           viewModel: vm,
           key: 'pot',
@@ -1140,6 +1311,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             hint: 'e.g. 150000',
           ),
         ),
+
         _fld(
           viewModel: vm,
           key: 'brands',
@@ -1153,6 +1325,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         ),
 
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _fld(
@@ -1166,6 +1339,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                     text: vm.openTime.value?.format(context) ?? '',
                   ),
                   readOnly: true,
+                  hint: 'Select Time',
                   onTap: () async {
                     final t = await showTimePicker(
                       context: context,
@@ -1176,7 +1350,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _fld(
                 viewModel: vm,
@@ -1189,6 +1363,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                     text: vm.closeTime.value?.format(context) ?? '',
                   ),
                   readOnly: true,
+                  hint: 'Select Time',
                   onTap: () async {
                     final t = await showTimePicker(
                       context: context,
@@ -1207,52 +1382,71 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _sub('Workshop details'),
-                _fld(
-                  viewModel: vm,
-                  key: 'wtype',
-                  label: 'Workshop type',
-                  child: _dropdownRef(
-                    viewModel: vm,
-                    key: 'wtype',
-                    rxValue: vm.wtypeUuid,
-                    options: vm.workshopTypeList
-                        .map((e) => MapEntry(e.uuid, e.name))
-                        .toList(),
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _fld(
+                        viewModel: vm,
+                        key: 'wtype',
+                        label: 'Workshop type',
+                        child: _dropdownRef(
+                          viewModel: vm,
+                          key: 'wtype',
+                          rxValue: vm.wtypeUuid,
+                          options: vm.workshopTypeList
+                              .map((e) => MapEntry(e.uuid, e.name))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _fld(
+                        viewModel: vm,
+                        key: 'exp',
+                        label: 'Experience (years)',
+                        child: _textInput(
+                          viewModel: vm,
+                          key: 'exp',
+                          controller: vm.expController,
+                          type: TextInputType.number,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                _fld(
-                  viewModel: vm,
-                  key: 'exp',
-                  label: 'Experience (years)',
-                  child: _textInput(
-                    viewModel: vm,
-                    key: 'exp',
-                    controller: vm.expController,
-                    type: TextInputType.number,
-                  ),
-                ),
-                _fld(
-                  viewModel: vm,
-                  key: 'eng',
-                  label: 'Engine specialty',
-                  child: _dropdown(
-                    viewModel: vm,
-                    key: 'eng',
-                    rxValue: vm.eng,
-                    options: vm.engs,
-                  ),
-                ),
-                _fld(
-                  viewModel: vm,
-                  key: 'mechs',
-                  label: 'Mechanics in workshop',
-                  child: _textInput(
-                    viewModel: vm,
-                    key: 'mechs',
-                    controller: vm.mechsController,
-                    type: TextInputType.number,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _fld(
+                        viewModel: vm,
+                        key: 'eng',
+                        label: 'Engine specialty',
+                        child: _dropdown(
+                          viewModel: vm,
+                          key: 'eng',
+                          rxValue: vm.eng,
+                          options: vm.engs,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _fld(
+                        viewModel: vm,
+                        key: 'mechs',
+                        label: 'Mechanics in workshop',
+                        child: _textInput(
+                          viewModel: vm,
+                          key: 'mechs',
+                          controller: vm.mechsController,
+                          type: TextInputType.number,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );
@@ -1263,11 +1457,11 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     );
   }
 
+  // Step 3: KYC | Bank | License
   Widget _buildStep3Fields(AddOutletViewModel vm) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sub('KYC'),
         _fld(
           viewModel: vm,
           key: 'doctype',
@@ -1280,25 +1474,35 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             onChanged: vm.onKycDocTypeChanged,
           ),
         ),
-        _fld(
-          viewModel: vm,
-          key: 'fn',
-          label: 'First name',
-          child: _textInput(
-            viewModel: vm,
-            key: 'fn',
-            controller: vm.fnController,
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'ln',
-          label: 'Last name',
-          child: _textInput(
-            viewModel: vm,
-            key: 'ln',
-            controller: vm.lnController,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'fn',
+                label: 'First name',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'fn',
+                  controller: vm.fnController,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'ln',
+                label: 'Last name',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'ln',
+                  controller: vm.lnController,
+                ),
+              ),
+            ),
+          ],
         ),
 
         _fld(
@@ -1325,48 +1529,69 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           ),
         ),
 
-        _sub('Bank details'),
-        _fld(
-          viewModel: vm,
-          key: 'bank',
-          label: 'Bank name',
-          child: _textInput(
-            viewModel: vm,
-            key: 'bank',
-            controller: vm.bankController,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'bank',
+                label: 'Bank name',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'bank',
+                  controller: vm.bankController,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'holder',
+                label: 'Account holder name',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'holder',
+                  controller: vm.holderController,
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'holder',
-          label: 'Account holder name',
-          child: _textInput(
-            viewModel: vm,
-            key: 'holder',
-            controller: vm.holderController,
-          ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'acc',
+                label: 'Account number',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'acc',
+                  controller: vm.accController,
+                  type: TextInputType.number,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'ifsc',
+                label: 'IFSC code',
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'ifsc',
+                  controller: vm.ifscController,
+                ),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'acc',
-          label: 'Account number',
-          child: _textInput(
-            viewModel: vm,
-            key: 'acc',
-            controller: vm.accController,
-            type: TextInputType.number,
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'ifsc',
-          label: 'IFSC code',
-          child: _textInput(
-            viewModel: vm,
-            key: 'ifsc',
-            controller: vm.ifscController,
-          ),
-        ),
+
         _fld(
           viewModel: vm,
           key: 'bankf',
@@ -1416,136 +1641,172 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         }),
 
         _sub('Optional licences'),
-        _fld(
-          viewModel: vm,
-          key: 'fssai',
-          label: 'FSSAI number',
-          isOpt: true,
-          child: _textInput(
-            viewModel: vm,
-            key: 'fssai',
-            controller: vm.fssaiController,
-            type: TextInputType.number,
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'ff',
-          label: 'FSSAI attachment',
-          isOpt: true,
-          child: _filePicker(viewModel: vm, key: 'ff', rxPath: vm.ffPath),
-        ),
-
-        _fld(
-          viewModel: vm,
-          key: 'drug',
-          label: 'Drug licence number',
-          isOpt: true,
-          child: _textInput(
-            viewModel: vm,
-            key: 'drug',
-            controller: vm.drugController,
-          ),
-        ),
-        _fld(
-          viewModel: vm,
-          key: 'df',
-          label: 'Drug licence attachment',
-          isOpt: true,
-          child: _filePicker(viewModel: vm, key: 'df', rxPath: vm.dfPath),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'fssai',
+                label: 'FSSAI number',
+                isOpt: true,
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'fssai',
+                  controller: vm.fssaiController,
+                  type: TextInputType.number,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'ff',
+                label: 'FSSAI attachment',
+                isOpt: true,
+                child: _filePicker(viewModel: vm, key: 'ff', rxPath: vm.ffPath),
+              ),
+            ),
+          ],
         ),
 
-        _fld(
-          viewModel: vm,
-          key: 'shopl',
-          label: 'Shop licence number',
-          isOpt: true,
-          child: _textInput(
-            viewModel: vm,
-            key: 'shopl',
-            controller: vm.shoplController,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'drug',
+                label: 'Drug licence number',
+                isOpt: true,
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'drug',
+                  controller: vm.drugController,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'df',
+                label: 'Drug licence attachment',
+                isOpt: true,
+                child: _filePicker(viewModel: vm, key: 'df', rxPath: vm.dfPath),
+              ),
+            ),
+          ],
         ),
-        _fld(
-          viewModel: vm,
-          key: 'sf',
-          label: 'Shop licence attachment',
-          isOpt: true,
-          child: _filePicker(viewModel: vm, key: 'sf', rxPath: vm.sfPath),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'shopl',
+                label: 'Shop licence number',
+                isOpt: true,
+                child: _textInput(
+                  viewModel: vm,
+                  key: 'shopl',
+                  controller: vm.shoplController,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _fld(
+                viewModel: vm,
+                key: 'sf',
+                label: 'Shop licence attachment',
+                isOpt: true,
+                child: _filePicker(viewModel: vm, key: 'sf', rxPath: vm.sfPath),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
+  // Fixed Compact Bottom Navigation Bar (nav)
   Widget _buildBottomNav(AddOutletViewModel viewModel) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: const BoxDecoration(
         color: HtmlColors.card,
         border: Border(top: BorderSide(color: HtmlColors.line)),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 30),
       child: Obx(() {
         final step = viewModel.currentStep.value;
         return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (step > 0)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: ElevatedButton(
-                    onPressed: viewModel.previousStep,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: HtmlColors.bg,
-                      foregroundColor: HtmlColors.pri,
-                      elevation: 0,
-                      side: const BorderSide(color: HtmlColors.line),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(13),
+                  padding: const EdgeInsets.only(right: 6),
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: viewModel.previousStep,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: HtmlColors.bg,
+                        foregroundColor: HtmlColors.ink,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                        side: const BorderSide(color: HtmlColors.line),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Back',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      child: const Text(
+                        'Back',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             Expanded(
-              child: Obx(
-                () => ElevatedButton(
-                  onPressed: viewModel.isLoading.value
-                      ? null
-                      : viewModel.nextStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: step == 2 ? HtmlColors.ok : HtmlColors.pri,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
+              child: SizedBox(
+                height: 40,
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed: viewModel.isLoading.value
+                        ? null
+                        : viewModel.nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: step == 2 ? HtmlColors.ok : HtmlColors.pri,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
+                    child: viewModel.isLoading.value
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            step == 2 ? 'Submit for approval' : 'Next',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
-                  child: viewModel.isLoading.value
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          step == 2 ? 'Submit for approval' : 'Next',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                 ),
               ),
             ),
@@ -1556,37 +1817,103 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
   }
 }
 
-class _DottedCirclePainter extends CustomPainter {
+// Custom StatefulWidget for Animated Location Icon inside Address Line 1
+class AnimatedLocationIconButton extends StatefulWidget {
+  final RxBool isLocating;
+  final VoidCallback onPressed;
+
+  const AnimatedLocationIconButton({
+    super.key,
+    required this.isLocating,
+    required this.onPressed,
+  });
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+  State<AnimatedLocationIconButton> createState() =>
+      _AnimatedLocationIconButtonState();
+}
 
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    const dashWidth = 4.0;
-    const dashSpace = 4.0;
+class _AnimatedLocationIconButtonState
+    extends State<AnimatedLocationIconButton> with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
 
-    double circumference = 2 * math.pi * radius;
-    int dashCount = (circumference / (dashWidth + dashSpace)).floor();
-
-    double sweepAngle = (2 * math.pi) / dashCount;
-    double dashAngle = (dashWidth / circumference) * 2 * math.pi;
-
-    for (int i = 0; i < dashCount; i++) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        i * sweepAngle,
-        dashAngle,
-        false,
-        paint,
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final locating = widget.isLocating.value;
+
+      return GestureDetector(
+        onTap: locating ? null : widget.onPressed,
+        child: Container(
+          margin: const EdgeInsets.all(5),
+          width: 34,
+          height: 34,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (!locating)
+                AnimatedBuilder(
+                  animation: _animController,
+                  builder: (context, child) {
+                    final val = _animController.value;
+                    return Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: HtmlColors.pri.withValues(
+                              alpha: (1 - val) * 0.4,
+                            ),
+                            spreadRadius: val * 8,
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0x146A3FD6),
+                ),
+                child: locating
+                    ? const Padding(
+                        padding: EdgeInsets.all(7.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: HtmlColors.pri,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.my_location_rounded,
+                        color: HtmlColors.pri,
+                        size: 18,
+                      ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
 }

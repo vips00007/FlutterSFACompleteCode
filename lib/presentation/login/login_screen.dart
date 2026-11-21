@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
 import '../../routes/route_names.dart';
@@ -12,7 +13,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late final TextEditingController usernameController;
+  late final TextEditingController mobileController;
+  late final TextEditingController passwordController;
   final LoginViewModel viewModel = Get.find<LoginViewModel>();
 
   // Wave heights as a fraction of screen height (kept small / decorative)
@@ -22,12 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    usernameController = TextEditingController();
+    mobileController = TextEditingController(text: viewModel.savedMobile);
+    passwordController = TextEditingController(text: viewModel.savedPassword);
   }
 
   @override
   void dispose() {
-    usernameController.dispose();
+    mobileController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
@@ -82,7 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
 
             // 4. Male sales representative image
-            // We removed the ShaderMask because we are using a transparent PNG now
             Positioned(
               top: size.height * 0.05,
               right: -20,
@@ -133,7 +136,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     horizontal: 24.0),
                                 child: Row(
                                   children: [
-                                    // Existing old application logo
                                     Container(
                                       width: 48,
                                       height: 48,
@@ -283,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         const SizedBox(height: 24),
 
-                                        // Username field
+                                        // Mobile Number field
                                         Container(
                                           decoration: BoxDecoration(
                                             borderRadius:
@@ -298,15 +300,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ],
                                           ),
                                           child: TextField(
-                                            controller: usernameController,
+                                            controller: mobileController,
+                                            keyboardType: TextInputType.phone,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.digitsOnly,
+                                              LengthLimitingTextInputFormatter(10),
+                                            ],
                                             decoration: InputDecoration(
-                                              hintText: 'Username',
+                                              hintText: 'Mobile Number',
                                               hintStyle: TextStyle(
                                                 color: Colors.grey.shade500,
                                                 fontSize: 14,
                                               ),
                                               prefixIcon: const Icon(
-                                                Icons.person_outline,
+                                                Icons.phone_android_outlined,
                                                 color: Color(0xFF4A148C),
                                               ),
                                               filled: true,
@@ -328,6 +335,71 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 borderSide: const BorderSide(
                                                   color: Color(0xFF4A148C),
                                                   width: 2.0,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 16),
+
+                                        // Password field
+                                        Obx(
+                                          () => Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                              BorderRadius.circular(16),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF311B92)
+                                                      .withValues(alpha: 0.05),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: TextField(
+                                              controller: passwordController,
+                                              obscureText: !viewModel.isPasswordVisible.value,
+                                              decoration: InputDecoration(
+                                                hintText: 'Password',
+                                                hintStyle: TextStyle(
+                                                  color: Colors.grey.shade500,
+                                                  fontSize: 14,
+                                                ),
+                                                prefixIcon: const Icon(
+                                                  Icons.lock_outline,
+                                                  color: Color(0xFF4A148C),
+                                                ),
+                                                suffixIcon: IconButton(
+                                                  icon: Icon(
+                                                    viewModel.isPasswordVisible.value
+                                                        ? Icons.visibility
+                                                        : Icons.visibility_off,
+                                                    color: const Color(0xFF4A148C),
+                                                  ),
+                                                  onPressed: viewModel.togglePasswordVisibility,
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.white,
+                                                contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 14),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                  BorderRadius.circular(16),
+                                                  borderSide: BorderSide(
+                                                    color: Colors.grey.shade300,
+                                                    width: 1.2,
+                                                  ),
+                                                ),
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                  BorderRadius.circular(16),
+                                                  borderSide: const BorderSide(
+                                                    color: Color(0xFF4A148C),
+                                                    width: 2.0,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -413,7 +485,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                         const SizedBox(height: 24),
 
-                                        // Generate OTP button
+                                        // Login button
                                         Container(
                                           width: double.infinity,
                                           height: 50,
@@ -443,9 +515,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                               viewModel.isLoading.value
                                                   ? null
                                                   : () => viewModel.login(
-                                                  usernameController
-                                                      .text
-                                                      .trim()),
+                                                  mobileController.text,
+                                                  passwordController.text),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor:
                                                 Colors.transparent,
@@ -471,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                     .center,
                                                 children: [
                                                   Text(
-                                                    'Generate OTP',
+                                                    'Login',
                                                     style: TextStyle(
                                                       fontSize: 16,
                                                       fontWeight:

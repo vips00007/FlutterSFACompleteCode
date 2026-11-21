@@ -1,4 +1,4 @@
-import '../../data/models/sfa_otp_models.dart';
+import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
 
 class LoginUseCase {
@@ -6,7 +6,7 @@ class LoginUseCase {
 
   LoginUseCase(this.repository);
 
-  Future<SendLoginOtpData> execute(String identifier) {
-    return repository.sendLoginOtp(identifier);
+  Future<User> execute(String username, String password) {
+    return repository.login(username, password);
   }
 }

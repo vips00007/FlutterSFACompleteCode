@@ -13,6 +13,7 @@ import '../../data/datasource/remote/customer_api_service.dart';
 import '../../data/models/customer_reference_data_response.dart';
 import '../../data/models/customer_create_request.dart';
 import 'widgets/shop_camera_preview_screen.dart';
+import 'widgets/customer_dialogs.dart';
 import 'dart:io';
 
 // Top-level function for background isolate image processing
@@ -41,6 +42,17 @@ Future<Uint8List?> _compressImageInIsolate(Uint8List originalBytes) async {
 
 class AddOutletViewModel extends GetxController {
   final CustomerApiService _apiService = CustomerApiService();
+  final scrollController = ScrollController();
+
+  void scrollToTop() {
+    if (scrollController.hasClients) {
+      scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   // Common states
   final currentStep = 0.obs;
@@ -374,6 +386,7 @@ class AddOutletViewModel extends GetxController {
       }
     }
     currentStep.value = step;
+    scrollToTop();
   }
 
   void nextStep() {
@@ -383,6 +396,7 @@ class AddOutletViewModel extends GetxController {
       }
       if (currentStep.value < 2) {
         currentStep.value++;
+        scrollToTop();
       } else {
         submitForm();
       }
@@ -392,6 +406,7 @@ class AddOutletViewModel extends GetxController {
   void previousStep() {
     if (currentStep.value > 0) {
       currentStep.value--;
+      scrollToTop();
     }
   }
 
@@ -971,63 +986,145 @@ class AddOutletViewModel extends GetxController {
         bankProofPath: bankfPath.value,
       );
 
-      Get.dialog(
-        Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_circle_outline,
-                  color: Color(0xFF1B9A6C),
-                  size: 100,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Sent for approval',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${shopController.text.isNotEmpty ? shopController.text : "The customer"} is now with your manager.\nRef: ${res.data?.customerCode ?? ""}',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2B2F87),
-                    ),
-                    onPressed: () {
-                      Get.back();
-                      Get.back();
-                    },
-                    child: const Text(
-                      'Close',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        barrierDismissible: false,
+      final customerName = shopController.text.isNotEmpty
+          ? shopController.text.trim()
+          : "The customer";
+      final customerCode = res.data?.customerCode ?? "";
+
+      // Reset form ONLY AFTER confirmed success response
+      resetForm();
+
+      showCustomerSuccessDialog(
+        title: 'Customer Created Successfully',
+        description: 'The customer record has been submitted for approval.',
+        customerName: customerName,
+        customerCode: customerCode,
+      );
+    } on CustomerApiException catch (e) {
+      showCustomerErrorDialog(
+        title: e.message,
+        description: 'Check the details below and try again.',
+        errors: e.errors,
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString().replaceAll('Exception: ', ''),
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
+      final errMsg = e.toString().replaceAll('Exception: ', '');
+      showCustomerErrorDialog(
+        title: 'Submission Failed',
+        description: 'Check the details below and try again.',
+        errors: [errMsg],
       );
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Reset form to original initial state
+  void resetForm() {
+    currentStep.value = 0;
+    maxStepReached.value = -1;
+    errors.clear();
+    avatarError.value = '';
+
+    // Header & Images
+    avatarPath.value = null;
+    isUploadingImage.value = false;
+    clientReqId.value = null;
+
+    // Step 1: Shop details
+    shopController.clear();
+    personController.clear();
+    mobileController.clear();
+    wacb.value = false;
+    waController.clear();
+    emailController.clear();
+
+    // Step 1: Address
+    capturedGeo.value = null;
+    lat = null;
+    lng = null;
+    a1Controller.clear();
+    a2Controller.clear();
+    a3Controller.clear();
+    selectedState.value = null;
+    cityController.clear();
+    pinController.clear();
+    isLocating.value = false;
+
+    // Step 2: Classification & Profile
+    subTypeUuid.value = null;
+    channelUuid.value = null;
+    segmentUuid.value = null;
+    categoryUuid.value = null;
+    clsUuid.value = null;
+    beatUuid.value = null;
+
+    establishedYearController.clear();
+    dob.value = null;
+    dobController.clear();
+    anniversary.value = null;
+    anniversaryController.clear();
+    shopSizeController.clear();
+    monthlyPotentialController.clear();
+    selectedBrands.clear();
+    openTime.value = null;
+    closeTime.value = null;
+
+    // Step 2: Mechanic details
+    wtypeUuid.value = null;
+    expController.clear();
+    eng.value = null;
+    mechsController.clear();
+
+    // Step 3: KYC, Bank & Licences
+    final kycTypes = kycDocTypeList;
+    if (kycTypes.isNotEmpty) {
+      final aadhaar = kycTypes.firstWhereOrNull(
+        (e) => e.name.toLowerCase().contains('aadhaar'),
+      );
+      if (aadhaar != null) {
+        kycDocTypeUuid.value = aadhaar.uuid;
+        kycDocTypeName.value = aadhaar.name;
+      } else {
+        kycDocTypeUuid.value = kycTypes.first.uuid;
+        kycDocTypeName.value = kycTypes.first.name;
+      }
+    } else {
+      kycDocTypeUuid.value = null;
+      kycDocTypeName.value = '';
+    }
+
+    fnController.clear();
+    lnController.clear();
+    docnoController.clear();
+    docfPath.value = null;
+    isUploadingDoc.value = false;
+
+    bankController.clear();
+    holderController.clear();
+    accController.clear();
+    ifscController.clear();
+    bankfPath.value = null;
+
+    gst.value = 'Registered';
+    gstcat.value = 'Regular';
+    gstnoController.clear();
+
+    fssaiController.clear();
+    fexpDate.value = null;
+    ffPath.value = null;
+
+    drugController.clear();
+    dfPath.value = null;
+
+    shoplController.clear();
+    sfPath.value = null;
+
+    scrollToTop();
+  }
+
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
   }
 }

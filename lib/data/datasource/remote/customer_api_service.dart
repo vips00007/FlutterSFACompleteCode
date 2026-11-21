@@ -121,7 +121,7 @@ class CustomerApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return CustomerCreateResponse.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception("Failed to create customer: ${response.statusCode} - ${response.body}");
+      throw CustomerApiException.fromResponse(response.statusCode, response.body);
     }
   }
 
@@ -190,4 +190,89 @@ class CustomerApiService {
       throw Exception("Failed to upload file: ${response.statusCode} - ${response.body}");
     }
   }
+}
+
+class CustomerApiException implements Exception {
+  final int statusCode;
+  final String rawBody;
+  final String message;
+  final List<String> errors;
+
+  CustomerApiException({
+    required this.statusCode,
+    required this.rawBody,
+    required this.message,
+    required this.errors,
+  });
+
+  factory CustomerApiException.fromResponse(int statusCode, String body) {
+    String message = '';
+    List<String> errorsList = [];
+
+    try {
+      final json = jsonDecode(body);
+      if (json is Map) {
+        if (json['message'] != null) {
+          message = json['message'].toString();
+        }
+        
+        if (json['errors'] != null) {
+          if (json['errors'] is List) {
+            errorsList = (json['errors'] as List)
+                .map((e) => e.toString())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          } else if (json['errors'] is String) {
+            errorsList = [json['errors'].toString()];
+          }
+        } else if (json['details'] != null) {
+          if (json['details'] is List) {
+            errorsList = (json['details'] as List)
+                .map((e) => e.toString())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          } else if (json['details'] is String) {
+            errorsList = [json['details'].toString()];
+          }
+        } else if (json['data'] != null && json['data'] is Map && json['data']['errors'] != null) {
+          if (json['data']['errors'] is List) {
+            errorsList = (json['data']['errors'] as List)
+                .map((e) => e.toString())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          }
+        }
+      }
+    } catch (_) {
+      // Body is not JSON
+    }
+
+    if (message.isEmpty) {
+      if (statusCode == 409) {
+        message = 'Customer already exists';
+      } else if (statusCode == 400) {
+        message = 'Invalid input details';
+      } else {
+        message = 'Failed to create customer ($statusCode)';
+      }
+    }
+
+    if (errorsList.isEmpty) {
+      if (statusCode == 409) {
+        errorsList = ['Mobile number or email is already registered'];
+      } else if (body.isNotEmpty && !body.startsWith('{')) {
+        errorsList = [body];
+      }
+    }
+
+    return CustomerApiException(
+      statusCode: statusCode,
+      rawBody: body,
+      message: message,
+      errors: errorsList,
+    );
+  }
+
+  @override
+  String toString() => '$message: ${errors.join(', ')}';
 }

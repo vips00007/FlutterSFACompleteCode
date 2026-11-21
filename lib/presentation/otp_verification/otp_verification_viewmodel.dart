@@ -145,15 +145,8 @@ class OtpVerificationViewModel extends GetxController {
 
     isLoading.value = true;
     try {
-      if (flowType == OtpFlowType.forgotPassword) {
-        final data = await forgotPasswordUseCase.execute(identifier);
-        _startTimer(data.otpExpiresInSeconds, data.resendAfterSeconds);
-      } else {
-        // Real resend for login flow
-        final otpData = await loginUseCase.execute(identifier);
-        challengeId = otpData.challengeId;
-        _startTimer(otpData.otpExpiresInSeconds, otpData.resendAfterSeconds);
-      }
+      final data = await forgotPasswordUseCase.execute(identifier);
+      _startTimer(data.otpExpiresInSeconds, data.resendAfterSeconds);
 
       isLoading.value = false;
       Get.snackbar(
