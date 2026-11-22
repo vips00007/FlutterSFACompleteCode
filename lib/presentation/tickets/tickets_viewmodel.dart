@@ -14,6 +14,10 @@ class TicketsViewModel extends GetxController {
   final selectedTabIndex = 1.obs; // 0 for Planned, 1 for Unplanned
   final plannedTickets = <Outlet>[].obs;
   
+  // Filter Chips State: 'All', 'FR', 'A-Z', 'L3M', 'MTD', 'Beat'
+  final selectedChip = 'All'.obs;
+  final filterChips = ['All', 'FR', 'A-Z', 'L3M', 'MTD', 'Beat'];
+  
   // Accumulated all unplanned tickets from all pages
   final _allUnplannedTickets = <Outlet>[];
   // Filtered tickets to show on UI
@@ -73,7 +77,6 @@ class TicketsViewModel extends GetxController {
       final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
       final planned = await getTicketsUseCase.executePlanned();
-      // No search query passed to API, get all for page 0
       final unplanned = await getTicketsUseCase.executeUnplanned(
         date: dateStr,
         page: _currentPage,
@@ -87,7 +90,7 @@ class TicketsViewModel extends GetxController {
         _hasMore = false;
       }
       
-      _applyLocalSearch();
+      _applyFilterAndSearch();
       state.value = TicketsState.success;
     } catch (e) {
       state.value = TicketsState.error;
@@ -113,7 +116,7 @@ class TicketsViewModel extends GetxController {
         _hasMore = false;
       }
       
-      _applyLocalSearch();
+      _applyFilterAndSearch();
     } catch (e) {
       _currentPage--;
     } finally {
@@ -122,21 +125,44 @@ class TicketsViewModel extends GetxController {
   }
 
   void _onSearchChanged() {
-    _applyLocalSearch();
+    _applyFilterAndSearch();
+  }
+
+  void selectChip(String chip) {
+    selectedChip.value = chip;
+    _applyFilterAndSearch();
   }
   
-  void _applyLocalSearch() {
+  void _applyFilterAndSearch() {
     final query = searchQuery.value.toLowerCase().trim();
-    if (query.isEmpty) {
-      unplannedTickets.assignAll(_allUnplannedTickets);
-    } else {
-      final filtered = _allUnplannedTickets.where((outlet) {
+    List<Outlet> result = List.from(_allUnplannedTickets);
+
+    // Apply search query filter
+    if (query.isNotEmpty) {
+      result = result.where((outlet) {
         final name = outlet.firstName.toLowerCase();
-        final code = outlet.mobileNumber.toLowerCase(); // mobileNumber is used to store customerCode
-        return name.contains(query) || code.contains(query);
+        final code = outlet.mobileNumber.toLowerCase();
+        final city = outlet.city.toLowerCase();
+        return name.contains(query) || code.contains(query) || city.contains(query);
       }).toList();
-      unplannedTickets.assignAll(filtered);
     }
+
+    // Apply chip selection behavior
+    switch (selectedChip.value) {
+      case 'A-Z':
+        result.sort((a, b) => a.firstName.compareTo(b.firstName));
+        break;
+      case 'FR':
+      case 'L3M':
+      case 'MTD':
+      case 'Beat':
+      case 'All':
+      default:
+        // Default ordering / all items
+        break;
+    }
+
+    unplannedTickets.assignAll(result);
   }
 
   void onSearchQueryChanged(String query) {
@@ -146,7 +172,7 @@ class TicketsViewModel extends GetxController {
   void clearSearch() {
     searchController.clear();
     searchQuery.value = '';
-    _applyLocalSearch();
+    _applyFilterAndSearch();
   }
 
   void changeTab(int index) {

@@ -144,10 +144,10 @@ class CreateTourPlanBottomSheet extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => viewModel.createPlan(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.sfaBlue,
+                  backgroundColor: AppColors.primaryPurple,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   elevation: 0,
                 ),

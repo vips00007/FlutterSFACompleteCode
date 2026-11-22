@@ -105,7 +105,12 @@ class ReviewPlanScreen extends StatelessWidget {
     Color color = Colors.grey.shade400;
     if (isCompleted) {
       color = Colors.green;
-    } else if (isActive) color = AppColors.primaryPurple;
+    }
+    if (isActive) {
+      if (!isCompleted) {
+        color = AppColors.primaryPurple;
+      }
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -560,7 +565,7 @@ class ReviewPlanScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryPurple,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text('Create Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
               ),

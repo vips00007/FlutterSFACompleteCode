@@ -1,1300 +1,1232 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../core/colors/app_colors.dart';
-import '../../data/models/my_visits_response.dart';
+import 'package:intl/intl.dart';
+import '../dashboard/dashboard_viewmodel.dart';
 import 'create_plan_viewmodel.dart';
 
 class CreatePlanScreen extends StatelessWidget {
   const CreatePlanScreen({super.key});
 
-  // Colors based on the existing app theme
-  static const Color bgColor = AppColors.background;
-  static const Color surfColor = Colors.white;
-  static const Color inkColor = AppColors.textPrimary;
-  static const Color muteColor = AppColors.textSecondary;
-  static const Color lineColor = Color(0xFFE0E0E0);
-  static const Color accColor = AppColors.primaryPurple;
-  static const Color accTColor = Color(0x1A8A2BE2);
-  static const Color warnColor = Color(0xFFEF6C00);
-  static const Color warnTColor = Color(0xFFFFF3E0);
-  static const Color errColor = Colors.red;
+  // Color Constants strictly matching Add Outlet theme & prototype
+  static const Color bgColor = Color(0xFFF4F3F9);
+  static const Color surfColor = Color(0xFFFFFFFF);
+  static const Color txColor = Color(0xFF17193F);
+  static const Color mutColor = Color(0xFF6B6F93);
+  static const Color bdColor = Color(0xFFDCDBEA);
+  static const Color priColor = Color(0xFF6A3FD6);
+  static const Color pri2Color = Color(0xFFF0EBFC);
+  static const Color okColor = Color(0xFF1B9A6C);
+  static const Color okbColor = Color(0xFFE8F6F0);
+  static const Color waColor = Color(0xFFD97706);
+  static const Color wabColor = Color(0xFFFEF3C7);
+  static const Color erColor = Color(0xFFD62839);
+  static const Color erbColor = Color(0xFFFCE8EA);
+
+  void _handleBackNavigation(BuildContext context, CreatePlanViewModel viewModel) {
+    if (viewModel.currentScreen.value != 'list') {
+      viewModel.go('list');
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else if (Get.isRegistered<DashboardViewModel>()) {
+      Get.find<DashboardViewModel>().changeTabIndex(0);
+    } else {
+      Get.back();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Get.find<CreatePlanViewModel>();
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: Obx(() {
-          switch (viewModel.currentScreen.value) {
-            case 'list':
-              return _buildListScreen(viewModel);
-            case 'planType':
-              return _buildPlanTypeScreen(context, viewModel);
-            case 'geography':
-              return _buildGeographyScreen(context, viewModel);
-            case 'retailers':
-              return _buildRetailersScreen(context, viewModel);
-            case 'details':
-              return _buildDetailsScreen(context, viewModel);
-            case 'done':
-              return _buildDoneScreen(viewModel);
-            default:
-              return _buildListScreen(viewModel);
-          }
-        }),
-      ),
-    );
-  }
-
-  // --- 1. List Screen (Dynamic My Plans API Response) ---
-  Widget _buildListScreen(CreatePlanViewModel viewModel) {
-    return Column(
-      children: [
-        _buildAppBar(title: 'My plans', showBack: true, onBackPressed: () => Get.back()),
-        Expanded(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBackNavigation(context, viewModel);
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        body: SafeArea(
           child: Obx(() {
-            if (viewModel.isVisitsLoading.value) {
-              return const Center(
-                child: CircularProgressIndicator(color: accColor),
-              );
+            switch (viewModel.currentScreen.value) {
+              case 'list':
+                return _buildListScreen(context, viewModel);
+              case 'create':
+                return _buildCreateScreen(context, viewModel);
+              case 'detail':
+                return _buildDetailScreen(context, viewModel);
+              default:
+                return _buildListScreen(context, viewModel);
             }
-
-            if (viewModel.visitsHasError.value) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, color: errColor, size: 48),
-                      const SizedBox(height: 12),
-                      Text(
-                        viewModel.visitsErrorMessage.value,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: inkColor, fontSize: 14),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => viewModel.fetchMyVisits(refresh: true),
-                        style: ElevatedButton.styleFrom(backgroundColor: accColor),
-                        child: const Text('Retry', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            final list = viewModel.myVisits;
-            if (list.isEmpty) {
-              return RefreshIndicator(
-                onRefresh: () => viewModel.fetchMyVisits(refresh: true),
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: const [
-                    SizedBox(height: 100),
-                    Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.calendar_today_outlined, size: 64, color: Colors.grey),
-                          SizedBox(height: 12),
-                          Text('No travel plans found.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: inkColor)),
-                          SizedBox(height: 4),
-                          Text('Tap + Create plan to create a new visit plan.', style: TextStyle(color: muteColor, fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: () => viewModel.fetchMyVisits(refresh: true),
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification scrollInfo) {
-                  if (scrollInfo.metrics.pixels >=
-                      scrollInfo.metrics.maxScrollExtent - 200) {
-                    viewModel.loadNextVisitsPage();
-                  }
-                  return false;
-                },
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(14),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: list.length + (viewModel.isVisitsLoadingMore.value ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == list.length) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
-                          child: CircularProgressIndicator(color: accColor, strokeWidth: 2),
-                        ),
-                      );
-                    }
-                    final plan = list[index];
-                    return _buildPlanCard(plan);
-                  },
-                ),
-              ),
-            );
           }),
         ),
-        _buildFooter(
-          buttonText: '+ Create plan',
-          onPressed: () => viewModel.startAddPlan(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadge(String rawStatus) {
-    final status = rawStatus.toUpperCase();
-    Color bgColor;
-    Color textColor;
-    String label;
-
-    switch (status) {
-      case 'COMPLETED':
-        bgColor = const Color(0xFFE8F5E9);
-        textColor = const Color(0xFF2E7D32);
-        label = 'Completed';
-        break;
-      case 'IN_PROGRESS':
-        bgColor = const Color(0xFFFFF3E0);
-        textColor = const Color(0xFFEF6C00);
-        label = 'In Progress';
-        break;
-      case 'MISSED':
-        bgColor = const Color(0xFFFFEBEE);
-        textColor = const Color(0xFFC62828);
-        label = 'Missed';
-        break;
-      case 'PENDING_APPROVAL':
-        bgColor = warnTColor;
-        textColor = warnColor;
-        label = 'Pending approval';
-        break;
-      case 'APPROVED':
-        bgColor = const Color(0xFFE8F5E9);
-        textColor = const Color(0xFF2E7D32);
-        label = 'Approved';
-        break;
-      case 'PLANNED':
-      default:
-        bgColor = accTColor;
-        textColor = accColor;
-        label = status == 'PLANNED' ? 'Planned' : status.replaceAll('_', ' ').capitalizeFirst ?? status;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
       ),
     );
   }
 
-  Widget _buildPlanCard(GroupedPlan plan) {
-    final isExpanded = false.obs;
+  // --- 1. MY PLAN – TAB-BASED LISTING SCREEN ---
+  Widget _buildListScreen(BuildContext context, CreatePlanViewModel viewModel) {
+    final filters = ['All', 'Pending', 'Approved', 'Rejected'];
 
-    return Obx(() {
-      final showAll = isExpanded.value || plan.customers.length <= 2;
-      final displayedCustomers = showAll ? plan.customers : plan.customers.take(2).toList();
-
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: surfColor,
-          border: Border.all(color: lineColor),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row: Plan Ref ID, Plan Type Tag, Status Badge
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Text(
-                          plan.displayId,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: inkColor),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: plan.planType == 'OUTSTATION' ? Colors.orange.shade50 : accTColor,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: plan.planType == 'OUTSTATION' ? Colors.orange.shade300 : accColor.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Text(
-                            plan.planType,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: plan.planType == 'OUTSTATION' ? Colors.orange.shade900 : accColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildStatusBadge(plan.status),
-                ],
-              ),
-            ),
-
-            // Sub-Header Info Row (Date & Customer Count)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_outlined, size: 13, color: muteColor),
-                  const SizedBox(width: 4),
-                  Text(
-                    plan.when,
-                    style: const TextStyle(fontSize: 13, color: inkColor, fontWeight: FontWeight.w600),
-                  ),
-                  const Text(' · ', style: TextStyle(color: muteColor)),
-                  const Icon(Icons.storefront_outlined, size: 13, color: muteColor),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${plan.customerCount} retailer${plan.customerCount > 1 ? 's' : ''}',
-                    style: const TextStyle(fontSize: 13, color: muteColor),
-                  ),
-                ],
-              ),
-            ),
-
-            // Location Summary Row (Area & City)
-            if (plan.place != null && plan.place!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 13, color: accColor),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        plan.place!,
-                        style: const TextStyle(fontSize: 12, color: muteColor),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            const Divider(height: 16, color: lineColor),
-
-            // Retailer List Details with Area, City, and Code
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: displayedCustomers.map((c) {
-                  final String locationStr = [
-                    if (c.area != null && c.area!.trim().isNotEmpty) c.area!.trim(),
-                    if (c.city != null && c.city!.trim().isNotEmpty) c.city!.trim(),
-                  ].join(', ');
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                c.customerName ?? 'Unknown Retailer',
-                                style: const TextStyle(fontSize: 13, color: inkColor, fontWeight: FontWeight.w600),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (c.customerCode != null && c.customerCode!.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  c.customerCode!,
-                                  style: const TextStyle(fontSize: 11, color: muteColor, fontWeight: FontWeight.w500),
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (locationStr.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              const Icon(Icons.map_outlined, size: 12, color: muteColor),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  locationStr,
-                                  style: const TextStyle(fontSize: 11, color: muteColor),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            // Expand / Collapse Footer Toggle
-            if (plan.customers.length > 2)
-              InkWell(
-                onTap: () => isExpanded.value = !isExpanded.value,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                  decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: lineColor)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isExpanded.value
-                            ? 'Show less'
-                            : '+ ${plan.customers.length - 2} more retailer${plan.customers.length - 2 > 1 ? 's' : ''}',
-                        style: const TextStyle(fontSize: 12, color: accColor, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        isExpanded.value ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        size: 16,
-                        color: accColor,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    });
-  }
-
-  // --- 2. First Step: Select Plan Type Screen ---
-  Widget _buildPlanTypeScreen(BuildContext context, CreatePlanViewModel viewModel) {
     return Column(
       children: [
-        _buildAppBar(
-          title: 'Select Plan Type',
-          showBack: true,
-          onBackPressed: () => viewModel.go('list'),
+        // Header matching Add Outlet screen header design
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          constraints: const BoxConstraints(minHeight: 60),
+          decoration: BoxDecoration(
+            color: priColor,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: priColor.withValues(alpha: 0.18),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => _handleBackNavigation(context, viewModel),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Visit',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 36,
+                child: ElevatedButton(
+                  onPressed: () => viewModel.newPlan(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: priColor,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    '＋ Create Plan',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+
+        // Main List Content
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Section Label
               const Text(
-                'Choose visit plan type:',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: inkColor),
+                'MY PLAN',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: mutColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Obx(() {
+                  return Row(
+                    children: filters.map((f) {
+                      final isSelected = viewModel.currentFilter.value == f;
+                      final count = viewModel.getPlanCountByStatus(f);
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => viewModel.currentFilter.value = f,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isSelected ? priColor : surfColor,
+                              borderRadius: BorderRadius.circular(99),
+                              border: Border.all(
+                                color: isSelected ? priColor : bdColor,
+                              ),
+                            ),
+                            child: Text(
+                              '$f ($count)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : mutColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }),
               ),
               const SizedBox(height: 12),
-              _buildTypeOption(viewModel, 'Local', '🏙️', 'Same-day visits within your area'),
-              const SizedBox(height: 12),
-              _buildTypeOption(viewModel, 'Outstation', '🚆', 'Outstation visits, multi-day trip'),
-              const SizedBox(height: 20),
 
-              // Dynamic Plan Date Visibility (Only visible when Local is selected)
+              // Plan Cards List
               Obx(() {
-                final isLocal = viewModel.planType.value.toLowerCase() == 'local';
-                if (!isLocal) return const SizedBox.shrink();
+                final plansList = viewModel.filteredPlans;
+                if (plansList.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Text(
+                        'No plans found.',
+                        style: TextStyle(color: mutColor, fontSize: 14),
+                      ),
+                    ),
+                  );
+                }
+
                 return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Plan Date',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: inkColor),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildDatePicker(
-                      context,
-                      viewModel.selectedDate.value,
-                      (val) => viewModel.setSelectedDate(val),
-                    ),
-                  ],
+                  children: plansList.map((plan) {
+                    return _buildPlanCard(viewModel, plan);
+                  }).toList(),
                 );
               }),
             ],
           ),
         ),
-        Obx(() => _buildFooter(
-          buttonText: 'Continue',
-          onPressed: viewModel.planType.value.isNotEmpty
-              ? () => viewModel.continueFromPlanType()
-              : null,
-        )),
       ],
     );
   }
 
-  Widget _buildTypeOption(CreatePlanViewModel viewModel, String type, String emoji, String subtitle) {
-    return Obx(() {
-      final isSelected = viewModel.planType.value.toLowerCase() == type.toLowerCase();
-      return GestureDetector(
-        onTap: () => viewModel.setPlanType(type),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isSelected ? accTColor : surfColor,
-            border: Border.all(
-              color: isSelected ? accColor : lineColor,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(14),
+  // Plan Card Component
+  Widget _buildPlanCard(CreatePlanViewModel viewModel, PrototypePlan plan) {
+    final zoneInfo = Z[plan.zone] ?? ['Unknown', 'Unknown'];
+
+    // Status Styling
+    Color statusBg = wabColor;
+    Color statusTextColor = waColor;
+    if (plan.status == 'Approved') {
+      statusBg = okbColor;
+      statusTextColor = okColor;
+    } else if (plan.status == 'Rejected') {
+      statusBg = erbColor;
+      statusTextColor = erColor;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: surfColor,
+        border: Border.all(color: bdColor),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(15, 27, 45, 0.05),
+            blurRadius: 12,
+            offset: Offset(0, 3),
           ),
-          child: Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => viewModel.go('detail', openRef: plan.ref),
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Row 1: Ref & Status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      type,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: inkColor),
+                      plan.ref,
+                      style: const TextStyle(
+                        color: priColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        decoration: TextDecoration.underline,
+                        decorationThickness: 1.5,
+                      ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(fontSize: 13, color: muteColor)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        plan.status,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: statusTextColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // Row 2: Meta Info (Customers, Date, Location)
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 6,
+                  children: [
+                    Text(
+                      '👥 ${plan.cust.length} Customers',
+                      style: const TextStyle(color: mutColor, fontSize: 12.5),
+                    ),
+                    Text(
+                      '📅 ${viewModel.formatPlanDateRange(plan)}',
+                      style: const TextStyle(color: mutColor, fontSize: 12.5),
+                    ),
+                    Text(
+                      '📍 ${zoneInfo[0]}, ${zoneInfo[1]}',
+                      style: const TextStyle(color: mutColor, fontSize: 12.5),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Row 3: Tag & Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: pri2Color,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        plan.mode,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: priColor,
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'View details ›',
+                      style: TextStyle(color: mutColor, fontSize: 12.5),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- 2. CREATE PLAN – LOCAL & UPCOUNTRY SCREEN ---
+  Widget _buildCreateScreen(BuildContext context, CreatePlanViewModel viewModel) {
+    return Column(
+      children: [
+        // Header matching Add Outlet screen header design
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          constraints: const BoxConstraints(minHeight: 60),
+          decoration: BoxDecoration(
+            color: priColor,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: priColor.withValues(alpha: 0.18),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => _handleBackNavigation(context, viewModel),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Create Plan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Scrollable Form Content
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
+            children: [
+              // Plan Type Segmented Toggle
+              const Text(
+                'PLAN TYPE',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: pri2Color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildSegButton(
+                        viewModel: viewModel,
+                        mode: 'Local',
+                        label: '🏙️ Local',
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildSegButton(
+                        viewModel: viewModel,
+                        mode: 'Upcountry',
+                        label: '🚚 Upcountry',
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(
-                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: isSelected ? accColor : muteColor,
+              const SizedBox(height: 16),
+
+              // Select Beat / Select Territory Dropdown
+              Obx(() => Text(
+                viewModel.currentMode.value == 'Local' ? 'SELECT BEAT' : 'SELECT TERRITORY',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+              )),
+              const SizedBox(height: 8),
+              Obx(() {
+                final mode = viewModel.currentMode.value;
+                final availableZones = Z.entries.where((e) => e.value[2] == mode).toList();
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: surfColor,
+                    border: Border.all(color: bdColor),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: viewModel.currentZone.value.isEmpty ? null : viewModel.currentZone.value,
+                      hint: Text(
+                        '— Choose ${mode == 'Local' ? 'beat' : 'territory'} —',
+                        style: const TextStyle(color: mutColor, fontSize: 14),
+                      ),
+                      isExpanded: true,
+                      icon: const Icon(Icons.arrow_drop_down, color: txColor),
+                      items: availableZones.map((entry) {
+                        final key = entry.key;
+                        final info = entry.value;
+                        return DropdownMenuItem<String>(
+                          value: key,
+                          child: Text(
+                            '${info[0]} · ${info[1]}',
+                            style: const TextStyle(fontSize: 14, color: txColor),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        viewModel.currentZone.value = val ?? '';
+                        viewModel.selectedCustomerIds.clear();
+                      },
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 16),
+
+              // Visit Date / Date Range
+              Obx(() => Text(
+                viewModel.currentMode.value == 'Local' ? 'VISIT DATE' : 'DATE RANGE',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+              )),
+              const SizedBox(height: 8),
+              Obx(() {
+                final isLocal = viewModel.currentMode.value == 'Local';
+                if (isLocal) {
+                  return _buildDatePickerField(
+                    context: context,
+                    value: viewModel.d1.value,
+                    onDatePicked: (val) {
+                      viewModel.d1.value = val;
+                      viewModel.d2.value = val;
+                    },
+                  );
+                } else {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('From date', style: TextStyle(color: mutColor, fontSize: 12)),
+                            const SizedBox(height: 4),
+                            _buildDatePickerField(
+                              context: context,
+                              value: viewModel.d1.value,
+                              onDatePicked: (val) {
+                                viewModel.d1.value = val;
+                                if (viewModel.d2.value.compareTo(val) < 0) {
+                                  viewModel.d2.value = val;
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('To date', style: TextStyle(color: mutColor, fontSize: 12)),
+                            const SizedBox(height: 4),
+                            _buildDatePickerField(
+                              context: context,
+                              value: viewModel.d2.value,
+                              minDate: viewModel.d1.value,
+                              onDatePicked: (val) {
+                                viewModel.d2.value = val;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              }),
+              const SizedBox(height: 18),
+
+              // Unplanned Customers Section Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'UNPLANNED CUSTOMERS',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+                  ),
+                  Obx(() {
+                    final customers = viewModel.filteredCustomers;
+                    if (customers.isEmpty) return const SizedBox.shrink();
+                    final allSel = viewModel.isAllVisibleSelected;
+                    return GestureDetector(
+                      onTap: () => viewModel.toggleAllVisibleCustomers(!allSel),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: surfColor,
+                          border: Border.all(color: bdColor),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          allSel ? 'Clear all' : 'Select all',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: mutColor),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
               ),
+              const SizedBox(height: 8),
+
+              // Customer Type Filter Chips
+              Obx(() {
+                final baseCustomers = viewModel.zoneAvailableCustomers;
+                final types = ['All', 'D', 'R', 'M'];
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: types.map((t) {
+                      final isSelected = viewModel.currentTypeFilter.value == t;
+                      final label = t == 'All' ? 'All' : '${TN[t]}s';
+                      final count = t == 'All'
+                          ? baseCustomers.length
+                          : baseCustomers.where((c) => c.type == t).length;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => viewModel.currentTypeFilter.value = t,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isSelected ? priColor : surfColor,
+                              border: Border.all(color: isSelected ? priColor : bdColor),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: Text(
+                              '$label ($count)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : mutColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              }),
+              const SizedBox(height: 10),
+
+              // Search Box
+              TextField(
+                onChanged: (val) => viewModel.searchQuery.value = val,
+                decoration: InputDecoration(
+                  hintText: 'Search customer or owner',
+                  hintStyle: const TextStyle(color: mutColor, fontSize: 14),
+                  filled: true,
+                  fillColor: surfColor,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: bdColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: bdColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: priColor),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Customer Cards / Empty State
+              Obx(() {
+                if (viewModel.currentZone.value.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 30),
+                    child: Center(
+                      child: Text(
+                        'Select a ${viewModel.currentMode.value == 'Local' ? 'beat' : 'territory'} to see available customers.',
+                        style: const TextStyle(color: mutColor, fontSize: 14),
+                      ),
+                    ),
+                  );
+                }
+
+                final list = viewModel.filteredCustomers;
+                if (list.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 30),
+                    child: Center(
+                      child: Text(
+                        'No unplanned customers available.',
+                        style: TextStyle(color: mutColor, fontSize: 14),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: list.map((c) {
+                    final isSel = viewModel.selectedCustomerIds.contains(c.id);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: isSel ? pri2Color : surfColor,
+                        border: Border.all(color: isSel ? priColor : bdColor),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => viewModel.toggleCustomerSelection(c.id),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              children: [
+                                // Checkbox
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: isSel ? priColor : surfColor,
+                                    border: Border.all(color: isSel ? priColor : bdColor, width: 2),
+                                    borderRadius: BorderRadius.circular(7),
+                                  ),
+                                  child: isSel
+                                      ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+
+                                // Type Avatar Circle
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(
+                                    color: pri2Color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    TN[c.type]![0],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: priColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                // Customer Name & Owner
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        c.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: txColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${c.owner} · ${Z[c.zone]![0]}',
+                                        style: const TextStyle(fontSize: 12, color: mutColor),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Tag
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: pri2Color,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    TN[c.type]!,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: priColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              }),
             ],
+          ),
+        ),
+
+        // Sticky Bottom Footer Bar matching Add Outlet screen button design
+        Obx(() {
+          final count = viewModel.selectedCustomerIds.length;
+          final isValid = viewModel.isFormValid;
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: const BoxDecoration(
+              color: surfColor,
+              border: Border(top: BorderSide(color: bdColor)),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$count',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: txColor),
+                      ),
+                      const Text(
+                        'selected',
+                        style: TextStyle(fontSize: 11, color: mutColor),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: (isValid && !viewModel.isSubmitting.value)
+                          ? () => viewModel.savePlan()
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: priColor,
+                        disabledBackgroundColor: priColor.withValues(alpha: 0.4),
+                        foregroundColor: Colors.white,
+                        disabledForegroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: viewModel.isSubmitting.value
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text(
+                              'Create Plan',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  // Segmented control button helper
+  Widget _buildSegButton({
+    required CreatePlanViewModel viewModel,
+    required String mode,
+    required String label,
+  }) {
+    return Obx(() {
+      final isSelected = viewModel.currentMode.value == mode;
+      return GestureDetector(
+        onTap: () {
+          viewModel.currentMode.value = mode;
+          viewModel.currentZone.value = '';
+          viewModel.selectedCustomerIds.clear();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? surfColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: isSelected
+                ? const [
+                    BoxShadow(
+                      color: Color.fromRGBO(15, 27, 45, 0.07),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                    )
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? priColor : mutColor,
+            ),
           ),
         ),
       );
     });
   }
 
-  // --- Helper Widget: Custom Checkbox ---
-  Widget _buildCustomCheckbox(bool isSelected) {
-    const blueColor = Color(0xFF2563EB);
-    return Container(
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isSelected ? blueColor : surfColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: isSelected ? blueColor : const Color(0xFF94A3B8),
-          width: 2,
-        ),
-      ),
-      child: isSelected
-          ? const Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 18,
-            )
-          : null,
-    );
-  }
-
-  // --- 2.5 Outstation Step: Select Geography Screen ---
-  Widget _buildGeographyScreen(BuildContext context, CreatePlanViewModel viewModel) {
-    const blueColor = Color(0xFF2563EB);
-    const lightBlueBg = Color(0xFFEFF6FF);
-
-    return Column(
-      children: [
-        _buildAppBar(
-          title: 'Select Geography',
-          showBack: true,
-          onBackPressed: () => viewModel.go('planType'),
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
-                child: Text(
-                  'Select destination geography for outstation plan:',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: inkColor),
-                ),
-              ),
-              Expanded(
-                child: Obx(() {
-                  if (viewModel.isGeographyLoading.value) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: accColor),
-                    );
-                  }
-
-                  if (viewModel.geographyHasError.value) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, color: errColor, size: 48),
-                            const SizedBox(height: 12),
-                            Text(
-                              viewModel.geographyErrorMessage.value,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: inkColor, fontSize: 14),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => viewModel.fetchMyGeographies(),
-                              style: ElevatedButton.styleFrom(backgroundColor: accColor),
-                              child: const Text('Retry', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  final list = viewModel.geographies;
-                  if (list.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Text(
-                          'No geographies found.',
-                          style: TextStyle(color: muteColor, fontSize: 14),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    itemCount: list.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = list[index];
-                      return Obx(() {
-                        final isSelected = viewModel.selectedGeographyUuid.value == item.effectiveUuid;
-                        return Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => viewModel.selectGeography(item),
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: isSelected ? lightBlueBg : surfColor,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isSelected ? blueColor : lineColor,
-                                  width: isSelected ? 1.5 : 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  _buildCustomCheckbox(isSelected),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.name,
-                                          style: TextStyle(
-                                            color: inkColor,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        if (item.code != null || item.type != null) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            [if (item.code != null) 'Code: ${item.code}', if (item.type != null) 'Type: ${item.type}'].join(' · '),
-                                            style: const TextStyle(fontSize: 13, color: muteColor),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      });
-                    },
-                  );
-                }),
-              ),
-            ],
-          ),
-        ),
-        Obx(() => _buildFooter(
-          buttonText: 'Continue',
-          onPressed: viewModel.selectedGeographyUuid.value.isNotEmpty
-              ? () => viewModel.continueFromGeography()
-              : null,
-        )),
-      ],
-    );
-  }
-
-  // --- 3. Second Step: Select Retailers Screen ---
-  Widget _buildRetailersScreen(BuildContext context, CreatePlanViewModel viewModel) {
-    const blueColor = Color(0xFF2563EB);
-    const lightBlueBg = Color(0xFFEFF6FF);
-
-    return Column(
-      children: [
-        _buildAppBar(
-          title: 'Select retailers (${viewModel.planType.value})',
-          showBack: true,
-          onBackPressed: () => viewModel.go(viewModel.apiPlanType == 'OUTSTATION' ? 'geography' : 'planType'),
-        ),
-        Expanded(
-          child: Column(
-            children: [
-              // Search Input
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
-                child: TextField(
-                  onChanged: (val) => viewModel.searchQuery.value = val,
-                  decoration: InputDecoration(
-                    hintText: 'Search shop name, code or area',
-                    prefixIcon: const Icon(Icons.search, color: muteColor),
-                    filled: true,
-                    fillColor: surfColor,
-                    contentPadding: const EdgeInsets.all(11),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: lineColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: lineColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: accColor, width: 2),
-                    ),
-                  ),
-                ),
-              ),
-              // Select All Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                child: Obx(() {
-                  final isAllSelected = viewModel.isAllVisibleSelected;
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => viewModel.selectAllVisible(!isAllSelected),
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isAllSelected ? lightBlueBg : accTColor,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isAllSelected ? blueColor : Colors.transparent,
-                            width: isAllSelected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            _buildCustomCheckbox(isAllSelected),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Select all (${viewModel.filteredCustomers.length})',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: isAllSelected ? blueColor : inkColor,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-              // Customer List with Pagination & State Handling
-              Expanded(
-                child: Obx(() {
-                  if (viewModel.isLoading.value) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: accColor),
-                    );
-                  }
-
-                  if (viewModel.hasError.value) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, color: errColor, size: 48),
-                            const SizedBox(height: 12),
-                            Text(
-                              viewModel.errorMessage.value,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: inkColor, fontSize: 14),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => viewModel.fetchUnplannedCustomers(refresh: true),
-                              style: ElevatedButton.styleFrom(backgroundColor: accColor),
-                              child: const Text('Retry', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  final customers = viewModel.filteredCustomers;
-                  if (customers.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Text(
-                          'No unplanned retailers found.',
-                          style: TextStyle(color: muteColor, fontSize: 14),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return NotificationListener<ScrollNotification>(
-                    onNotification: (ScrollNotification scrollInfo) {
-                      if (scrollInfo.metrics.pixels >=
-                          scrollInfo.metrics.maxScrollExtent - 200) {
-                        viewModel.loadNextPage();
-                      }
-                      return false;
-                    },
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      itemCount: customers.length + (viewModel.isLoadingMore.value ? 1 : 0),
-                      separatorBuilder: (context, index) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        if (index == customers.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: CircularProgressIndicator(color: accColor, strokeWidth: 2),
-                            ),
-                          );
-                        }
-
-                        final customer = customers[index];
-
-                        return Obx(() {
-                          final isSelected = viewModel.selectedCustomerUuids.contains(customer.uuid);
-
-                          return Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => viewModel.toggleCustomerUuid(customer.uuid),
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? lightBlueBg : surfColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSelected ? blueColor : lineColor,
-                                    width: isSelected ? 1.5 : 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    _buildCustomCheckbox(isSelected),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            customer.shopName ?? 'Unknown Retailer',
-                                            style: TextStyle(
-                                              color: inkColor,
-                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            'Code: ${customer.customerCode ?? 'N/A'}',
-                                            style: const TextStyle(fontSize: 13, color: muteColor),
-                                          ),
-                                          const SizedBox(height: 1),
-                                          Text(
-                                            ([
-                                              if (customer.area != null && customer.area!.isNotEmpty) 'Area: ${customer.area}',
-                                              if (customer.city != null && customer.city!.isNotEmpty) 'City: ${customer.city}',
-                                            ].isNotEmpty
-                                                ? [
-                                                    if (customer.area != null && customer.area!.isNotEmpty) 'Area: ${customer.area}',
-                                                    if (customer.city != null && customer.city!.isNotEmpty) 'City: ${customer.city}',
-                                                  ].join(' · ')
-                                                : 'Area: N/A'),
-                                            style: const TextStyle(fontSize: 12, color: muteColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        });
-                      },
-                    ),
-                  );
-                }),
-              ),
-            ],
-          ),
-        ),
-        Obx(() => _buildFooter(
-          buttonText: 'Add plan (${viewModel.selectedCustomerUuids.length})',
-          onPressed: viewModel.selectedCustomerUuids.isNotEmpty
-              ? () => viewModel.continueFromRetailers()
-              : null,
-        )),
-      ],
-    );
-  }
-
-  // --- 4. Third Step: Details Screen ---
-  Widget _buildDetailsScreen(BuildContext context, CreatePlanViewModel viewModel) {
-    return Column(
-      children: [
-        _buildAppBar(
-          title: '${viewModel.planType.value} plan details',
-          showBack: true,
-          onBackPressed: () => viewModel.go('retailers'),
-        ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(14),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: surfColor,
-                  border: Border.all(color: lineColor),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: accTColor,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Text(
-                        viewModel.planType.value,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: accColor),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Obx(() => Text(
-                        '${viewModel.selectedCustomerUuids.length} retailers selected',
-                        style: const TextStyle(fontSize: 13, color: muteColor),
-                      )),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Date fields: Only visible for Outstation plan type.
-              // For Local plan, the date was already picked on Step 1 and carried forward.
-              Obx(() {
-                final isOutstation = viewModel.apiPlanType == 'OUTSTATION';
-                if (!isOutstation) return const SizedBox.shrink();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildFieldLayout(
-                      label: 'From date',
-                      error: 'from',
-                      viewModel: viewModel,
-                      child: Obx(() => _buildDatePicker(
-                        context,
-                        viewModel.fromDate.value,
-                        (val) {
-                          viewModel.fromDate.value = val;
-                          if (viewModel.toDate.value.isNotEmpty && viewModel.toDate.value.compareTo(val) < 0) {
-                            viewModel.toDate.value = val;
-                          }
-                        },
-                      )),
-                    ),
-                    _buildFieldLayout(
-                      label: 'To date',
-                      error: 'to',
-                      viewModel: viewModel,
-                      child: Obx(() => _buildDatePicker(
-                        context,
-                        viewModel.toDate.value,
-                        (val) => viewModel.toDate.value = val,
-                        minDate: viewModel.fromDate.value,
-                      )),
-                    ),
-                  ],
-                );
-              }),
-
-              // Remark Section
-              _buildFieldLayout(
-                label: 'Remark',
-                error: 'remark',
-                viewModel: viewModel,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: TextEditingController(text: viewModel.remark.value)..selection = TextSelection.collapsed(offset: viewModel.remark.value.length),
-                      onChanged: (val) => viewModel.remark.value = val,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Supervisor visit',
-                        filled: true,
-                        fillColor: surfColor,
-                        contentPadding: const EdgeInsets.all(11),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: lineColor)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: lineColor)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: accColor, width: 2)),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Obx(() => Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: viewModel.remarksList.map((r) {
-                        final isSelected = viewModel.remark.value == r;
-                        return GestureDetector(
-                          onTap: () => viewModel.remark.value = r,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? accColor : Colors.transparent,
-                              border: Border.all(color: isSelected ? accColor : lineColor),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: Text(
-                              r, 
-                              style: TextStyle(
-                                fontSize: 13, 
-                                color: isSelected ? Colors.white : inkColor,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    )),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Obx(() => _buildFooter(
-          buttonText: viewModel.isSubmitting.value ? 'Submitting...' : 'Submit for approval',
-          onPressed: viewModel.isSubmitting.value ? null : () => viewModel.submit(),
-          isLoading: viewModel.isSubmitting.value,
-        )),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker(BuildContext context, String value, Function(String) onChanged, {String? minDate}) {
+  // Date Picker Helper
+  Widget _buildDatePickerField({
+    required BuildContext context,
+    required String value,
+    required Function(String) onDatePicked,
+    String? minDate,
+  }) {
     return GestureDetector(
       onTap: () async {
         final now = DateTime.now();
-        final tomorrow = now.add(const Duration(days: 1));
-        final tomorrowDate = DateTime(tomorrow.year, tomorrow.month, tomorrow.day);
+        DateTime initial = DateTime.tryParse(value) ?? now;
+        DateTime first = minDate != null ? (DateTime.tryParse(minDate) ?? now) : DateTime(now.year - 1);
 
-        DateTime first = tomorrowDate;
-        if (minDate != null && minDate.isNotEmpty) {
-          final parsedMin = DateTime.tryParse(minDate) ?? tomorrowDate;
-          if (parsedMin.isAfter(tomorrowDate)) {
-            first = DateTime(parsedMin.year, parsedMin.month, parsedMin.day);
-          }
-        }
-
-        final parsedInitial = value.isNotEmpty ? DateTime.tryParse(value) ?? tomorrowDate : tomorrowDate;
-        final initialDate = parsedInitial.isBefore(first) ? first : parsedInitial;
+        if (initial.isBefore(first)) initial = first;
 
         final picked = await showDatePicker(
           context: context,
-          initialDate: initialDate,
+          initialDate: initial,
           firstDate: first,
-          lastDate: DateTime.now().add(const Duration(days: 365)),
-          selectableDayPredicate: (DateTime date) {
-            final day = DateTime(date.year, date.month, date.day);
-            return !day.isBefore(first);
-          },
+          lastDate: DateTime(now.year + 2),
           builder: (context, child) {
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: const ColorScheme.light(
-                  primary: accColor,
-                  onPrimary: surfColor,
-                  onSurface: inkColor,
+                  primary: priColor,
+                  onPrimary: Colors.white,
+                  onSurface: txColor,
                 ),
               ),
               child: child!,
             );
           },
         );
+
         if (picked != null) {
-          final dateStr = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-          onChanged(dateStr);
+          onDatePicked(DateFormat('yyyy-MM-dd').format(picked));
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
           color: surfColor,
-          border: Border.all(color: lineColor),
+          border: Border.all(color: bdColor),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              value.isEmpty ? 'YYYY-MM-DD' : value,
-              style: TextStyle(color: value.isEmpty ? muteColor : inkColor, fontSize: 15),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(fontSize: 14, color: txColor),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const Icon(Icons.calendar_today_outlined, color: accColor, size: 20),
+            const Icon(Icons.calendar_today, size: 16, color: mutColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFieldLayout({required String label, required String error, required CreatePlanViewModel viewModel, required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  // --- 3. PLAN DETAIL VIEW SCREEN ---
+  Widget _buildDetailScreen(BuildContext context, CreatePlanViewModel viewModel) {
+    return Obx(() {
+      final ref = viewModel.openPlanRef.value;
+      final plan = viewModel.plans.firstWhere(
+        (p) => p.ref == ref,
+        orElse: () => PrototypePlan(
+          ref: ref.isNotEmpty ? ref : 'PLN-000000',
+          mode: 'Local',
+          zone: 'L1',
+          from: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          to: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          cust: [1, 2],
+          status: 'Approved',
+        ),
+      );
+
+      final zoneInfo = Z[plan.zone] ?? ['Unknown', 'Unknown'];
+
+      final planCustomers = plan.cust
+          .map((id) => viewModel.customers.firstWhere((c) => c.id == id,
+              orElse: () => PrototypeCustomer(
+                    id: id,
+                    zone: plan.zone,
+                    type: 'R',
+                    name: 'Customer #$id',
+                    owner: 'Owner Name',
+                    phone: '+91 9000000000',
+                    addr: 'Shop Address',
+                  )))
+          .toList();
+
+      // Status Styling
+      Color statusBg = wabColor;
+      Color statusTextColor = waColor;
+      if (plan.status == 'Approved') {
+        statusBg = okbColor;
+        statusTextColor = okColor;
+      } else if (plan.status == 'Rejected') {
+        statusBg = erbColor;
+        statusTextColor = erColor;
+      }
+
+      return Column(
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          const SizedBox(height: 6),
-          child,
-          Obx(() {
-            final errMsg = viewModel.errors[error];
-            if (errMsg != null) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(errMsg, style: const TextStyle(color: errColor, fontSize: 13)),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-        ],
-      ),
-    );
-  }
-
-  // --- 5. Fourth Step: Done Screen ---
-  Widget _buildDoneScreen(CreatePlanViewModel viewModel) {
-    final hasVisits = viewModel.myVisits.isNotEmpty;
-    final planId = hasVisits ? viewModel.myVisits.first.displayId : 'PLN-SUBMITTED';
-    final planType = hasVisits ? viewModel.myVisits.first.planType : viewModel.planType.value;
-    final count = hasVisits ? viewModel.myVisits.first.customerCount : viewModel.selectedCustomerUuids.length;
-    final when = hasVisits ? viewModel.myVisits.first.when : (viewModel.selectedDate.value.isNotEmpty ? viewModel.selectedDate.value : 'Date N/A');
-    final remark = viewModel.remark.value.isNotEmpty ? viewModel.remark.value : 'Visit Plan';
-
-    return Column(
-      children: [
-        _buildAppBar(title: 'Plan submitted'),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(14),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 10),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: const BoxDecoration(
-                        color: accTColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(child: Text('✓', style: TextStyle(fontSize: 36, color: accColor))),
-                    ),
-                    const SizedBox(height: 14),
-                    const Text('Sent for approval', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: inkColor)),
-                    const SizedBox(height: 4),
-                    Text('$planId is waiting for your supervisor.', style: const TextStyle(color: muteColor), textAlign: TextAlign.center),
-                  ],
-                ),
+          // Header matching Add Outlet screen header design
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            constraints: const BoxConstraints(minHeight: 60),
+            decoration: BoxDecoration(
+              color: priColor,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
               ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: surfColor,
-                  border: Border.all(color: lineColor),
-                  borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: priColor.withValues(alpha: 0.18),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            planId,
-                            style: const TextStyle(fontWeight: FontWeight.w600, color: inkColor),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () => _handleBackNavigation(context, viewModel),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    plan.ref,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    plan.status,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: statusTextColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Detail Content
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Overview Summary Card
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: surfColor,
+                    border: Border.all(color: bdColor),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color.fromRGBO(15, 27, 45, 0.07),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Key-Value Grid
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Plan type', style: TextStyle(color: mutColor, fontSize: 11.5)),
+                                const SizedBox(height: 2),
+                                Text(plan.mode, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                                const SizedBox(height: 12),
+                                const Text('City', style: TextStyle(color: mutColor, fontSize: 11.5)),
+                                const SizedBox(height: 2),
+                                Text(zoneInfo[1], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                                const SizedBox(height: 12),
+                                const Text('Total customers', style: TextStyle(color: mutColor, fontSize: 11.5)),
+                                const SizedBox(height: 2),
+                                Text('${planCustomers.length}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                              ],
+                            ),
                           ),
-                        ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(plan.mode == 'Local' ? 'Beat' : 'Territory', style: const TextStyle(color: mutColor, fontSize: 11.5)),
+                                const SizedBox(height: 2),
+                                Text(zoneInfo[0], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                                const SizedBox(height: 12),
+                                const Text('Date', style: TextStyle(color: mutColor, fontSize: 11.5)),
+                                const SizedBox(height: 2),
+                                Text(viewModel.formatPlanDateRange(plan), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                                const SizedBox(height: 12),
+                                const Text('Mix', style: TextStyle(color: mutColor, fontSize: 11.5)),
+                                const SizedBox(height: 2),
+                                Text(viewModel.getCustomerMixString(planCustomers), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Rejection Remark Banner if Rejected
+                      if (plan.remark != null && plan.remark!.isNotEmpty) ...[
+                        const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: warnTColor,
-                            borderRadius: BorderRadius.circular(99),
+                            color: erbColor,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            'Pending approval',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: warnColor),
+                          child: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(color: erColor, fontSize: 13),
+                              children: [
+                                const TextSpan(text: 'Rejection remark: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                TextSpan(text: plan.remark),
+                              ],
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$planType · $count retailers\n$when\nRemark: $remark',
-                      style: const TextStyle(fontSize: 13, color: muteColor, height: 1.4),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        _buildFooter(
-          buttonText: 'Back to my plans',
-          onPressed: () => viewModel.reset(),
-        ),
-      ],
-    );
-  }
+                const SizedBox(height: 16),
 
-  // --- Shared Components ---
-  Widget _buildAppBar({required String title, bool showBack = false, VoidCallback? onBackPressed}) {
-    return Container(
-      color: accColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          if (showBack)
-            GestureDetector(
-              onTap: onBackPressed,
-              child: const Padding(
-                padding: EdgeInsets.only(right: 10),
-                child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-              ),
+                // Planned Customers Section Header
+                Text(
+                  'PLANNED CUSTOMERS (${planCustomers.length})',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+                ),
+                const SizedBox(height: 8),
+
+                // Planned Customer Cards
+                Column(
+                  children: planCustomers.map((c) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: surfColor,
+                        border: Border.all(color: bdColor),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color.fromRGBO(15, 27, 45, 0.07),
+                            blurRadius: 16,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: pri2Color,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  TN[c.type]![0],
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: priColor, fontSize: 14),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: txColor)),
+                                    Text(c.owner, style: const TextStyle(fontSize: 12, color: mutColor)),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: pri2Color,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  TN[c.type]!,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: priColor),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text('📞 ${c.phone}', style: const TextStyle(color: mutColor, fontSize: 12.5)),
+                          const SizedBox(height: 4),
+                          Text('📍 ${c.addr}', style: const TextStyle(color: mutColor, fontSize: 12.5)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFooter({required String buttonText, VoidCallback? onPressed, bool isLoading = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: const BoxDecoration(
-        color: surfColor,
-        border: Border(top: BorderSide(color: lineColor)),
-      ),
-      child: _buildButton(text: buttonText, onPressed: onPressed, isLoading: isLoading),
-    );
-  }
-
-  Widget _buildButton({required String text, VoidCallback? onPressed, bool isGhost = false, bool isLoading = false}) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isGhost ? accTColor : accColor,
-          foregroundColor: isGhost ? accColor : surfColor,
-          elevation: 0,
-          padding: const EdgeInsets.all(13),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          disabledBackgroundColor: accColor.withValues(alpha: 0.4),
-          disabledForegroundColor: surfColor,
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
-            : Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-      ),
-    );
+      );
+    });
   }
 }

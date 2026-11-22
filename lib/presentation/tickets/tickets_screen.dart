@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../core/colors/app_colors.dart';
 import '../../routes/route_names.dart';
+import '../dashboard/dashboard_viewmodel.dart';
 import 'tickets_viewmodel.dart';
 import 'widgets/ticket_card.dart';
 import 'widgets/empty_state_widget.dart';
@@ -10,411 +10,441 @@ import '../check_in/widgets/outside_radius_bottom_sheet.dart';
 class TicketsScreen extends StatelessWidget {
   const TicketsScreen({super.key});
 
+  // Color constants matching Add Outlet screen & prototype redesign
+  static const Color blueColor = Color(0xFF6A3FD6);
+  static const Color blue50Color = Color(0xFFF0EBFC);
+  static const Color blue100Color = Color(0xFFD6C8F8);
+  static const Color inkColor = Color(0xFF17193F);
+  static const Color slateColor = Color(0xFF6B6F93);
+  static const Color lineColor = Color(0xFFDCDBEA);
+  static const Color bgColor = Color(0xFFF4F3F9);
+
+  void _handleBackNavigation(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else if (Get.isRegistered<DashboardViewModel>()) {
+      Get.find<DashboardViewModel>().changeTabIndex(0);
+    } else {
+      Get.back();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Get.find<TicketsViewModel>();
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: AppColors.textPrimary,
-              size: 16,
-            ),
-          ),
-          onPressed: () => Get.back(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'Visits',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            Text(
-              'Beat plan and journey approval',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: ElevatedButton(
-                onPressed: () => Get.toNamed(RoutesName.create_plan_view),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 0,
-                  ),
-                  minimumSize: const Size(0, 36),
-                ),
-                child: const Text(
-                  'Create Plan',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                ),
-              ),
-            ),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Colors.grey.shade200,
-            height: 1,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Custom Tab Bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Container(
-                padding: const EdgeInsets.all(2),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleBackNavigation(context);
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Header (Matching Add Outlet header design & prototype)
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                constraints: const BoxConstraints(minHeight: 60),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Obx(
-                  () => Row(
-                    children: [
-                      Expanded(
-                        child: _buildTab(
-                          title: 'Planned',
-                          subtitle: '${viewModel.plannedTickets.length}/0 visited',
-                          isSelected: viewModel.selectedTabIndex.value == 0,
-                          onTap: () => viewModel.changeTab(0),
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildTab(
-                          title: 'Unplanned',
-                          subtitle: '${viewModel.unplannedTickets.length} customers',
-                          isSelected: viewModel.selectedTabIndex.value == 1,
-                          onTap: () => viewModel.changeTab(1),
-                        ),
-                      ),
-                    ],
+                  color: blueColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: blueColor.withValues(alpha: 0.25),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-
-            // Search Bar & Filter Button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.5),
-                          width: 1,
+                        size: 20,
+                      ),
+                      onPressed: () => _handleBackNavigation(context),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Visit',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: viewModel.searchController,
-                              onChanged: viewModel.onSearchQueryChanged,
-                              decoration: InputDecoration(
-                                hintText: 'Search name, area or owner',
-                                hintStyle: TextStyle(
-                                  color: AppColors.textSecondary
-                                      .withValues(alpha: 0.7),
-                                  fontSize: 15,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                isDense: true,
-                              ),
-                            ),
-                          ),
-                          Obx(() => viewModel.searchQuery.value.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, size: 20, color: AppColors.textSecondary),
-                                  onPressed: viewModel.clearSearch,
-                                )
-                              : const SizedBox.shrink()),
-                        ],
+                    ),
+                    SizedBox(
+                    height: 36,
+                    child: ElevatedButton(
+                      onPressed: () => Get.toNamed(RoutesName.create_plan_view),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: blueColor,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        '＋ Create Plan',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.tune,
-                      color: AppColors.primaryPurple,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Filter Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildNewFilterChip('All', isSelected: true, isOutline: true),
-                  _buildNewFilterChip('FR', isSelected: true, isOutline: false),
-                  _buildNewFilterChip('A-Z'),
-                  _buildNewFilterChip('L3M'),
-                  _buildNewFilterChip('MTD'),
-                  _buildNewFilterChip('BL'),
-                  _buildNewFilterChip('UN'),
-                  _buildNewFilterChip('IN'),
-                ],
-              ),
-            ),
-
-            // List Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Business Partner',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+              // 2. Custom Segmented Pill Tab Bar (.seg) - Compact & Overflow Free
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: blue50Color,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: blue100Color, width: 1),
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Saturday, 12 September',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content Area
-            Expanded(
-              child: Obx(() {
-                if (viewModel.state.value == TicketsState.loading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (viewModel.state.value == TicketsState.error) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  child: Obx(
+                    () => Row(
                       children: [
-                        const Text('Error loading data', style: TextStyle(color: Colors.red)),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: viewModel.fetchTickets,
-                          child: const Text('Retry'),
+                        Expanded(
+                          child: _buildSegTab(
+                            title: 'Planned',
+                            badge: '${viewModel.plannedTickets.length}/0 visited',
+                            isSelected: viewModel.selectedTabIndex.value == 0,
+                            onTap: () => viewModel.changeTab(0),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: _buildSegTab(
+                            title: 'Unplanned',
+                            badge: '${viewModel.unplannedTickets.length} customers',
+                            isSelected: viewModel.selectedTabIndex.value == 1,
+                            onTap: () => viewModel.changeTab(1),
+                          ),
                         ),
                       ],
                     ),
-                  );
-                }
-
-                final tickets = viewModel.selectedTabIndex.value == 0
-                    ? viewModel.plannedTickets
-                    : viewModel.unplannedTickets;
-
-                if (tickets.isEmpty) {
-                  return const EmptyStateWidget(message: 'No results found');
-                }
-
-                return RefreshIndicator(
-                  onRefresh: viewModel.fetchTickets,
-                  child: ListView.builder(
-                    controller: viewModel.scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: tickets.length + (viewModel.isLoadingMore.value ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == tickets.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-
-                      VoidCallback? onCheckIn;
-                      
-                      if (viewModel.selectedTabIndex.value == 1) {
-                        // Logic for Unplanned list (Index 1)
-                        if (index == 0) {
-                          onCheckIn = () {
-                            Get.toNamed(RoutesName.visit_check_in_view,
-                                arguments: tickets[index]);
-                          };
-                        } else if (index == 1) {
-                          onCheckIn = () {
-                            Get.bottomSheet(
-                              OutsideRadiusBottomSheet(
-                                  outlet: tickets[index], isInside: false),
-                              isScrollControlled: true,
-                            );
-                          };
-                        } else if (index == 2) {
-                          onCheckIn = () {
-                            Get.bottomSheet(
-                              OutsideRadiusBottomSheet(
-                                  outlet: tickets[index], isInside: true),
-                              isScrollControlled: true,
-                            );
-                          };
-                        } else {
-                          onCheckIn = () {
-                            Get.toNamed(RoutesName.visit_check_in_view,
-                                arguments: tickets[index]);
-                          };
-                        }
-                      }
-
-                      return TicketCard(
-                        outlet: tickets[index],
-                        onCheckIn: onCheckIn,
-                      );
-                    },
                   ),
-                );
-              }),
-            ),
-          ],
+                ),
+              ),
+
+              // 3. Search Bar & Filter Button (.sr)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: lineColor),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.search, color: slateColor, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child:TextField(
+                                controller: viewModel.searchController,
+                                onChanged: viewModel.onSearchQueryChanged,
+                                style: const TextStyle(fontSize: 14.5, color: inkColor),
+                                decoration: const InputDecoration(
+                                  hintText: 'Search by name, city or owner',
+                                  hintStyle: TextStyle(color: slateColor, fontSize: 14.5),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            Obx(() => viewModel.searchQuery.value.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear, size: 20, color: slateColor),
+                                    onPressed: viewModel.clearSearch,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  )
+                                : const SizedBox.shrink()),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: blue50Color,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.tune,
+                        color: blueColor,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 4. Filter Chips Row (.chips) - Default 'All' selected and functional
+              Obx(() => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Row(
+                  children: viewModel.filterChips.map((chipLabel) {
+                    final isSelected = viewModel.selectedChip.value == chipLabel;
+                    return _buildNewFilterChip(
+                      viewModel: viewModel,
+                      label: chipLabel,
+                      isSelected: isSelected,
+                    );
+                  }).toList(),
+                ),
+              )),
+
+              // 5. Section Header (.sec)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Business Partner',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: inkColor,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Saturday, 12 September',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: slateColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 6. Content Cards List Area
+              Expanded(
+                child: Obx(() {
+                  if (viewModel.state.value == TicketsState.loading) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: blueColor),
+                    );
+                  }
+
+                  if (viewModel.state.value == TicketsState.error) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Error loading data', style: TextStyle(color: Colors.red)),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: viewModel.fetchTickets,
+                            style: ElevatedButton.styleFrom(backgroundColor: blueColor),
+                            child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final tickets = viewModel.selectedTabIndex.value == 0
+                      ? viewModel.plannedTickets
+                      : viewModel.unplannedTickets;
+
+                  if (tickets.isEmpty) {
+                    return const EmptyStateWidget(message: 'No results found');
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: viewModel.fetchTickets,
+                    color: blueColor,
+                    child: ListView.builder(
+                      controller: viewModel.scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: tickets.length + (viewModel.isLoadingMore.value ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == tickets.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(
+                              child: CircularProgressIndicator(color: blueColor, strokeWidth: 2),
+                            ),
+                          );
+                        }
+
+                        VoidCallback? onCheckIn;
+
+                        if (viewModel.selectedTabIndex.value == 1) {
+                          if (index == 0) {
+                            onCheckIn = () {
+                              Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
+                            };
+                          } else if (index == 1) {
+                            onCheckIn = () {
+                              Get.bottomSheet(
+                                OutsideRadiusBottomSheet(outlet: tickets[index], isInside: false),
+                                isScrollControlled: true,
+                              );
+                            };
+                          } else if (index == 2) {
+                            onCheckIn = () {
+                              Get.bottomSheet(
+                                OutsideRadiusBottomSheet(outlet: tickets[index], isInside: true),
+                                isScrollControlled: true,
+                              );
+                            };
+                          } else {
+                            onCheckIn = () {
+                              Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
+                            };
+                          }
+                        }
+
+                        return TicketCard(
+                          outlet: tickets[index],
+                          onCheckIn: onCheckIn,
+                        );
+                      },
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNewFilterChip(String label,
-      {bool isSelected = false, bool isOutline = false}) {
-    Color bgColor;
-    Color textColor;
-    Color borderColor = Colors.transparent;
-
-    if (isOutline) {
-      bgColor = Colors.white;
-      textColor = AppColors.primaryPurple;
-      borderColor = AppColors.primaryPurple;
-    } else if (isSelected) {
-      bgColor = AppColors.primaryPurple;
-      textColor = Colors.white;
-    } else {
-      bgColor = const Color(0xFFF3E8FF); // light purple
-      textColor = AppColors.primaryPurple;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: 1),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTab({
+  // Segmented Control Tab Item Helper (Responsive & Overflow Free)
+  Widget _buildSegTab({
     required String title,
-    required String subtitle,
+    required String badge,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
+          color: isSelected ? blueColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: blueColor.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ]
               : null,
         ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? AppColors.primaryPurple : Colors.grey,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 14,
+            Flexible(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : slateColor,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 13.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(height: 1),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: isSelected ? Colors.grey.shade500 : Colors.grey.shade400,
-                fontSize: 10,
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.22)
+                    : blue100Color,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                badge,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : blueColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+                maxLines: 1,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Filter Chip Helper
+  Widget _buildNewFilterChip({
+    required TicketsViewModel viewModel,
+    required String label,
+    required bool isSelected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () => viewModel.selectChip(label),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? blueColor : blue50Color,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: blueColor.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : blueColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 13.5,
+            ),
+          ),
         ),
       ),
     );
