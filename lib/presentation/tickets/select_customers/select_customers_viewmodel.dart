@@ -1,96 +1,71 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import '../../../data/datasource/remote/visit_plans_api_service.dart';
 import '../../../domain/entities/outlet.dart';
 import '../../../routes/route_names.dart';
 
 class SelectCustomersViewModel extends GetxController {
+  final VisitPlansApiService _apiService = Get.isRegistered<VisitPlansApiService>()
+      ? Get.find<VisitPlansApiService>()
+      : VisitPlansApiService();
+
   final customers = <Outlet>[].obs;
   final selectedCustomers = <Outlet>[].obs;
+  final isLoading = true.obs;
+  final errorMessage = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadMockCustomers();
+    fetchCustomers();
   }
 
-  void _loadMockCustomers() {
-    // Generate some mock customers for the selection list
-    customers.value = [
-      Outlet(
-        id: '101',
-        firstName: 'Ashok Kumar kundu',
-        lastName: '',
-        firmName: '',
-        customerType: 'Mechanic',
-        mobileNumber: '9668477106',
-        city: 'Jajpur',
-        state: 'Orissa',
-        email: '',
-        address: '',
-        district: '',
-        pinCode: '',
-        photos: [],
-      ),
-      Outlet(
-        id: '102',
-        firstName: 'Shubham Goyal',
-        lastName: '',
-        firmName: '',
-        customerType: 'Retailer',
-        mobileNumber: '9041801678',
-        city: 'Mansa',
-        state: 'Punjab',
-        email: '',
-        address: '',
-        district: '',
-        pinCode: '',
-        photos: [],
-      ),
-      Outlet(
-        id: '103',
-        firstName: 'Bapanbai Mohammad imr...',
-        lastName: '',
-        firmName: '',
-        customerType: 'Mechanic',
-        mobileNumber: '8977139527',
-        city: 'Anantapur',
-        state: 'Andhra Pradesh',
-        email: '',
-        address: '',
-        district: '',
-        pinCode: '',
-        photos: [],
-      ),
-      Outlet(
-        id: '104',
-        firstName: 'Ravi Kaliyan',
-        lastName: '',
-        firmName: '',
-        customerType: 'Mechanic',
-        mobileNumber: '9566534683',
-        city: 'Namakkal Market',
-        state: 'Tamilnadu',
-        email: '',
-        address: '',
-        district: '',
-        pinCode: '',
-        photos: [],
-      ),
-      Outlet(
-        id: '105',
-        firstName: 'Jogdand Aditya dhondiram',
-        lastName: '',
-        firmName: '',
-        customerType: 'Mechanic',
-        mobileNumber: '9420067290',
-        city: 'Huzurabad',
-        state: 'Telangana',
-        email: '',
-        address: '',
-        district: '',
-        pinCode: '',
-        photos: [],
-      ),
-    ];
+  Future<void> fetchCustomers() async {
+    isLoading.value = true;
+    errorMessage.value = '';
+    customers.clear();
+
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final res = await _apiService.getVisitPlanCustomers(
+        planType: 'LOCAL',
+        type: 'ALL',
+        date: dateStr,
+        page: 0,
+        size: 100,
+      );
+
+      final list = res.data?.content ?? [];
+      final outlets = list.map((c) {
+        final name = c.shopName?.isNotEmpty == true ? c.shopName! : 'Not Available';
+        return Outlet(
+          id: c.uuid,
+          customerType: c.customerType ?? 'Retailer',
+          firstName: name,
+          lastName: '',
+          firmName: name,
+          mobileNumber: c.customerCode ?? 'Not Available',
+          email: '',
+          address: '',
+          state: '',
+          district: '',
+          city: c.city ?? 'Not Available',
+          pinCode: '',
+          photos: [],
+          area: c.area,
+        );
+      }).toList();
+
+      customers.assignAll(outlets);
+    } catch (e) {
+      errorMessage.value = e.toString().replaceAll('Exception: ', '');
+      if (kDebugMode) {
+        print("API fetchCustomers error in SelectCustomersViewModel: $e");
+      }
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void toggleSelection(Outlet outlet) {

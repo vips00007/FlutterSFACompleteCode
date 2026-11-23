@@ -69,6 +69,7 @@ class VisitPlanCustomer {
   final List<String>? plannedDates;
   final String? planUuid;
   final String? planStatus;
+  final String? customerType;
 
   VisitPlanCustomer({
     required this.uuid,
@@ -86,6 +87,7 @@ class VisitPlanCustomer {
     this.plannedDates,
     this.planUuid,
     this.planStatus,
+    this.customerType,
   });
 
   factory VisitPlanCustomer.fromJson(Map<String, dynamic> json) {
@@ -103,8 +105,12 @@ class VisitPlanCustomer {
       metrics: json['metrics'] is Map<String, dynamic> ? json['metrics'] as Map<String, dynamic> : null,
       planned: json['planned'] is bool ? json['planned'] as bool : null,
       plannedDates: (json['plannedDates'] as List?)?.map((e) => e.toString()).toList(),
-      planUuid: json['planUuid']?.toString(),
+      planUuid: json['planUuid']?.toString() ?? json['planId']?.toString(),
       planStatus: json['planStatus']?.toString(),
+      customerType: json['customerType']?.toString() ??
+          json['type']?.toString() ??
+          json['category']?.toString() ??
+          json['role']?.toString(),
     );
   }
 }

@@ -60,16 +60,49 @@ class SelectCustomersScreen extends StatelessWidget {
         children: [
           _buildSearchBar(),
           Expanded(
-            child: Obx(
-              () => ListView.builder(
+            child: Obx(() {
+              if (viewModel.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryPurple),
+                );
+              }
+
+              if (viewModel.errorMessage.value.isNotEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        viewModel.errorMessage.value,
+                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: viewModel.fetchCustomers,
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+                        child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (viewModel.customers.isEmpty) {
+                return const Center(
+                  child: Text('No customers found', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                );
+              }
+
+              return ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: viewModel.customers.length,
                 itemBuilder: (context, index) {
                   final customer = viewModel.customers[index];
                   return Obx(() => _buildCustomerCard(customer, viewModel));
                 },
-              ),
-            ),
+              );
+            }),
           ),
         ],
       ),

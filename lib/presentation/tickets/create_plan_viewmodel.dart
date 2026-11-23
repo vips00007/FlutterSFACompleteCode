@@ -1,7 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../data/datasource/remote/visit_plans_api_service.dart';
+import '../../data/models/my_geographies_response.dart';
+import '../../data/models/visit_plan_customers_response.dart';
+import '../../data/models/visit_plan_models.dart';
+import '../widgets/api_error_dialog.dart';
 
 /// Zone Info Mapping matching the HTML Prototype
 const Map<String, List<String>> Z = {
@@ -13,7 +18,7 @@ const Map<String, List<String>> Z = {
   'U3': ['Sagar Territory', 'Sagar', 'Upcountry'],
 };
 
-/// Customer Type Labels matching the HTML Prototype
+/// Customer Type Labels
 const Map<String, String> TN = {
   'D': 'Distributor',
   'R': 'Retailer',
@@ -80,16 +85,29 @@ class CreatePlanViewModel extends GetxController {
 
   // Create Plan Form State
   final currentMode = 'Local'.obs; // 'Local' or 'Upcountry'
-  final currentZone = ''.obs;
+  final currentZone = ''.obs; // Geography UUID
   final d1 = ''.obs; // Visit date / From date
   final d2 = ''.obs; // To date (Upcountry)
   final currentTypeFilter = 'All'.obs; // 'All', 'D', 'R', 'M'
   final searchQuery = ''.obs;
   final selectedCustomerIds = <int>{}.obs;
 
-  // Reactive Plan List & Customer List
+  // Dynamic Geographies State
+  final geographies = <GeographyItem>[].obs;
+  final selectedGeography = Rxn<GeographyItem>();
+  final isGeographiesLoading = false.obs;
+
+  // Dynamic Customers State
+  final apiCustomers = <VisitPlanCustomer>[].obs;
+  final selectedCustomerUuids = <String>{}.obs;
+  final isCustomersLoading = true.obs; // Starts as true so loader displays from first frame
+  final customersError = ''.obs;
+
+  // Reactive Plan List & Prototype Lists
   final plans = <PrototypePlan>[].obs;
   final customers = <PrototypeCustomer>[].obs;
+  final apiVisitPlans = <VisitPlanModel>[].obs;
+  final selectedApiPlan = Rxn<VisitPlanModel>();
 
   // Loading & Error States for API integration
   final isLoading = false.obs;
@@ -102,151 +120,273 @@ class CreatePlanViewModel extends GetxController {
     d1.value = today;
     d2.value = today;
 
-    _loadPrototypeMasterData();
-    fetchMyVisitsFromApi();
+    debounce(searchQuery, (_) {
+      if (currentScreen.value == 'create') {
+        fetchCustomers();
+      }
+    }, time: const Duration(milliseconds: 300));
+
+    fetchVisitPlansFromApi();
+    fetchGeographies();
   }
 
-  void _loadPrototypeMasterData() {
-    // Populate prototype customer list
-    final List<PrototypeCustomer> initialCustList = [
-      ['L1', 'D', 'Shree Balaji Distributors', 'Rakesh Jain'],
-      ['L1', 'R', 'Arera Hardware Mart', 'Sunil Verma'],
-      ['L1', 'M', 'Imran Auto Works', 'Imran Khan'],
-      ['L1', 'R', 'Ganesh General Store', 'Ganesh Patel'],
-      ['L2', 'D', 'Narmada Traders', 'Anil Sharma'],
-      ['L2', 'R', 'MP Nagar Motors', 'Deepak Rao'],
-      ['L2', 'M', 'Raju Garage', 'Raju Yadav'],
-      ['L2', 'R', 'City Spares Point', 'Vikas Mehta'],
-      ['L3', 'D', 'Kolar Agencies', 'Manoj Gupta'],
-      ['L3', 'R', 'Singh Tyre House', 'Harpal Singh'],
-      ['L3', 'M', 'Salim Mechanic Shop', 'Salim Ansari'],
-      ['L3', 'R', 'Om Auto Parts', 'Ravi Tiwari'],
-      ['U1', 'D', 'Malwa Distribution Co.', 'Pankaj Joshi'],
-      ['U1', 'R', 'Rajwada Retail', 'Nitin Soni'],
-      ['U1', 'M', 'Vijay Nagar Garage', 'Vijay Chouhan'],
-      ['U1', 'R', 'Palasia Auto Hub', 'Kamal Bhatia'],
-      ['U2', 'D', 'Mahakoshal Traders', 'Sanjay Dubey'],
-      ['U2', 'R', 'Napier Town Motors', 'Alok Mishra'],
-      ['U2', 'M', 'Gorakhpur Workshop', 'Pappu Kewat'],
-      ['U2', 'R', 'Wright Town Spares', 'Neeraj Jain'],
-      ['U3', 'D', 'Bundelkhand Suppliers', 'Rohit Rathore'],
-      ['U3', 'R', 'Civil Lines Autos', 'Arun Lodhi'],
-      ['U3', 'M', 'Makronia Garage', 'Shyam Ahirwar'],
-      ['U3', 'R', 'Sagar Wheel Centre', 'Yogesh Patel'],
-    ].asMap().entries.map((entry) {
-      final i = entry.key;
-      final c = entry.value;
-      final zoneKey = c[0];
-      final zoneInfo = Z[zoneKey]!;
-      return PrototypeCustomer(
-        id: i + 1,
-        zone: c[0],
-        type: c[1],
-        name: c[2],
-        owner: c[3],
-        phone: '+91 9${(8100000000 + i * 7391337).toString().substring(0, 9)}',
-        addr: 'Shop ${10 + i * 3}, ${zoneInfo[0]}, ${zoneInfo[1]}, MP',
-      );
-    }).toList();
-
-    customers.assignAll(initialCustList);
-
-    // Populate initial prototype plans
-    final List<PrototypePlan> initialPlansList = [
-      PrototypePlan(
-        ref: 'PLN-000001',
-        mode: 'Local',
-        zone: 'L1',
-        from: '2026-11-21',
-        to: '2026-11-21',
-        cust: [1, 2],
-        status: 'Approved',
-      ),
-      PrototypePlan(
-        ref: 'PLN-000002',
-        mode: 'Upcountry',
-        zone: 'U1',
-        from: '2026-11-24',
-        to: '2026-11-26',
-        cust: [13, 14],
-        status: 'Pending',
-      ),
-      PrototypePlan(
-        ref: 'PLN-000003',
-        mode: 'Local',
-        zone: 'L3',
-        from: '2026-11-18',
-        to: '2026-11-18',
-        cust: [9, 10],
-        status: 'Rejected',
-        remark: 'Beat overlaps with another approved plan. Please re-plan.',
-      ),
-    ];
-
-    plans.assignAll(initialPlansList);
-  }
-
-  // Fetch plans from backend API if available and merge into plans list
-  Future<void> fetchMyVisitsFromApi() async {
+  Future<void> fetchGeographies() async {
+    isGeographiesLoading.value = true;
     try {
-      final response = await _apiService.getMyVisits(scope: 'MINE', page: 0, size: 20);
-      if (response.data != null && response.data!.content.isNotEmpty) {
-        final visitItems = response.data!.content;
-        final Map<String, List<dynamic>> grouped = {};
-        for (final item in visitItems) {
-          final pUuid = (item.planUuid != null && item.planUuid!.isNotEmpty)
-              ? item.planUuid!
-              : (item.uuid != null && item.uuid!.isNotEmpty ? item.uuid! : 'UNPLANNED');
-          grouped.putIfAbsent(pUuid, () => []).add(item);
-        }
-
-        final List<PrototypePlan> apiPlans = [];
-        grouped.forEach((pUuid, visits) {
-          final first = visits.first;
-          final String rawStatus = (first.status ?? 'PENDING').toUpperCase();
-          String mappedStatus = 'Pending';
-          if (rawStatus == 'APPROVED' || rawStatus == 'COMPLETED') {
-            mappedStatus = 'Approved';
-          } else if (rawStatus == 'REJECTED' || rawStatus == 'MISSED') {
-            mappedStatus = 'Rejected';
-          }
-
-          final String rawType = (first.planType ?? 'LOCAL').toUpperCase();
-          final String mode = (rawType == 'OUTSTATION' || rawType == 'UPCOUNTRY') ? 'Upcountry' : 'Local';
-          final String displayRef = pUuid.length > 8 ? 'PLN-${pUuid.substring(0, 6).toUpperCase()}' : 'PLN-$pUuid';
-
-          // Pick zone or default to L1/U1
-          final String defaultZone = mode == 'Local' ? 'L1' : 'U1';
-
-          apiPlans.add(PrototypePlan(
-            ref: displayRef,
-            mode: mode,
-            zone: defaultZone,
-            from: first.planFromDate ?? first.date ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
-            to: first.planToDate ?? first.date ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
-            cust: [1, 2], // Default customer map reference
-            status: mappedStatus,
-          ));
-        });
-
-        if (apiPlans.isNotEmpty) {
-          // Merge API plans without duplicating refs
-          final existingRefs = plans.map((p) => p.ref).toSet();
-          for (final ap in apiPlans) {
-            if (!existingRefs.contains(ap.ref)) {
-              plans.insert(0, ap);
-            }
-          }
-        }
+      final res = await _apiService.getMyGeographies();
+      if (res.data.isNotEmpty) {
+        geographies.assignAll(res.data);
+        _autoSelectGeographyForCurrentMode();
       }
     } catch (e) {
       if (kDebugMode) {
-        print("API fetch MyVisits fallback to local prototype data: $e");
+        print("API fetchGeographies notice: $e");
+      }
+    } finally {
+      isGeographiesLoading.value = false;
+      fetchCustomers();
+    }
+  }
+
+  void _autoSelectGeographyForCurrentMode() {
+    if (geographies.isEmpty) return;
+
+    if (currentMode.value == 'Upcountry') {
+      // Entry with isPrimary = false represents OUTSTATION destination territory
+      final outstationItem = geographies.firstWhereOrNull((g) => g.isPrimary == false) ??
+          geographies.firstWhereOrNull((g) => g.isPrimary != true);
+
+      if (outstationItem != null) {
+        selectedGeography.value = outstationItem;
+        currentZone.value = outstationItem.effectiveUuid;
+      }
+    } else {
+      // Local mode: primary territory (isPrimary = true)
+      final primaryItem = geographies.firstWhereOrNull((g) => g.isPrimary == true) ?? geographies.firstOrNull;
+      if (primaryItem != null) {
+        selectedGeography.value = primaryItem;
+        currentZone.value = primaryItem.effectiveUuid;
       }
     }
   }
 
-  // Navigation controller
+  Future<void> fetchCustomers() async {
+    final mode = currentMode.value;
+    final planType = mode == 'Local' ? 'LOCAL' : 'OUTSTATION';
+
+    if (mode == 'Upcountry') {
+      if (selectedGeography.value == null || selectedGeography.value?.isPrimary == true) {
+        final outstationItem = geographies.firstWhereOrNull((g) => g.isPrimary == false) ??
+            geographies.firstWhereOrNull((g) => g.isPrimary != true);
+        if (outstationItem != null) {
+          selectedGeography.value = outstationItem;
+          currentZone.value = outstationItem.effectiveUuid;
+        }
+      }
+    } else {
+      if (selectedGeography.value == null || selectedGeography.value?.isPrimary == false) {
+        final primaryItem = geographies.firstWhereOrNull((g) => g.isPrimary == true) ?? geographies.firstOrNull;
+        if (primaryItem != null) {
+          selectedGeography.value = primaryItem;
+          currentZone.value = primaryItem.effectiveUuid;
+        }
+      }
+    }
+
+    final geoUuid = selectedGeography.value?.effectiveUuid ?? currentZone.value;
+
+    if (mode == 'Upcountry' && geoUuid.trim().isEmpty) {
+      apiCustomers.clear();
+      isCustomersLoading.value = false;
+      return;
+    }
+
+    isCustomersLoading.value = true;
+    customersError.value = '';
+
+    try {
+      final res = await _apiService.getCustomers(
+        planType: planType,
+        date: d1.value,
+        destinationGeographyUuid: mode == 'Upcountry' ? geoUuid : null,
+        search: searchQuery.value.trim().isNotEmpty ? searchQuery.value.trim() : null,
+        sort: 'NAME_ASC',
+        page: 0,
+        size: 100,
+      );
+
+      final list = res.data?.content ?? [];
+      apiCustomers.assignAll(list);
+    } catch (e) {
+      customersError.value = e.toString().replaceAll('Exception: ', '');
+      if (kDebugMode) {
+        print("API fetchCustomers notice: $e");
+      }
+    } finally {
+      isCustomersLoading.value = false;
+    }
+  }
+
+  void onGeographySelected(GeographyItem? geo) {
+    selectedGeography.value = geo;
+    if (geo != null) {
+      currentZone.value = geo.effectiveUuid;
+    } else {
+      currentZone.value = '';
+    }
+    selectedCustomerUuids.clear();
+    fetchCustomers();
+  }
+
+  void onModeChanged(String mode) {
+    currentMode.value = mode;
+    selectedCustomerUuids.clear();
+    _autoSelectGeographyForCurrentMode();
+    fetchCustomers();
+  }
+
+  void onDate1Changed(String dateVal) {
+    try {
+      final parsed = DateTime.parse(dateVal.trim());
+      final formatted = DateFormat('yyyy-MM-dd').format(parsed);
+      d1.value = formatted;
+      if (currentMode.value == 'Local' || d2.value.compareTo(formatted) < 0) {
+        d2.value = formatted;
+      }
+    } catch (_) {
+      d1.value = dateVal.trim();
+    }
+    fetchCustomers();
+  }
+
+  void onDate2Changed(String dateVal) {
+    try {
+      final parsed = DateTime.parse(dateVal.trim());
+      final formatted = DateFormat('yyyy-MM-dd').format(parsed);
+      d2.value = formatted;
+    } catch (_) {
+      d2.value = dateVal.trim();
+    }
+    fetchCustomers();
+  }
+
+  bool _isDistributor(VisitPlanCustomer c) {
+    final type = (c.customerType ?? '').trim().toUpperCase();
+    final shop = (c.shopName ?? '').toLowerCase();
+    if (type == 'D' || type == 'DISTRIBUTOR' || type.contains('DISTRIB')) return true;
+    return shop.contains('distributor') || shop.contains('traders') || shop.contains('agencies') || shop.contains('suppliers');
+  }
+
+  bool _isRetailer(VisitPlanCustomer c) {
+    final type = (c.customerType ?? '').trim().toUpperCase();
+    final shop = (c.shopName ?? '').toLowerCase();
+    if (type == 'R' || type == 'RETAILER' || type.contains('RETAIL')) return true;
+    return shop.contains('retail') || shop.contains('store') || shop.contains('mart') || shop.contains('spares') || shop.contains('hardware') || shop.contains('autos') || shop.contains('hub');
+  }
+
+  bool _isMechanic(VisitPlanCustomer c) {
+    final type = (c.customerType ?? '').trim().toUpperCase();
+    final shop = (c.shopName ?? '').toLowerCase();
+    if (type == 'M' || type == 'MECHANIC' || type.contains('MECHANIC')) return true;
+    return shop.contains('mechanic') || shop.contains('garage') || shop.contains('works') || shop.contains('workshop') || shop.contains('service');
+  }
+
+  int getApiCustomerCountForType(String typeKey) {
+    if (typeKey == 'All') return apiCustomers.length;
+    if (typeKey == 'D') return apiCustomers.where((c) => _isDistributor(c)).length;
+    if (typeKey == 'R') return apiCustomers.where((c) => _isRetailer(c)).length;
+    if (typeKey == 'M') return apiCustomers.where((c) => _isMechanic(c)).length;
+    return 0;
+  }
+
+  int getPrototypeCustomerCountForType(String typeKey) {
+    if (apiCustomers.isNotEmpty || isCustomersLoading.value) {
+      return getApiCustomerCountForType(typeKey);
+    }
+    return 0;
+  }
+
+  List<VisitPlanCustomer> get filteredApiCustomers {
+    final tf = currentTypeFilter.value;
+    final q = searchQuery.value.trim().toLowerCase();
+
+    return apiCustomers.where((c) {
+      bool matchesType = true;
+      if (tf == 'D') {
+        matchesType = _isDistributor(c);
+      } else if (tf == 'R') {
+        matchesType = _isRetailer(c);
+      } else if (tf == 'M') {
+        matchesType = _isMechanic(c);
+      }
+
+      bool matchesSearch = true;
+      if (q.isNotEmpty) {
+        final name = (c.shopName ?? '').toLowerCase();
+        final code = (c.customerCode ?? '').toLowerCase();
+        final area = (c.area ?? '').toLowerCase();
+        final city = (c.city ?? '').toLowerCase();
+        matchesSearch = name.contains(q) || code.contains(q) || area.contains(q) || city.contains(q);
+      }
+
+      return matchesType && matchesSearch;
+    }).toList();
+  }
+
+  void toggleApiCustomerSelection(String uuid) {
+    if (selectedCustomerUuids.contains(uuid)) {
+      selectedCustomerUuids.remove(uuid);
+    } else {
+      selectedCustomerUuids.add(uuid);
+    }
+    selectedCustomerUuids.refresh();
+  }
+
+  bool get isAllApiCustomersSelected {
+    final visible = filteredApiCustomers;
+    if (visible.isEmpty) return false;
+    return visible.every((c) => selectedCustomerUuids.contains(c.uuid));
+  }
+
+  void toggleAllApiCustomers(bool selectAll) {
+    final visible = filteredApiCustomers;
+    if (selectAll) {
+      for (final c in visible) {
+        if (c.uuid.isNotEmpty) {
+          selectedCustomerUuids.add(c.uuid);
+        }
+      }
+    } else {
+      for (final c in visible) {
+        selectedCustomerUuids.remove(c.uuid);
+      }
+    }
+    selectedCustomerUuids.refresh();
+  }
+
+  // Helper getters for prototype compatibility
+  List<PrototypeCustomer> get zoneAvailableCustomers => [];
+  List<PrototypeCustomer> get filteredCustomers => [];
+  bool get isAllVisibleSelected => isAllApiCustomersSelected;
+  void toggleCustomerSelection(int id) {}
+  void toggleAllVisibleCustomers(bool selectAll) => toggleAllApiCustomers(selectAll);
+
+  Future<void> fetchVisitPlansFromApi() async {
+    isLoading.value = true;
+    try {
+      final response = await _apiService.getVisitPlans();
+      if (response.content.isNotEmpty) {
+        apiVisitPlans.assignAll(response.content);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("API getVisitPlans notice: $e");
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   void go(String screen, {String? openRef}) {
     currentScreen.value = screen;
     if (openRef != null) {
@@ -254,166 +394,138 @@ class CreatePlanViewModel extends GetxController {
     }
   }
 
-  // Reset Create Plan Form state
   void newPlan() {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     currentMode.value = 'Local';
     currentZone.value = '';
+    selectedGeography.value = null;
     d1.value = today;
     d2.value = today;
     currentTypeFilter.value = 'All';
     searchQuery.value = '';
-    selectedCustomerIds.clear();
+    selectedCustomerUuids.clear();
+    apiCustomers.clear();
+    isCustomersLoading.value = true;
+
+    fetchGeographies();
     go('create');
   }
 
-  // Get set of customer IDs already used in non-rejected plans
-  Set<int> get usedCustomerIds {
-    final set = <int>{};
-    for (final p in plans) {
-      if (p.status != 'Rejected') {
-        set.addAll(p.cust);
-      }
-    }
-    return set;
-  }
-
-  // Customers for current zone excluding already used ones
-  List<PrototypeCustomer> get zoneAvailableCustomers {
-    if (currentZone.value.isEmpty) return [];
-    final used = usedCustomerIds;
-    return customers
-        .where((c) => c.zone == currentZone.value && !used.contains(c.id))
-        .toList();
-  }
-
-  // Filtered customer list for display (by type chip and search query)
-  List<PrototypeCustomer> get filteredCustomers {
-    final base = zoneAvailableCustomers;
-    final tf = currentTypeFilter.value;
-    final q = searchQuery.value.trim().toLowerCase();
-
-    return base.where((c) {
-      final matchesType = tf == 'All' || c.type == tf;
-      final matchesSearch = q.isEmpty ||
-          c.name.toLowerCase().contains(q) ||
-          c.owner.toLowerCase().contains(q);
-      return matchesType && matchesSearch;
-    }).toList();
-  }
-
-  // Are all currently visible filtered customers selected?
-  bool get isAllVisibleSelected {
-    final visible = filteredCustomers;
-    if (visible.isEmpty) return false;
-    return visible.every((c) => selectedCustomerIds.contains(c.id));
-  }
-
-  // Toggle selection of individual customer
-  void toggleCustomerSelection(int customerId) {
-    if (selectedCustomerIds.contains(customerId)) {
-      selectedCustomerIds.remove(customerId);
-    } else {
-      selectedCustomerIds.add(customerId);
-    }
-    selectedCustomerIds.refresh();
-  }
-
-  // Toggle "Select all" / "Clear all"
-  void toggleAllVisibleCustomers(bool selectAll) {
-    final visible = filteredCustomers;
-    if (selectAll) {
-      for (final c in visible) {
-        selectedCustomerIds.add(c.id);
-      }
-    } else {
-      for (final c in visible) {
-        selectedCustomerIds.remove(c.id);
-      }
-    }
-    selectedCustomerIds.refresh();
-  }
-
-  // Form Validity check for sticky footer button
   bool get isFormValid {
-    if (currentZone.value.isEmpty || selectedCustomerIds.isEmpty) return false;
-    if (currentMode.value == 'Local') {
-      return d1.value.isNotEmpty;
-    } else {
-      return d1.value.isNotEmpty &&
-          d2.value.isNotEmpty &&
-          d2.value.compareTo(d1.value) >= 0;
+    if (currentMode.value == 'Upcountry' &&
+        (selectedGeography.value == null && currentZone.value.isEmpty)) {
+      return false;
     }
+    if (selectedCustomerUuids.isEmpty) return false;
+    if (currentMode.value == 'Local') return d1.value.trim().isNotEmpty;
+    return d1.value.trim().isNotEmpty &&
+        d2.value.trim().isNotEmpty &&
+        d2.value.compareTo(d1.value) >= 0;
   }
 
-  // Save / Submit Plan action
   Future<void> savePlan() async {
     if (!isFormValid || isSubmitting.value) return;
 
     isSubmitting.value = true;
-    final newRefNum = plans.length + 1;
-    final newRef = 'PLN-${newRefNum.toString().padLeft(6, '0')}';
-
-    final newPlanItem = PrototypePlan(
-      ref: newRef,
-      mode: currentMode.value,
-      zone: currentZone.value,
-      from: d1.value,
-      to: currentMode.value == 'Local' ? d1.value : d2.value,
-      cust: selectedCustomerIds.toList(),
-      status: 'Pending',
-    );
-
-    plans.insert(0, newPlanItem);
-
-    // Attempt background API submission if service available
     try {
       final isOutstation = currentMode.value == 'Upcountry';
-      final body = isOutstation
-          ? {
-              "planType": "OUTSTATION",
-              "fromDate": d1.value,
-              "toDate": d2.value,
-              "remark": "New tour plan created",
-            }
-          : {
-              "date": d1.value,
-              "planType": "LOCAL",
-            };
-      await _apiService.createVisitPlan(body);
-    } catch (e) {
-      if (kDebugMode) {
-        print("API createVisitPlan notice (saved locally in prototype mode): $e");
+
+      String geoUuid = '';
+      if (isOutstation) {
+        if (selectedGeography.value != null && selectedGeography.value!.isPrimary == false) {
+          geoUuid = selectedGeography.value!.effectiveUuid;
+        } else {
+          final outstationItem = geographies.firstWhereOrNull((g) => g.isPrimary == false) ??
+              geographies.firstWhereOrNull((g) => g.isPrimary != true);
+          if (outstationItem != null) {
+            geoUuid = outstationItem.effectiveUuid;
+          }
+        }
+      } else {
+        geoUuid = selectedGeography.value?.effectiveUuid ?? currentZone.value;
       }
+
+      final parsedFrom = DateTime.tryParse(d1.value.trim()) ?? DateTime.now();
+      final validFromDate = DateFormat('yyyy-MM-dd').format(parsedFrom);
+
+      final parsedTo = isOutstation
+          ? (DateTime.tryParse(d2.value.trim()) ?? parsedFrom)
+          : parsedFrom;
+      final validToDate = DateFormat('yyyy-MM-dd').format(parsedTo);
+
+      final selectedUuidsList = selectedCustomerUuids.toList();
+
+      final Map<String, dynamic> body;
+      if (isOutstation) {
+        int daysCount = parsedTo.difference(parsedFrom).inDays + 1;
+        if (daysCount < 1) daysCount = 1;
+
+        final List<Map<String, dynamic>> daysList = [];
+        for (int i = 0; i < daysCount; i++) {
+          final dayDate = parsedFrom.add(Duration(days: i));
+          final formattedDay = DateFormat('yyyy-MM-dd').format(dayDate);
+          daysList.add({
+            "date": formattedDay,
+            "customerUuids": selectedUuidsList,
+          });
+        }
+
+        body = <String, dynamic>{
+          "planType": "OUTSTATION",
+          "fromDate": validFromDate,
+          "toDate": validToDate,
+          if (geoUuid.isNotEmpty) "destinationGeographyUuid": geoUuid,
+          "days": daysList,
+          "remark": "Upcountry trip plan",
+        };
+      } else {
+        body = <String, dynamic>{
+          "planType": "LOCAL",
+          "date": validFromDate,
+          "customerUuids": selectedUuidsList,
+        };
+      }
+
+      if (kDebugMode) {
+        print("POST /api/v1/sfa/visit-plans [${isOutstation ? 'OUTSTATION' : 'LOCAL'}] Payload: ${jsonEncode(body)}");
+      }
+
+      await _apiService.createVisitPlan(body);
+
+      currentFilter.value = 'All';
+      selectedCustomerUuids.clear();
+      await fetchVisitPlansFromApi();
+      go('list');
+
+      Get.snackbar(
+        'Success',
+        'Visit plan created successfully',
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      showApiErrorDialog(
+        title: 'Unable to Create Plan',
+        error: e,
+      );
     } finally {
       isSubmitting.value = false;
     }
-
-    currentFilter.value = 'All';
-    go('list');
-
-    Get.snackbar(
-      'Plan Created',
-      '$newRef created · Pending approval',
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(seconds: 2),
-    );
   }
 
-  // Filtered plans list for My Plan view
-  List<PrototypePlan> get filteredPlans {
-    final f = currentFilter.value;
-    if (f == 'All') return plans;
-    return plans.where((p) => p.status == f).toList();
-  }
+  List<PrototypePlan> get filteredPlans => [];
 
-  // Count helper for My Plan status tabs
   int getPlanCountByStatus(String status) {
-    if (status == 'All') return plans.length;
-    return plans.where((p) => p.status == status).length;
+    if (status == 'All') return apiVisitPlans.length;
+    return apiVisitPlans.where((p) => p.displayStatus == status).length;
   }
 
-  // Format date helper: YYYY-MM-DD -> 21 Nov 2026
+  List<VisitPlanModel> get filteredApiPlans {
+    final f = currentFilter.value;
+    if (f == 'All') return apiVisitPlans;
+    return apiVisitPlans.where((p) => p.displayStatus == f).toList();
+  }
+
   String formatDate(String dateStr) {
     try {
       final d = DateTime.parse(dateStr);
@@ -423,7 +535,6 @@ class CreatePlanViewModel extends GetxController {
     }
   }
 
-  // Date range helper for plan cards
   String formatPlanDateRange(PrototypePlan plan) {
     if (plan.from == plan.to) {
       return formatDate(plan.from);
@@ -431,15 +542,5 @@ class CreatePlanViewModel extends GetxController {
     return '${formatDate(plan.from)} → ${formatDate(plan.to)}';
   }
 
-  // Customer Mix String e.g. "1 D · 1 R"
-  String getCustomerMixString(List<PrototypeCustomer> custs) {
-    final parts = <String>[];
-    for (final type in ['D', 'R', 'M']) {
-      final count = custs.where((c) => c.type == type).length;
-      if (count > 0) {
-        parts.add('$count ${TN[type]![0]}');
-      }
-    }
-    return parts.join(' · ');
-  }
+  String getCustomerMixString(List<PrototypeCustomer> custs) => '';
 }

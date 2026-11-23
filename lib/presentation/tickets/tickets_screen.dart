@@ -239,13 +239,7 @@ class TicketsScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 3),
-                    Text(
-                      'Saturday, 12 September',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: slateColor,
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -264,24 +258,45 @@ class TicketsScreen extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('Error loading data', style: TextStyle(color: Colors.red)),
-                          const SizedBox(height: 8),
+                          const Text(
+                            'Failed to load visit data',
+                            style: TextStyle(color: slateColor, fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 12),
                           ElevatedButton(
                             onPressed: viewModel.fetchTickets,
-                            style: ElevatedButton.styleFrom(backgroundColor: blueColor),
-                            child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: blueColor,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text('Retry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
                     );
                   }
 
-                  final tickets = viewModel.selectedTabIndex.value == 0
+                  final isPlannedTab = viewModel.selectedTabIndex.value == 0;
+                  final tickets = isPlannedTab
                       ? viewModel.plannedTickets
                       : viewModel.unplannedTickets;
 
                   if (tickets.isEmpty) {
-                    return const EmptyStateWidget(message: 'No results found');
+                    return RefreshIndicator(
+                      onRefresh: viewModel.fetchTickets,
+                      color: blueColor,
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          const SizedBox(height: 80),
+                          EmptyStateWidget(
+                            message: isPlannedTab
+                                ? 'No planned visits for today'
+                                : 'No unplanned customers found',
+                          ),
+                        ],
+                      ),
+                    );
                   }
 
                   return RefreshIndicator(

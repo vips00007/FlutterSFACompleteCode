@@ -23,22 +23,27 @@ class TicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String name = outlet.firmName.isNotEmpty
+    final String rawName = outlet.firmName.isNotEmpty
         ? outlet.firmName
         : '${outlet.firstName} ${outlet.lastName}'.trim();
+    final String name = rawName.isNotEmpty ? rawName : 'Not Available';
 
-    final bool isAtRisk = name.length % 3 == 0;
-    final String outstanding = isAtRisk ? '₹94,000' : '₹58,000';
-    final String locationText = '${outlet.city.isNotEmpty ? outlet.city : 'Indore'} · 1.8 km';
-    final String id = outlet.mobileNumber.isNotEmpty ? outlet.mobileNumber : 'CUS000002';
+    final String areaPart = outlet.area?.isNotEmpty == true ? '${outlet.area}, ' : '';
+    final String cityPart = outlet.city.isNotEmpty ? outlet.city : '';
+    final String locationText = (areaPart.isNotEmpty || cityPart.isNotEmpty)
+        ? '$areaPart$cityPart'
+        : 'Not Available';
+
+    final String id = outlet.mobileNumber.isNotEmpty ? outlet.mobileNumber : 'Not Available';
+    final String outstanding = 'Not Available';
 
     final performanceList = [
       ['Tgt', '₹0'],
       ['Ach', '₹0'],
       ['Bal', '₹0'],
-      ['AvgL3M', isAtRisk ? '₹98,000' : '₹58,000'],
-      ['Cov', '2'],
-      ['Prod', '5'],
+      ['AvgL3M', 'Not Available'],
+      ['Cov', '0'],
+      ['Prod', '0'],
     ];
 
     return GestureDetector(
@@ -95,11 +100,11 @@ class TicketCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name.isNotEmpty ? name : 'Shubham Auto Parts',
-                        style: const TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.bold,
-                          color: inkColor,
+                        name,
+                        style: TextStyle(
+                          fontSize: name == 'Not Available' ? 12.5 : 15.5,
+                          fontWeight: name == 'Not Available' ? FontWeight.w500 : FontWeight.bold,
+                          color: name == 'Not Available' ? redColor : inkColor,
                           height: 1.2,
                         ),
                         maxLines: 1,
@@ -108,18 +113,18 @@ class TicketCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.location_on_outlined,
                             size: 13,
-                            color: slateColor,
+                            color: locationText == 'Not Available' ? redColor : slateColor,
                           ),
                           const SizedBox(width: 3),
                           Expanded(
                             child: Text(
                               locationText,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: slateColor,
+                              style: TextStyle(
+                                fontSize: locationText == 'Not Available' ? 10.5 : 12.0,
+                                color: locationText == 'Not Available' ? redColor : slateColor,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -131,15 +136,15 @@ class TicketCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: blue50Color,
+                          color: id == 'Not Available' ? redColor.withValues(alpha: 0.1) : blue50Color,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           id,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: blueColor,
+                          style: TextStyle(
+                            fontSize: id == 'Not Available' ? 9.5 : 11.0,
+                            fontWeight: id == 'Not Available' ? FontWeight.w500 : FontWeight.bold,
+                            color: id == 'Not Available' ? redColor : blueColor,
                             letterSpacing: 0.2,
                           ),
                         ),
@@ -160,9 +165,9 @@ class TicketCard extends StatelessWidget {
                     const SizedBox(height: 1),
                     Text(
                       outstanding,
-                      style: const TextStyle(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w800,
+                      style: TextStyle(
+                        fontSize: outstanding == 'Not Available' ? 11.0 : 16.5,
+                        fontWeight: outstanding == 'Not Available' ? FontWeight.w500 : FontWeight.w800,
                         color: redColor,
                       ),
                     ),
@@ -281,9 +286,9 @@ class TicketCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: isNegative ? redColor : inkColor,
+              fontSize: value == 'Not Available' ? 10.0 : 12.5,
+              fontWeight: value == 'Not Available' ? FontWeight.w400 : FontWeight.w600,
+              color: isNegative ? redColor : (value == 'Not Available' ? redColor : inkColor),
             ),
           ),
         ],

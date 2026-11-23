@@ -142,8 +142,8 @@ class CustomerSummaryScreen extends StatelessWidget {
                     Flexible(
                       child: _buildStatusBadge(
                         'Not Available',
-                        Colors.grey.shade100,
-                        Colors.grey,
+                        Colors.red.shade50,
+                        Colors.red,
                       ),
                     ),
                     const Spacer(),
@@ -185,15 +185,19 @@ class CustomerSummaryScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.person, size: 14, color: Colors.grey),
+                        Icon(
+                          Icons.person,
+                          size: 14,
+                          color: name == 'Not Available' ? Colors.red : Colors.grey,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: name == 'Not Available' ? Colors.red : AppColors.textPrimary,
                             ),
                           ),
                         ),

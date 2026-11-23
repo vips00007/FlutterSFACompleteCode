@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import '../../domain/entities/outlet.dart';
 import '../../domain/entities/paginated_outlets.dart';
 import '../../domain/repositories/ticket_repository.dart';
@@ -10,8 +11,40 @@ class TicketRepositoryImpl implements TicketRepository {
 
   @override
   Future<List<Outlet>> getPlannedTickets() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return [];
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final response = await apiService.getCustomers(
+        planType: 'LOCAL',
+        planned: true,
+        date: dateStr,
+        page: 0,
+        size: 50,
+      );
+
+      if (response.data == null) return [];
+
+      return response.data!.content.map((c) {
+        final name = c.shopName?.isNotEmpty == true ? c.shopName! : 'Not Available';
+        return Outlet(
+          id: c.uuid,
+          customerType: c.customerType ?? 'Retailer',
+          firstName: name,
+          lastName: '',
+          firmName: name,
+          mobileNumber: c.customerCode ?? '',
+          email: '',
+          address: '',
+          state: '',
+          district: '',
+          city: c.city ?? '',
+          pinCode: '',
+          photos: [],
+          area: c.area,
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   @override
@@ -22,9 +55,9 @@ class TicketRepositoryImpl implements TicketRepository {
     String planType = 'LOCAL',
     String? searchQuery,
   }) async {
-    final response = await apiService.getVisitPlanCustomers(
+    final response = await apiService.getCustomers(
       planType: planType,
-      type: 'ALL',
+      planned: false,
       date: date,
       page: page,
       size: size,
@@ -44,12 +77,13 @@ class TicketRepositoryImpl implements TicketRepository {
     final customers = response.data!.content;
 
     final outlets = customers.map((c) {
+      final name = c.shopName?.isNotEmpty == true ? c.shopName! : 'Not Available';
       return Outlet(
         id: c.uuid,
-        customerType: 'Retailer',
-        firstName: c.shopName ?? 'Unknown',
+        customerType: c.customerType ?? 'Retailer',
+        firstName: name,
         lastName: '',
-        firmName: c.shopName ?? 'Unknown',
+        firmName: name,
         mobileNumber: c.customerCode ?? '',
         email: '',
         address: '',

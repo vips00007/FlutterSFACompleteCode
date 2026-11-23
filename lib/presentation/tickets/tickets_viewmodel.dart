@@ -52,6 +52,8 @@ class TicketsViewModel extends GetxController {
         }
       }
     });
+
+    fetchTickets();
   }
 
   @override
@@ -70,10 +72,13 @@ class TicketsViewModel extends GetxController {
   Future<void> fetchTickets() async {
     _hasFetched = true;
     state.value = TicketsState.loading;
+    plannedTickets.clear();
+    unplannedTickets.clear();
+    _allUnplannedTickets.clear();
+
     try {
       _currentPage = 0;
       _hasMore = true;
-      _allUnplannedTickets.clear();
       final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
       final planned = await getTicketsUseCase.executePlanned();
