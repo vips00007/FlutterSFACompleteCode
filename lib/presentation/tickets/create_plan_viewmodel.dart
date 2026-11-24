@@ -394,9 +394,9 @@ class CreatePlanViewModel extends GetxController {
     }
   }
 
-  void newPlan() {
+  void newPlan([String mode = 'Local']) {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    currentMode.value = 'Local';
+    currentMode.value = mode;
     currentZone.value = '';
     selectedGeography.value = null;
     d1.value = today;

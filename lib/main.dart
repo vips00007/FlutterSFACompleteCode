@@ -13,8 +13,6 @@ void main() async {
     FlutterError.presentError(details);
   };
 
-  //zjhasd
-
   PlatformDispatcher.instance.onError = (error, stack) {
     return true;
   };

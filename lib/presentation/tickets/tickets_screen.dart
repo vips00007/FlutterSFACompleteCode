@@ -253,7 +253,7 @@ class TicketsScreen extends StatelessWidget {
                     );
                   }
 
-                  if (viewModel.state.value == TicketsState.error) {
+                  if(viewModel.state.value == TicketsState.error) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

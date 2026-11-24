@@ -117,7 +117,7 @@ class CreatePlanScreen extends StatelessWidget {
               SizedBox(
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: () => viewModel.newPlan(),
+                  onPressed: () => _showPlanTypeBottomSheet(context, viewModel),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: priColor,
@@ -412,15 +412,51 @@ class CreatePlanScreen extends StatelessWidget {
                 onPressed: () => _handleBackNavigation(context, viewModel),
               ),
               const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Create Plan',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+              Expanded(
+                child: Obx(() {
+                  final mode = viewModel.currentMode.value;
+                  return Text(
+                    'Create Plan ($mode)',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  );
+                }),
+              ),
+              GestureDetector(
+                onTap: () => _showPlanTypeBottomSheet(context, viewModel),
+                child: Obx(() {
+                  final mode = viewModel.currentMode.value;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          mode == 'Local' ? '🏙️ Local' : '🚚 Upcountry',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ),
             ],
           ),
@@ -431,223 +467,199 @@ class CreatePlanScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
             children: [
-              // Plan Type Segmented Toggle
-              const Text(
-                'PLAN TYPE',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: pri2Color,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildSegButton(
-                        viewModel: viewModel,
-                        mode: 'Local',
-                        label: '🏙️ Local',
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildSegButton(
-                        viewModel: viewModel,
-                        mode: 'Upcountry',
-                        label: '🚚 Upcountry',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+              // Horizontal Row: Select Beat / Territory (Left) & Visit Date / Date Range (Right)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Select Beat / Select Territory Dropdown
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Obx(() => Text(
+                          viewModel.currentMode.value == 'Local' ? 'SELECT BEAT' : 'SELECT TERRITORY',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+                        )),
+                        const SizedBox(height: 8),
+                        Obx(() {
+                          final mode = viewModel.currentMode.value;
+                          final geos = viewModel.geographies;
 
-              // Select Beat / Select Territory Dropdown
-              Obx(() => Text(
-                viewModel.currentMode.value == 'Local' ? 'SELECT BEAT' : 'SELECT TERRITORY',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
-              )),
-              const SizedBox(height: 8),
-              Obx(() {
-                final mode = viewModel.currentMode.value;
-                final geos = viewModel.geographies;
+                          if (viewModel.isGeographiesLoading.value && geos.isEmpty) {
+                            return Container(
+                              height: 48,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: surfColor,
+                                border: Border.all(color: bdColor),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: priColor, strokeWidth: 2),
+                              ),
+                            );
+                          }
 
-                if (viewModel.isGeographiesLoading.value && geos.isEmpty) {
-                  return Container(
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: surfColor,
-                      border: Border.all(color: bdColor),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(color: priColor, strokeWidth: 2),
-                    ),
-                  );
-                }
+                          List<GeographyItem> displayGeos = geos;
+                          if (mode == 'Upcountry') {
+                            final nonPrimary = geos.where((g) => g.isPrimary == false).toList();
+                            if (nonPrimary.isNotEmpty) {
+                              displayGeos = nonPrimary;
+                            }
+                          } else {
+                            final primary = geos.where((g) => g.isPrimary == true).toList();
+                            if (primary.isNotEmpty) {
+                              displayGeos = primary;
+                            }
+                          }
 
-                List<GeographyItem> displayGeos = geos;
-                if (mode == 'Upcountry') {
-                  final nonPrimary = geos.where((g) => g.isPrimary == false).toList();
-                  if (nonPrimary.isNotEmpty) {
-                    displayGeos = nonPrimary;
-                  }
-                } else {
-                  final primary = geos.where((g) => g.isPrimary == true).toList();
-                  if (primary.isNotEmpty) {
-                    displayGeos = primary;
-                  }
-                }
+                          if (displayGeos.isEmpty && geos.isNotEmpty) {
+                            displayGeos = geos;
+                          }
 
-                if (displayGeos.isEmpty && geos.isNotEmpty) {
-                  displayGeos = geos;
-                }
+                          if (displayGeos.isNotEmpty) {
+                            final currentValue = viewModel.selectedGeography.value?.effectiveUuid.isNotEmpty == true
+                                ? viewModel.selectedGeography.value!.effectiveUuid
+                                : (viewModel.currentZone.value.isNotEmpty ? viewModel.currentZone.value : null);
 
-                if (displayGeos.isNotEmpty) {
-                  final currentValue = viewModel.selectedGeography.value?.effectiveUuid.isNotEmpty == true
-                      ? viewModel.selectedGeography.value!.effectiveUuid
-                      : (viewModel.currentZone.value.isNotEmpty ? viewModel.currentZone.value : null);
+                            final validValue = displayGeos.any((g) => g.effectiveUuid == currentValue)
+                                ? currentValue
+                                : (displayGeos.isNotEmpty ? displayGeos.first.effectiveUuid : null);
 
-                  final validValue = displayGeos.any((g) => g.effectiveUuid == currentValue)
-                      ? currentValue
-                      : (displayGeos.isNotEmpty ? displayGeos.first.effectiveUuid : null);
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: surfColor,
+                                border: Border.all(color: bdColor),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: validValue,
+                                  hint: Text(
+                                    '— Choose ${mode == 'Local' ? 'beat' : 'territory'} —',
+                                    style: const TextStyle(color: mutColor, fontSize: 13),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.arrow_drop_down, color: txColor),
+                                  items: displayGeos.map((g) {
+                                    return DropdownMenuItem<String>(
+                                      value: g.effectiveUuid,
+                                      child: Text(
+                                        g.name,
+                                        style: const TextStyle(fontSize: 13, color: txColor),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    final selected = displayGeos.firstWhereOrNull((g) => g.effectiveUuid == val);
+                                    viewModel.onGeographySelected(selected);
+                                  },
+                                ),
+                              ),
+                            );
+                          }
 
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: surfColor,
-                      border: Border.all(color: bdColor),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: validValue,
-                        hint: Text(
-                          '— Choose ${mode == 'Local' ? 'beat' : 'territory'} —',
-                          style: const TextStyle(color: mutColor, fontSize: 14),
-                        ),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down, color: txColor),
-                        items: displayGeos.map((g) {
-                          return DropdownMenuItem<String>(
-                            value: g.effectiveUuid,
-                            child: Text(
-                              g.name,
-                              style: const TextStyle(fontSize: 14, color: txColor),
+                          // Fallback static prototype dropdown if no geographies returned
+                          final availableZones = Z.entries.where((e) => e.value[2] == mode).toList();
+
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: surfColor,
+                              border: Border.all(color: bdColor),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: viewModel.currentZone.value.isEmpty ? null : viewModel.currentZone.value,
+                                hint: Text(
+                                  '— Choose ${mode == 'Local' ? 'beat' : 'territory'} —',
+                                  style: const TextStyle(color: mutColor, fontSize: 13),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down, color: txColor),
+                                items: availableZones.map((entry) {
+                                  final key = entry.key;
+                                  final info = entry.value;
+                                  return DropdownMenuItem<String>(
+                                    value: key,
+                                    child: Text(
+                                      '${info[0]} · ${info[1]}',
+                                      style: const TextStyle(fontSize: 13, color: txColor),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  viewModel.currentZone.value = val ?? '';
+                                  viewModel.selectedCustomerIds.clear();
+                                },
+                              ),
                             ),
                           );
-                        }).toList(),
-                        onChanged: (val) {
-                          final selected = displayGeos.firstWhereOrNull((g) => g.effectiveUuid == val);
-                          viewModel.onGeographySelected(selected);
-                        },
-                      ),
-                    ),
-                  );
-                }
-
-                // Fallback static prototype dropdown if no geographies returned
-                final availableZones = Z.entries.where((e) => e.value[2] == mode).toList();
-
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: surfColor,
-                    border: Border.all(color: bdColor),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: viewModel.currentZone.value.isEmpty ? null : viewModel.currentZone.value,
-                      hint: Text(
-                        '— Choose ${mode == 'Local' ? 'beat' : 'territory'} —',
-                        style: const TextStyle(color: mutColor, fontSize: 14),
-                      ),
-                      isExpanded: true,
-                      icon: const Icon(Icons.arrow_drop_down, color: txColor),
-                      items: availableZones.map((entry) {
-                        final key = entry.key;
-                        final info = entry.value;
-                        return DropdownMenuItem<String>(
-                          value: key,
-                          child: Text(
-                            '${info[0]} · ${info[1]}',
-                            style: const TextStyle(fontSize: 14, color: txColor),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        viewModel.currentZone.value = val ?? '';
-                        viewModel.selectedCustomerIds.clear();
-                      },
+                        }),
+                      ],
                     ),
                   ),
-                );
-              }),
-              const SizedBox(height: 16),
+                  const SizedBox(width: 12),
 
-              // Visit Date / Date Range
-              Obx(() => Text(
-                viewModel.currentMode.value == 'Local' ? 'VISIT DATE' : 'DATE RANGE',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
-              )),
-              const SizedBox(height: 8),
-              Obx(() {
-                final isLocal = viewModel.currentMode.value == 'Local';
-                if (isLocal) {
-                  return _buildDatePickerField(
-                    context: context,
-                    value: viewModel.d1.value,
-                    onDatePicked: (val) {
-                      viewModel.onDate1Changed(val);
-                    },
-                  );
-                } else {
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('From date', style: TextStyle(color: mutColor, fontSize: 12)),
-                            const SizedBox(height: 4),
-                            _buildDatePickerField(
+                  // Right Column: Visit Date / Date Range
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Obx(() => Text(
+                          viewModel.currentMode.value == 'Local' ? 'VISIT DATE' : 'DATE RANGE',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutColor, letterSpacing: 0.5),
+                        )),
+                        const SizedBox(height: 8),
+                        Obx(() {
+                          final isLocal = viewModel.currentMode.value == 'Local';
+                          if (isLocal) {
+                            return _buildDatePickerField(
                               context: context,
                               value: viewModel.d1.value,
                               onDatePicked: (val) {
                                 viewModel.onDate1Changed(val);
                               },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('To date', style: TextStyle(color: mutColor, fontSize: 12)),
-                            const SizedBox(height: 4),
-                            _buildDatePickerField(
-                              context: context,
-                              value: viewModel.d2.value,
-                              minDate: viewModel.d1.value,
-                              onDatePicked: (val) {
-                                viewModel.onDate2Changed(val);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }
-              }),
+                            );
+                          } else {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildDatePickerField(
+                                  context: context,
+                                  value: viewModel.d1.value,
+                                  label: 'From',
+                                  onDatePicked: (val) {
+                                    viewModel.onDate1Changed(val);
+                                  },
+                                ),
+                                const SizedBox(height: 6),
+                                _buildDatePickerField(
+                                  context: context,
+                                  value: viewModel.d2.value,
+                                  label: 'To',
+                                  minDate: viewModel.d1.value,
+                                  onDatePicked: (val) {
+                                    viewModel.onDate2Changed(val);
+                                  },
+                                ),
+                              ],
+                            );
+                          }
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 18),
 
               // Unplanned Customers Section Header
@@ -1007,46 +1019,197 @@ class CreatePlanScreen extends StatelessWidget {
     );
   }
 
-  // Segmented control button helper
-  Widget _buildSegButton({
-    required CreatePlanViewModel viewModel,
-    required String mode,
-    required String label,
-  }) {
-    return Obx(() {
-      final isSelected = viewModel.currentMode.value == mode;
-      return GestureDetector(
-        onTap: () {
-          viewModel.onModeChanged(mode);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? surfColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: isSelected
-                ? const [
-                    BoxShadow(
-                      color: Color.fromRGBO(15, 27, 45, 0.07),
-                      blurRadius: 16,
-                      offset: Offset(0, 4),
-                    )
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? priColor : mutColor,
+  // Bottom Dialog for Local / Upcountry Plan Selection
+  void _showPlanTypeBottomSheet(BuildContext context, CreatePlanViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
           ),
-        ),
-      );
-    });
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // Header Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select Plan Type',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: txColor,
+                    ),
+                  ),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.close, color: mutColor, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Choose the type of visit plan you want to create',
+                style: TextStyle(fontSize: 13, color: mutColor),
+              ),
+              const SizedBox(height: 20),
+
+              // Option 1: Local
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    viewModel.newPlan('Local');
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: pri2Color,
+                      border: Border.all(color: priColor.withValues(alpha: 0.25)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: priColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text('🏙️', style: TextStyle(fontSize: 22)),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Local',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: txColor,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Daily visit plan for local beats & market routes',
+                                style: TextStyle(fontSize: 12, color: mutColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: priColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Option 2: Upcountry
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    viewModel.newPlan('Upcountry');
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: pri2Color,
+                      border: Border.all(color: priColor.withValues(alpha: 0.25)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: priColor.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text('🚚', style: TextStyle(fontSize: 22)),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Upcountry',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: txColor,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Tour plan for outstation territories & travel',
+                                style: TextStyle(fontSize: 12, color: mutColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: priColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
   }
+
+
 
   // Date Picker Helper
   Widget _buildDatePickerField({
@@ -1054,6 +1217,7 @@ class CreatePlanScreen extends StatelessWidget {
     required String value,
     required Function(String) onDatePicked,
     String? minDate,
+    String? label,
   }) {
     return GestureDetector(
       onTap: () async {
@@ -1087,7 +1251,7 @@ class CreatePlanScreen extends StatelessWidget {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: surfColor,
           border: Border.all(color: bdColor),
@@ -1098,13 +1262,14 @@ class CreatePlanScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                value,
-                style: const TextStyle(fontSize: 14, color: txColor),
+                label != null ? '$label: $value' : value,
+                style: const TextStyle(fontSize: 13, color: txColor, fontWeight: FontWeight.w500),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.calendar_today, size: 16, color: mutColor),
+            const SizedBox(width: 4),
+            const Icon(Icons.calendar_today, size: 15, color: mutColor),
           ],
         ),
       ),
