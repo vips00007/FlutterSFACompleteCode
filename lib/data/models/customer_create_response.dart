@@ -21,16 +21,25 @@ class CustomerCreateResponse {
 class CustomerCreateData {
   final String uuid;
   final String customerCode;
+  final String? lifecycleStatus;
+  final bool? mobileVerified;
+  final String? mobileVerifiedAt;
 
   CustomerCreateData({
     required this.uuid,
     required this.customerCode,
+    this.lifecycleStatus,
+    this.mobileVerified,
+    this.mobileVerifiedAt,
   });
 
   factory CustomerCreateData.fromJson(Map<String, dynamic> json) {
     return CustomerCreateData(
       uuid: json['uuid'] ?? '',
       customerCode: json['customerCode'] ?? '',
+      lifecycleStatus: json['lifecycleStatus'],
+      mobileVerified: json['mobileVerified'] is bool ? json['mobileVerified'] : null,
+      mobileVerifiedAt: json['mobileVerifiedAt']?.toString(),
     );
   }
 }

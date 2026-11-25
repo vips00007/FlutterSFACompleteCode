@@ -151,6 +151,7 @@ class CustomerCreateRequest {
   final CreditDetails? credit;
   final String? version;
   final String? clientRequestId;
+  final String? mobileOtp;
 
   CustomerCreateRequest({
     this.customerType,
@@ -200,6 +201,7 @@ class CustomerCreateRequest {
     this.credit,
     this.version,
     this.clientRequestId,
+    this.mobileOtp,
   });
 
   Map<String, dynamic> toJson() {
@@ -251,6 +253,7 @@ class CustomerCreateRequest {
       if (credit != null) 'credit': credit?.toJson(),
       if (version != null) 'version': version,
       if (clientRequestId != null) 'clientRequestId': clientRequestId,
+      if (mobileOtp != null) 'mobileOtp': mobileOtp,
     };
   }
 }

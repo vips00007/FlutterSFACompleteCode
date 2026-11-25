@@ -10,10 +10,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/datasource/remote/customer_api_service.dart';
+import '../../data/datasource/remote/auth_api_service.dart';
 import '../../data/models/customer_reference_data_response.dart';
 import '../../data/models/customer_create_request.dart';
+import '../../data/models/sfa_otp_models.dart';
 import 'widgets/shop_camera_preview_screen.dart';
 import 'widgets/customer_dialogs.dart';
+import 'widgets/outlet_preview_bottom_sheet.dart';
 import 'dart:io';
 
 // Top-level function for background isolate image processing
@@ -42,6 +45,7 @@ Future<Uint8List?> _compressImageInIsolate(Uint8List originalBytes) async {
 
 class AddOutletViewModel extends GetxController {
   final CustomerApiService _apiService = CustomerApiService();
+  final AuthApiService _authApiService = AuthApiService();
   final scrollController = ScrollController();
 
   void scrollToTop() {
@@ -60,6 +64,16 @@ class AddOutletViewModel extends GetxController {
   final isLoading = false.obs;
   final isRefDataLoading = false.obs;
   final refDataError = ''.obs;
+
+  // Mobile Verification & OTP States
+  final isMobileVerified = false.obs;
+  final isSendingOtp = false.obs;
+  final isVerifyingOtp = false.obs;
+  final otpChallengeId = RxnString();
+  final resendCountdown = 60.obs;
+  final verifiedMobileNumber = ''.obs;
+  final enteredMobileOtp = ''.obs;
+  Timer? _otpTimer;
 
   // Reference Data
   final customerTypes = <CustomerTypeModel>[].obs;
@@ -333,6 +347,74 @@ class AddOutletViewModel extends GetxController {
     return allBeats.toList();
   }
 
+  // Display Name Helpers for Preview
+  String get selectedSubTypeName =>
+      subTypeUuid.value != null
+          ? allLookups
+                  .firstWhereOrNull((e) => e.uuid == subTypeUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  String get selectedChannelName =>
+      channelUuid.value != null
+          ? allLookups
+                  .firstWhereOrNull((e) => e.uuid == channelUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  String get selectedSegmentName =>
+      segmentUuid.value != null
+          ? allLookups
+                  .firstWhereOrNull((e) => e.uuid == segmentUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  String get selectedCategoryName =>
+      categoryUuid.value != null
+          ? allLookups
+                  .firstWhereOrNull((e) => e.uuid == categoryUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  String get selectedClassName =>
+      clsUuid.value != null
+          ? allLookups
+                  .firstWhereOrNull((e) => e.uuid == clsUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  String get selectedBeatName =>
+      beatUuid.value != null
+          ? allBeats
+                  .firstWhereOrNull((e) => e.uuid == beatUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  String get selectedWorkshopTypeName =>
+      wtypeUuid.value != null
+          ? workshopTypeList
+                  .firstWhereOrNull((e) => e.uuid == wtypeUuid.value)
+                  ?.name ??
+              ''
+          : '';
+
+  bool validateAllSteps() {
+    for (int i = 0; i <= 2; i++) {
+      if (!validateStep(i)) {
+        currentStep.value = i;
+        scrollToTop();
+        return false;
+      }
+    }
+    return true;
+  }
+
   void onCustomerTypeChanged(String uuid, String name) {
     if (rtypeUuid.value != uuid) {
       rtypeUuid.value = uuid;
@@ -398,7 +480,11 @@ class AddOutletViewModel extends GetxController {
         currentStep.value++;
         scrollToTop();
       } else {
-        submitForm();
+        if (Get.context != null) {
+          OutletPreviewBottomSheet.show(Get.context!, this);
+        } else {
+          submitForm();
+        }
       }
     }
   }
@@ -639,6 +725,171 @@ class AddOutletViewModel extends GetxController {
     }
   }
 
+  // --- Mobile OTP Verification Methods ---
+  // Static testing flag: set to false when backend OTP API is live
+  static const bool useStaticOtpForTesting = true;
+  static const String staticOtpCode = '11111';
+
+  void startOtpTimer(int seconds) {
+    _otpTimer?.cancel();
+    resendCountdown.value = seconds;
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendCountdown.value > 0) {
+        resendCountdown.value--;
+      } else {
+        _otpTimer?.cancel();
+      }
+    });
+  }
+
+  void stopOtpTimer() {
+    _otpTimer?.cancel();
+  }
+
+  Future<bool> sendMobileOtp() async {
+    final mobile = mobileController.text.trim();
+    if (mobile.length != 10 || !RegExp(r'^[6-9]\d{9}$').hasMatch(mobile)) {
+      Get.snackbar(
+        'Invalid Mobile Number',
+        'Please enter a valid 10-digit mobile number.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade50,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    }
+
+    if (isSendingOtp.value) return false;
+
+    isSendingOtp.value = true;
+    try {
+      if (useStaticOtpForTesting) {
+        // Simulated short delay for static OTP mode
+        await Future.delayed(const Duration(milliseconds: 300));
+        otpChallengeId.value = 'static_challenge_${DateTime.now().millisecondsSinceEpoch}';
+        startOtpTimer(60);
+        isSendingOtp.value = false;
+        return true;
+      }
+
+      final req = SendLoginOtpRequest(identifier: mobile);
+      final res = await _authApiService.sendLoginOtp(req);
+
+      if (res.data != null && res.data!.challengeId.isNotEmpty) {
+        otpChallengeId.value = res.data!.challengeId;
+        startOtpTimer(res.data!.resendAfterSeconds);
+        isSendingOtp.value = false;
+        return true;
+      } else {
+        throw Exception(
+          res.message.isNotEmpty ? res.message : 'Failed to send OTP',
+        );
+      }
+    } catch (e) {
+      isSendingOtp.value = false;
+      String err = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar(
+        'OTP Error',
+        err,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade50,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> verifyMobileOtp(String otp) async {
+    if (otp.length < 5) {
+      Get.snackbar(
+        'Invalid OTP',
+        'Please enter the full 5-digit verification code.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade50,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    }
+
+    if (otpChallengeId.value == null || otpChallengeId.value!.isEmpty) {
+      Get.snackbar(
+        'Session Expired',
+        'OTP session expired. Please resend OTP.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade50,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    }
+
+    if (isVerifyingOtp.value) return false;
+
+    isVerifyingOtp.value = true;
+    try {
+      if (useStaticOtpForTesting) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (otp == staticOtpCode) {
+          isMobileVerified.value = true;
+          verifiedMobileNumber.value = mobileController.text.trim();
+          enteredMobileOtp.value = otp;
+          setError('mobile', '');
+          stopOtpTimer();
+          isVerifyingOtp.value = false;
+          return true;
+        } else {
+          isVerifyingOtp.value = false;
+          Get.snackbar(
+            'Invalid OTP',
+            'Incorrect verification code. Use 11111 for testing.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade50,
+            colorText: Colors.red.shade900,
+          );
+          return false;
+        }
+      }
+
+      final req = VerifyLoginOtpRequest(
+        challengeId: otpChallengeId.value!,
+        otp: otp,
+      );
+      await _authApiService.verifyLoginOtp(req);
+
+      isMobileVerified.value = true;
+      verifiedMobileNumber.value = mobileController.text.trim();
+      enteredMobileOtp.value = otp;
+      setError('mobile', '');
+      stopOtpTimer();
+      isVerifyingOtp.value = false;
+      return true;
+    } catch (e) {
+      isVerifyingOtp.value = false;
+      String err = e.toString().replaceAll('Exception: ', '');
+      Get.snackbar(
+        'Verification Failed',
+        err,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade50,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> resendMobileOtp() async {
+    if (resendCountdown.value > 0 || isSendingOtp.value) return false;
+    return await sendMobileOtp();
+  }
+
+  void onMobileNumberChanged(String val) {
+    if (isMobileVerified.value && val.trim() != verifiedMobileNumber.value) {
+      isMobileVerified.value = false;
+      otpChallengeId.value = null;
+      verifiedMobileNumber.value = '';
+      enteredMobileOtp.value = '';
+    }
+  }
+
   // Validation
   final errors = <String, String>{}.obs;
 
@@ -670,6 +921,10 @@ class AddOutletViewModel extends GetxController {
         setError('mobile', 'Required');
       } else if (!RegExp(r'^[6-9]\d{9}$').hasMatch(mobile)) {
         setError('mobile', 'Enter a valid 10-digit mobile number');
+      } else if (!isMobileVerified.value) {
+        setError('mobile', 'Please verify your mobile number via OTP');
+      } else if (enteredMobileOtp.value.trim().length != 5) {
+        setError('mobile', 'A 5-digit mobile OTP is required');
       }
 
       final wa = waController.text.trim();
@@ -682,8 +937,10 @@ class AddOutletViewModel extends GetxController {
       final email = emailController.text.trim();
       if (email.isEmpty) {
         setError('email', 'Required');
-      } else if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$').hasMatch(email)) {
-        setError('email', 'Enter a valid email address');
+      } else if (!RegExp(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      ).hasMatch(email)) {
+        setError('email', 'Please enter a valid email address.');
       }
 
       if (a1Controller.text.trim().isEmpty) setError('a1', 'Required');
@@ -978,6 +1235,9 @@ class AddOutletViewModel extends GetxController {
         shopImageFileRef: null,
         kyc: kycList.isNotEmpty ? kycList : null,
         attachments: [],
+        mobileOtp: enteredMobileOtp.value.isNotEmpty
+            ? enteredMobileOtp.value.trim()
+            : null,
       );
 
       final res = await _apiService.createCustomer(request,
@@ -1001,6 +1261,10 @@ class AddOutletViewModel extends GetxController {
         customerCode: customerCode,
       );
     } on CustomerApiException catch (e) {
+      if (e.errors.any((err) => err.toLowerCase().contains('otp') || err.toLowerCase().contains('mobileotp'))) {
+        setError('mobile', 'A 5-digit mobile OTP is required');
+        currentStep.value = 0;
+      }
       showCustomerErrorDialog(
         title: e.message,
         description: 'Check the details below and try again.',
@@ -1008,6 +1272,10 @@ class AddOutletViewModel extends GetxController {
       );
     } catch (e) {
       final errMsg = e.toString().replaceAll('Exception: ', '');
+      if (errMsg.toLowerCase().contains('otp') || errMsg.toLowerCase().contains('mobileotp')) {
+        setError('mobile', 'A 5-digit mobile OTP is required');
+        currentStep.value = 0;
+      }
       showCustomerErrorDialog(
         title: 'Submission Failed',
         description: 'Check the details below and try again.',
@@ -1037,6 +1305,15 @@ class AddOutletViewModel extends GetxController {
     wacb.value = false;
     waController.clear();
     emailController.clear();
+
+    // Mobile Verification & OTP States
+    isMobileVerified.value = false;
+    isSendingOtp.value = false;
+    isVerifyingOtp.value = false;
+    otpChallengeId.value = null;
+    verifiedMobileNumber.value = '';
+    enteredMobileOtp.value = '';
+    _otpTimer?.cancel();
 
     // Step 1: Address
     capturedGeo.value = null;
@@ -1124,6 +1401,7 @@ class AddOutletViewModel extends GetxController {
 
   @override
   void onClose() {
+    _otpTimer?.cancel();
     scrollController.dispose();
     super.onClose();
   }

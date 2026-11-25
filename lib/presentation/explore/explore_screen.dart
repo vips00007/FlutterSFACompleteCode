@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'add_outlet_viewmodel.dart';
 import '../dashboard/dashboard_viewmodel.dart';
+import 'widgets/otp_verification_bottom_sheet.dart';
+import 'widgets/outlet_preview_bottom_sheet.dart';
 
 class HtmlColors {
   static const Color bg = Color(0xFFF4F3F9);
@@ -52,7 +54,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     controller: viewModel.scrollController,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 80),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                     child: _buildStepCard(viewModel, context),
                   ),
                 ),
@@ -72,7 +74,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           }),
         ],
       ),
-      bottomSheet: _buildBottomNav(viewModel),
+      bottomNavigationBar: _buildBottomNav(viewModel, context),
     );
   }
 
@@ -359,7 +361,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
       Widget content = const SizedBox.shrink();
 
       if (step == 0) {
-        content = _buildStep1Fields(viewModel);
+        content = _buildStep1Fields(viewModel, context);
       } else if (step == 1) {
         content = _buildStep2Fields(viewModel, context);
       } else if (step == 2) {
@@ -471,6 +473,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     VoidCallback? onTap,
     Widget? suffixIcon,
     List<TextInputFormatter>? inputFormatters,
+    ValueChanged<String>? onChangedExtra,
   }) {
     final isPhone = type == TextInputType.phone || key == 'mobile' || key == 'wa';
     final formatters = inputFormatters ??
@@ -483,6 +486,14 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
 
     return Obx(() {
       final hasErr = viewModel.hasError(key);
+      final isVerifiedMobile = key == 'mobile' && viewModel.isMobileVerified.value;
+      final borderColor = hasErr
+          ? HtmlColors.bad
+          : (isVerifiedMobile ? HtmlColors.ok : HtmlColors.line);
+      final focusedBorderColor = hasErr
+          ? HtmlColors.bad
+          : (isVerifiedMobile ? HtmlColors.ok : HtmlColors.pri);
+
       return SizedBox(
         height: 44,
         child: TextField(
@@ -493,10 +504,20 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           inputFormatters: formatters,
           style: const TextStyle(fontSize: 14.5, color: HtmlColors.ink),
           onChanged: (val) {
+            if (onChangedExtra != null) {
+              onChangedExtra(val);
+            }
             if (isPhone) {
               final clean = val.replaceAll(RegExp(r'\D'), '');
               if (clean.length == 10 && RegExp(r'^[6-9]\d{9}$').hasMatch(clean)) {
                 viewModel.setError(key, '');
+              }
+            } else if (key == 'email') {
+              final trimmed = val.trim();
+              if (RegExp(
+                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+              ).hasMatch(trimmed)) {
+                viewModel.setError('email', '');
               }
             } else if (viewModel.hasError(key)) {
               if (val.trim().isNotEmpty) viewModel.setError(key, '');
@@ -510,20 +531,25 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
             ),
             filled: true,
             fillColor: HtmlColors.bg,
+            isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             suffixIcon: suffixIcon,
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 32,
+              minHeight: 32,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(
-                color: hasErr ? HtmlColors.bad : HtmlColors.line,
+                color: borderColor,
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(
-                color: hasErr ? HtmlColors.bad : HtmlColors.pri,
+                color: focusedBorderColor,
                 width: 1.5,
               ),
             ),
@@ -896,8 +922,134 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
     });
   }
 
+  // Mobile Number Field with Integrated Verify Button & Success State
+  Widget _buildMobileField(AddOutletViewModel vm, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Obx(() {
+          final isVerified = vm.isMobileVerified.value;
+          final isSending = vm.isSendingOtp.value;
+
+          return _textInput(
+            viewModel: vm,
+            key: 'mobile',
+            controller: vm.mobileController,
+            type: TextInputType.phone,
+            hint: '10-digit mobile number',
+            onChangedExtra: (val) {
+              vm.onMobileNumberChanged(val);
+            },
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: 6, top: 4, bottom: 4),
+              child: isVerified
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFA5D6A7)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: Color(0xFF2E7D32),
+                            size: 15,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Verified',
+                            style: TextStyle(
+                              color: Color(0xFF2E7D32),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: vm.mobileController,
+                      builder: (context, value, child) {
+                        final phone = value.text.replaceAll(RegExp(r'\D'), '');
+                        final isValid = phone.length == 10 && RegExp(r'^[6-9]\d{9}$').hasMatch(phone);
+
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          child: ElevatedButton(
+                            onPressed: (isValid && !isSending)
+                                ? () => OtpVerificationBottomSheet.show(context, vm)
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isValid ? HtmlColors.pri : HtmlColors.lineConnector,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: HtmlColors.bg,
+                              disabledForegroundColor: HtmlColors.mut.withValues(alpha: 0.5),
+                              elevation: isValid ? 1 : 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              minimumSize: const Size(64, 32),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: isSending
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Verify',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          );
+        }),
+        Obx(() {
+          if (vm.isMobileVerified.value) {
+            return const Padding(
+              padding: EdgeInsets.only(top: 4, left: 2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: HtmlColors.ok,
+                    size: 13,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Mobile Number Verified',
+                    style: TextStyle(
+                      color: HtmlColors.ok,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }),
+      ],
+    );
+  }
+
   // Step 1: Shop & Address
-  Widget _buildStep1Fields(AddOutletViewModel vm) {
+  Widget _buildStep1Fields(AddOutletViewModel vm, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -938,13 +1090,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           viewModel: vm,
           key: 'mobile',
           label: 'Mobile number',
-          child: _textInput(
-            viewModel: vm,
-            key: 'mobile',
-            controller: vm.mobileController,
-            type: TextInputType.phone,
-            hint: '10-digit mobile number',
-          ),
+          child: _buildMobileField(vm, context),
         ),
 
         Padding(
@@ -1733,14 +1879,16 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
   }
 
   // Fixed Compact Bottom Navigation Bar (nav)
-  Widget _buildBottomNav(AddOutletViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: const BoxDecoration(
-        color: HtmlColors.card,
-        border: Border(top: BorderSide(color: HtmlColors.line)),
-      ),
-      child: Obx(() {
+  Widget _buildBottomNav(AddOutletViewModel viewModel, BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: const BoxDecoration(
+          color: HtmlColors.card,
+          border: Border(top: BorderSide(color: HtmlColors.line)),
+        ),
+        child: Obx(() {
         final step = viewModel.currentStep.value;
         return Row(
           children: [
@@ -1780,9 +1928,15 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                   () => ElevatedButton(
                     onPressed: viewModel.isLoading.value
                         ? null
-                        : viewModel.nextStep,
+                        : () {
+                            if (step == 2) {
+                              OutletPreviewBottomSheet.show(context, viewModel);
+                            } else {
+                              viewModel.nextStep();
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: step == 2 ? HtmlColors.ok : HtmlColors.pri,
+                      backgroundColor: step == 2 ? HtmlColors.pri : HtmlColors.pri,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                       shape: RoundedRectangleBorder(
@@ -1798,14 +1952,30 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
                               strokeWidth: 2,
                             ),
                           )
-                        : Text(
-                            step == 2 ? 'Submit for approval' : 'Next',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        : (step == 2
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.remove_red_eye_outlined, size: 16, color: Colors.white),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Preview Details',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const Text(
+                                'Next',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )),
                   ),
                 ),
               ),
@@ -1813,6 +1983,7 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
           ],
         );
       }),
+    ),
     );
   }
 }
