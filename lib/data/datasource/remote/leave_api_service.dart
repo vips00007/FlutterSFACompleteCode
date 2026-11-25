@@ -1,16 +1,7 @@
-import 'dart:convert';
-import 'package:dio/dio.dart';
 import '../../models/leave_models.dart';
 
 class LeaveApiService {
   final String baseUrl = "https://api-staging.rahulpatel.online";
-  late final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: baseUrl,
-      headers: {"Accept": "application/json"},
-      validateStatus: (status) => status != null,
-    ),
-  );
 
   // Mocking all endpoints to allow the UI to flow without crashing
   Future<LeaveBalance> getLeaveBalance() async {

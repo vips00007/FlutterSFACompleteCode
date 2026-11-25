@@ -13,6 +13,8 @@ class Outlet {
   final String pinCode;
   final List<String> photos;
   final String? area;
+  final double? latitude;
+  final double? longitude;
 
   Outlet({
     this.id,
@@ -29,5 +31,7 @@ class Outlet {
     required this.pinCode,
     required this.photos,
     this.area,
+    this.latitude,
+    this.longitude,
   });
 }

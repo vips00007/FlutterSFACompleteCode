@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'leave_request_details_viewmodel.dart';
-import '../../core/colors/app_colors.dart';
 
 class LeaveRequestDetailsScreen extends StatelessWidget {
   const LeaveRequestDetailsScreen({super.key});

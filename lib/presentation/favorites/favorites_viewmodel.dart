@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../core/utils/shared_prefs_manager.dart';
+import '../../routes/route_names.dart';
 
 class FavoritesViewModel extends GetxController {
   final userName = 'User'.obs;
@@ -24,7 +25,7 @@ class FavoritesViewModel extends GetxController {
   }
 
   void loadUserData() {
-    final savedName = SharedPrefsManager.getName();
+    final savedName = SharedPrefsManager.getName() ?? SharedPrefsManager.getSavedUsername();
     if (savedName != null && savedName.isNotEmpty) {
       userName.value = savedName;
     }
@@ -34,14 +35,37 @@ class FavoritesViewModel extends GetxController {
       role.value = savedRoles.join(', ');
     }
 
+    final savedMobile = SharedPrefsManager.getMobile() ?? SharedPrefsManager.getSavedUsername();
+    if (savedMobile != null && savedMobile.isNotEmpty && !savedMobile.contains('@')) {
+      phone.value = savedMobile;
+    } else {
+      phone.value = 'N/A';
+    }
+
     final savedEmail = SharedPrefsManager.getEmail();
-    if (savedEmail != null) {
+    if (savedEmail != null && savedEmail.isNotEmpty) {
       email.value = savedEmail;
+    } else {
+      final savedUser = SharedPrefsManager.getSavedUsername();
+      if (savedUser != null && savedUser.contains('@')) {
+        email.value = savedUser;
+      } else {
+        email.value = 'N/A';
+      }
+    }
+
+    final savedUuid = SharedPrefsManager.getUserUuid();
+    if (savedUuid != null && savedUuid.isNotEmpty) {
+      employeeId.value = savedUuid.length > 8 ? savedUuid.substring(0, 8).toUpperCase() : savedUuid;
     }
   }
 
-  void logout() {
-    SharedPrefsManager.clear();
-    Get.offAllNamed('/login_view');
+  Future<void> logout() async {
+    final bool wasOnboardingComplete = SharedPrefsManager.isOnboardingComplete();
+    await SharedPrefsManager.clear();
+    if (wasOnboardingComplete) {
+      await SharedPrefsManager.setOnboardingComplete(true);
+    }
+    Get.offAllNamed(RoutesName.login_view);
   }
 }

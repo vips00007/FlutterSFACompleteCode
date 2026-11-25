@@ -79,6 +79,7 @@ class LoginViewModel extends GetxController {
         mustChangePassword: user.mustChangePassword,
         sessionMode: user.sessionMode,
         channel: user.channel,
+        mobile: cleanMobile,
       );
 
       isLoading.value = false;

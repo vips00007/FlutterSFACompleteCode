@@ -70,6 +70,8 @@ class SharedPrefsManager {
     bool? mustChangePassword,
     String? sessionMode,
     String? channel,
+    String? mobile,
+    String? email,
   }) async {
     await _prefs?.setString(_keyToken, token);
     await _prefs?.setString(_keyTokenType, tokenType);
@@ -77,7 +79,14 @@ class SharedPrefsManager {
     await _prefs?.setString(_keyExpiresAt, expiresAt);
 
     if (userUuid != null) await _prefs?.setString(_keyUserUuid, userUuid);
-    if (username != null) await _prefs?.setString(_keyUsername, username);
+    if (username != null) {
+      await _prefs?.setString(_keyUsername, username);
+      if (username.contains('@') && (email == null || email.isEmpty)) {
+        await _prefs?.setString(_keyEmail, username);
+      } else if (RegExp(r'^\d{10}$').hasMatch(username) && (mobile == null || mobile.isEmpty)) {
+        await _prefs?.setString(_keyMobile, username);
+      }
+    }
     if (displayName != null) await _prefs?.setString(_keyName, displayName);
     if (companyUuid != null) {
       await _prefs?.setString(_keyCompanyUuid, companyUuid);
@@ -93,6 +102,12 @@ class SharedPrefsManager {
       await _prefs?.setString(_keySessionMode, sessionMode);
     }
     if (channel != null) await _prefs?.setString(_keyChannel, channel);
+    if (mobile != null && mobile.isNotEmpty) {
+      await _prefs?.setString(_keyMobile, mobile);
+    }
+    if (email != null && email.isNotEmpty) {
+      await _prefs?.setString(_keyEmail, email);
+    }
   }
 
   static String? getTokenType() => _prefs?.getString(_keyTokenType);

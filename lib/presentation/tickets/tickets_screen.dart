@@ -7,6 +7,8 @@ import 'widgets/ticket_card.dart';
 import 'widgets/empty_state_widget.dart';
 import '../check_in/widgets/outside_radius_bottom_sheet.dart';
 
+import 'widgets/app_header_bar.dart';
+
 class TicketsScreen extends StatelessWidget {
   const TicketsScreen({super.key});
 
@@ -45,68 +47,28 @@ class TicketsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Header (Matching Add Outlet header design & prototype)
-              Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                constraints: const BoxConstraints(minHeight: 60),
-                decoration: BoxDecoration(
-                  color: blueColor,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: blueColor.withValues(alpha: 0.25),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () => _handleBackNavigation(context),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'Visit',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+              // 1. Header (Reusable AppHeaderBar component)
+              AppHeaderBar(
+                title: 'Visit',
+                onBackPressed: () => _handleBackNavigation(context),
+                trailing: SizedBox(
+                  height: 36,
+                  child: ElevatedButton(
+                    onPressed: () => Get.toNamed(RoutesName.create_plan_view),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: blueColor,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    SizedBox(
-                    height: 36,
-                    child: ElevatedButton(
-                      onPressed: () => Get.toNamed(RoutesName.create_plan_view),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: blueColor,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        '＋ Create Plan',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                      ),
+                    child: const Text(
+                      '＋ Create Plan',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  ],
                 ),
               ),
 
@@ -319,30 +281,37 @@ class TicketsScreen extends StatelessWidget {
 
                         VoidCallback? onCheckIn;
 
-                        if (viewModel.selectedTabIndex.value == 1) {
-                          if (index == 0) {
-                            onCheckIn = () {
-                              Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
-                            };
-                          } else if (index == 1) {
-                            onCheckIn = () {
-                              Get.bottomSheet(
-                                OutsideRadiusBottomSheet(outlet: tickets[index], isInside: false),
-                                isScrollControlled: true,
-                              );
-                            };
-                          } else if (index == 2) {
-                            onCheckIn = () {
-                              Get.bottomSheet(
-                                OutsideRadiusBottomSheet(outlet: tickets[index], isInside: true),
-                                isScrollControlled: true,
-                              );
-                            };
-                          } else {
-                            onCheckIn = () {
-                              Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
-                            };
-                          }
+                        if (index == 0) {
+                          onCheckIn = () {
+                            Get.toNamed(RoutesName.visit_check_in_view, arguments: tickets[index]);
+                          };
+                        } else if (index == 1) {
+                          onCheckIn = () {
+                            Get.bottomSheet(
+                              OutsideRadiusBottomSheet(outlet: tickets[index], isInside: false),
+                              isScrollControlled: true,
+                            );
+                          };
+                        } else if (index == 2) {
+                          onCheckIn = () {
+                            Get.bottomSheet(
+                              OutsideRadiusBottomSheet(outlet: tickets[index], isInside: true),
+                              isScrollControlled: true,
+                            );
+                          };
+                        } else {
+                          onCheckIn = () {
+                            final outlet = tickets[index];
+                            final bool hasLocation = (outlet.latitude != null &&
+                                outlet.longitude != null &&
+                                outlet.latitude != 0.0 &&
+                                outlet.longitude != 0.0);
+                            if (!hasLocation) {
+                              Get.toNamed(RoutesName.visit_check_in_view, arguments: outlet);
+                            } else {
+                              Get.toNamed(RoutesName.visit_details_view, arguments: outlet);
+                            }
+                          };
                         }
 
                         return TicketCard(

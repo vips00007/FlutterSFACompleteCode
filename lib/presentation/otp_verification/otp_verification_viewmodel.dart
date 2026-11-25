@@ -119,6 +119,8 @@ class OtpVerificationViewModel extends GetxController {
           mustChangePassword: user.mustChangePassword,
           sessionMode: user.sessionMode,
           channel: user.channel,
+          mobile: identifier.contains('@') ? null : identifier,
+          email: identifier.contains('@') ? identifier : null,
         );
 
         isLoading.value = false;

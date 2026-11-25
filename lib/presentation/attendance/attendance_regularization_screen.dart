@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'attendance_regularization_viewmodel.dart';
-import '../../core/colors/app_colors.dart';
 
 class AttendanceRegularizationScreen extends StatelessWidget {
   const AttendanceRegularizationScreen({super.key});

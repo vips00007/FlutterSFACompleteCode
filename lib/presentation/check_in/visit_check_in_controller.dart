@@ -16,6 +16,11 @@ class VisitCheckInController extends GetxController {
   final outlet = Rxn<Outlet>();
   final state = CheckInState.initial.obs;
   final isPhotoTaken = false.obs;
+  final isHeaderExpanded = false.obs;
+
+  void toggleHeaderExpanded() {
+    isHeaderExpanded.value = !isHeaderExpanded.value;
+  }
 
   @override
   void onInit() {

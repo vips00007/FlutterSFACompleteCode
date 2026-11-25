@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'regularization_request_status_viewmodel.dart';
-import '../../core/colors/app_colors.dart';
 
 class RegularizationRequestStatusScreen extends StatelessWidget {
   const RegularizationRequestStatusScreen({super.key});

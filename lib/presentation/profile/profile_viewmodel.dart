@@ -17,7 +17,7 @@ class ProfileViewModel extends GetxController {
   }
 
   void loadUserData() {
-    final savedName = SharedPrefsManager.getName();
+    final savedName = SharedPrefsManager.getName() ?? SharedPrefsManager.getSavedUsername();
     if (savedName != null && savedName.isNotEmpty) {
       userName.value = savedName;
     }
@@ -29,23 +29,32 @@ class ProfileViewModel extends GetxController {
       designation.value = rolesString;
     }
 
-    final savedEmail = SharedPrefsManager.getEmail();
-    if (savedEmail != null) {
-      email.value = savedEmail;
+    final savedMobile = SharedPrefsManager.getMobile() ?? SharedPrefsManager.getSavedUsername();
+    if (savedMobile != null && savedMobile.isNotEmpty && !savedMobile.contains('@')) {
+      mobile.value = savedMobile;
+    } else {
+      mobile.value = 'N/A';
     }
 
-    final savedMobile = SharedPrefsManager.getMobile();
-    if (savedMobile != null) {
-      mobile.value = savedMobile;
+    final savedEmail = SharedPrefsManager.getEmail();
+    if (savedEmail != null && savedEmail.isNotEmpty) {
+      email.value = savedEmail;
+    } else {
+      final savedUser = SharedPrefsManager.getSavedUsername();
+      if (savedUser != null && savedUser.contains('@')) {
+        email.value = savedUser;
+      } else {
+        email.value = 'N/A';
+      }
     }
 
     final savedCompanyCode = SharedPrefsManager.getCompanyCode();
-    if (savedCompanyCode != null) {
+    if (savedCompanyCode != null && savedCompanyCode.isNotEmpty) {
       companyCode.value = savedCompanyCode;
     }
 
     final savedUserUuid = SharedPrefsManager.getUserUuid();
-    if (savedUserUuid != null) {
+    if (savedUserUuid != null && savedUserUuid.isNotEmpty) {
       userUuid.value = savedUserUuid;
     }
   }

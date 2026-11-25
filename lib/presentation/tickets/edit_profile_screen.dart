@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/colors/app_colors.dart';
+import '../../core/utils/shared_prefs_manager.dart';
 import '../../domain/entities/outlet.dart';
+import '../favorites/favorites_viewmodel.dart';
+import '../profile/profile_viewmodel.dart';
+import '../home/home_viewmodel.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,15 +17,28 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isSubmitted = false;
   // Controllers
-  final _distributorNameController = TextEditingController(text: 'ABC Distributors');
-  final _ownerNameController = TextEditingController(text: 'Rakesh Shah');
-  final _mobileController = TextEditingController(text: '9876543210');
-  final _areaController = TextEditingController(text: 'Bhopal North · Beat 4');
-  final _gstController = TextEditingController(text: '23AABCSO231F1Z5');
+  late final TextEditingController _distributorNameController;
+  late final TextEditingController _ownerNameController;
+  late final TextEditingController _mobileController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _areaController;
+  late final TextEditingController _gstController;
 
   @override
   void initState() {
     super.initState();
+    final savedName = SharedPrefsManager.getName() ?? SharedPrefsManager.getSavedUsername() ?? '';
+    final savedMobile = SharedPrefsManager.getMobile() ?? (SharedPrefsManager.getSavedUsername()?.contains('@') == false ? SharedPrefsManager.getSavedUsername() : '') ?? '';
+    final savedEmail = SharedPrefsManager.getEmail() ?? (SharedPrefsManager.getSavedUsername()?.contains('@') == true ? SharedPrefsManager.getSavedUsername() : '') ?? '';
+    final savedCompany = SharedPrefsManager.getCompanyCode() ?? 'ABC Distributors';
+
+    _distributorNameController = TextEditingController(text: savedCompany);
+    _ownerNameController = TextEditingController(text: savedName);
+    _mobileController = TextEditingController(text: savedMobile);
+    _emailController = TextEditingController(text: savedEmail);
+    _areaController = TextEditingController(text: 'Bhopal North · Beat 4');
+    _gstController = TextEditingController(text: '23AABCSO231F1Z5');
+
     final Outlet? outlet = Get.arguments as Outlet?;
     if (outlet != null) {
       if (outlet.firmName.isNotEmpty) _distributorNameController.text = outlet.firmName;
@@ -37,9 +54,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _distributorNameController.dispose();
     _ownerNameController.dispose();
     _mobileController.dispose();
+    _emailController.dispose();
     _areaController.dispose();
     _gstController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitForm() async {
+    final ownerName = _ownerNameController.text.trim();
+    final mobile = _mobileController.text.trim();
+    final email = _emailController.text.trim();
+
+    if (ownerName.isEmpty) {
+      Get.snackbar('Validation Error', 'Please enter your name',
+          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red.shade50);
+      return;
+    }
+
+    if (mobile.isNotEmpty && (mobile.length != 10 || !RegExp(r'^\d{10}$').hasMatch(mobile))) {
+      Get.snackbar('Validation Error', 'Please enter a valid 10-digit mobile number',
+          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red.shade50);
+      return;
+    }
+
+    if (email.isNotEmpty && !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
+      Get.snackbar('Validation Error', 'Please enter a valid email address',
+          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red.shade50);
+      return;
+    }
+
+    await SharedPrefsManager.saveName(ownerName);
+    if (mobile.isNotEmpty) {
+      await SharedPrefsManager.saveMobile(mobile);
+    }
+    if (email.isNotEmpty) {
+      await SharedPrefsManager.saveEmail(email);
+    }
+
+    // Refresh active ViewModels across app
+    if (Get.isRegistered<FavoritesViewModel>()) {
+      Get.find<FavoritesViewModel>().loadUserData();
+    }
+    if (Get.isRegistered<ProfileViewModel>()) {
+      Get.find<ProfileViewModel>().loadUserData();
+    }
+    if (Get.isRegistered<HomeViewModel>()) {
+      Get.find<HomeViewModel>().loadUserData();
+    }
+
+    setState(() {
+      _isSubmitted = true;
+    });
   }
 
   @override
@@ -79,7 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
             ),
             Text(
-              'Update distributor details',
+              'Update profile details',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
@@ -88,11 +153,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isSubmitted = true;
-                });
-              },
+              onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryPurple,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -146,7 +207,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.domain, color: Colors.white, size: 24),
+            child: const Icon(Icons.person, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -154,14 +215,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _distributorNameController.text,
+                  _ownerNameController.text.isNotEmpty ? _ownerNameController.text : 'User Profile',
                   style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'DST-0231 · Vijay Nagar',
+                  _distributorNameController.text,
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
                 ),
               ],
@@ -194,7 +255,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5EEFF), // Light purple
+        color: const Color(0xFFF5EEFF),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -242,19 +303,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInputGroup(
-            label: 'Distributor name',
-            icon: Icons.domain,
-            controller: _distributorNameController,
-          ),
-          const SizedBox(height: 16),
-          _buildInputGroup(
-            label: 'Owner name',
+            label: 'Full Name',
             icon: Icons.person_outline,
             controller: _ownerNameController,
-            isFocused: true, // For the purple highlight
+            isFocused: true,
           ),
           const SizedBox(height: 16),
           _buildMobileInputGroup(),
+          const SizedBox(height: 16),
+          _buildInputGroup(
+            label: 'Email Address',
+            icon: Icons.email_outlined,
+            controller: _emailController,
+          ),
+          const SizedBox(height: 16),
+          _buildInputGroup(
+            label: 'Distributor / Company Code',
+            icon: Icons.domain,
+            controller: _distributorNameController,
+          ),
           const SizedBox(height: 16),
           _buildInputGroup(
             label: 'Area / Beat',
@@ -315,7 +382,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Mobile',
+          'Mobile Number',
           style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
         ),
         const SizedBox(height: 8),
@@ -433,7 +500,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
             ),
             Text(
-              'Update distributor details',
+              'Update profile details',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
@@ -469,7 +536,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Your changes were sent to the company. The profile\nupdates once they approve.',
+                'Your profile changes were saved and sent for approval.\nUpdates will reflect across your application.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
               ),
@@ -499,6 +566,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ],
                     ),
+                    if (_emailController.text.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Email', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                          Text(
+                            _emailController.text,
+                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ],
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: Divider(height: 1),
@@ -510,7 +593,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E1), // Light amber/yellow
+                            color: const Color(0xFFFFF8E1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(

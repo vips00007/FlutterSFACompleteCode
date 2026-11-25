@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/colors/app_colors.dart';
+import '../../routes/route_names.dart';
 import 'profile_viewmodel.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -10,7 +11,8 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Get.put(ProfileViewModel());
 
-    return Scaffold(backgroundColor: const Color(0xFFF5F7FA),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -27,6 +29,12 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: AppColors.primaryPurple),
+            onPressed: () => Get.toNamed(RoutesName.edit_profile_view),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -77,13 +85,15 @@ class ProfileScreen extends StatelessWidget {
                 width: 2,
               ),
             ),
-            child: const Center(
-              child: Text(
-                'A',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight.w500,
+            child: Center(
+              child: Obx(
+                () => Text(
+                  viewModel.userName.value.isNotEmpty ? viewModel.userName.value[0].toUpperCase() : 'U',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -136,14 +146,30 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'CONTACT INFORMATION',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'CONTACT INFORMATION',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              InkWell(
+                onTap: () => Get.toNamed(RoutesName.edit_profile_view),
+                child: const Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: AppColors.primaryPurple,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Obx(
@@ -152,6 +178,7 @@ class ProfileScreen extends StatelessWidget {
               label: 'Mobile',
               value: viewModel.mobile.value,
               iconColor: Colors.lightBlue,
+              onTap: () => Get.toNamed(RoutesName.edit_profile_view),
             ),
           ),
           const Padding(
@@ -164,6 +191,7 @@ class ProfileScreen extends StatelessWidget {
               label: 'Email',
               value: viewModel.email.value,
               iconColor: Colors.lightBlue,
+              onTap: () => Get.toNamed(RoutesName.edit_profile_view),
             ),
           ),
         ],
@@ -219,41 +247,45 @@ class ProfileScreen extends StatelessWidget {
     required String value,
     required Color iconColor,
     bool showTrailing = true,
+    VoidCallback? onTap,
   }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 22),
           ),
-          child: Icon(icon, color: iconColor, size: 22),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        if (showTrailing)
-          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-      ],
+          if (showTrailing)
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+        ],
+      ),
     );
   }
 }

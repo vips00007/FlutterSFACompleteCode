@@ -205,28 +205,13 @@ class FavoritesScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Back Arrow / Navigation
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const Icon(
-                Icons.notifications_none,
-                color: Colors.white,
-                size: 24,
-              ),
-            ],
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Icon(
+              Icons.notifications_none,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
           const SizedBox(height: 20),
           InkWell(
@@ -243,13 +228,17 @@ class FavoritesScreen extends StatelessWidget {
                       width: 2,
                     ),
                   ),
-                  child: const Center(
-                    child: Text(
-                      'A',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w300,
+                  child: Center(
+                    child: Obx(
+                      () => Text(
+                        viewModel.userName.value.isNotEmpty
+                            ? viewModel.userName.value[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w300,
+                        ),
                       ),
                     ),
                   ),

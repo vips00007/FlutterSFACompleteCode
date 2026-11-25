@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'apply_regularization_viewmodel.dart';
-import '../../core/colors/app_colors.dart';
 
 class ApplyRegularizationScreen extends StatelessWidget {
   const ApplyRegularizationScreen({super.key});
