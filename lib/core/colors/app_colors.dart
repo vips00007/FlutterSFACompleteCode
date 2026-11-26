@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Brand Colors
-  static const Color primaryPurple = Color(0xFF8A2BE2);
-  static const Color secondaryPurple = Color(0xFFAA86FB);
-  static const Color accentPurple = Color(0xFF8A2BE2);
+  // Brand Colors matching Home Dashboard Theme
+  static const Color primaryPurple = Color(0xFF555ABC); // Home Dashboard Primary Blue
+  static const Color secondaryPurple = Color(0xFF8B8ED3); // Home Dashboard Light Accent
+  static const Color accentPurple = Color(0xFF555ABC);
 
   // Design Specific Colors
   static const Color loginBackground = Color(0xFFFAFBFD);
   static const Color loginAccent = Color(0xFFC9DDE7);
-  static const Color loginButtonBlue = Color(
-    0xFF8A2BE2,
-  ); // Brighter blue from latest design
+  static const Color loginButtonBlue = Color(0xFF555ABC);
   static const Color loginBadgeBlue = Color(0xFF74A4D1);
 
   // SFA Specific Colors
-  static const Color sfaBlue = Color(0xFF8A2BE2);
+  static const Color sfaBlue = Color(0xFF555ABC);
   static const Color sfaLightBlue = Color(0xFFE1F1F8);
   static const Color sfaTextGray = Color(0xFF757575);
-  static const Color sfaIconBoxBlue = Color(0xFF8A2BE2);
+  static const Color sfaIconBoxBlue = Color(0xFF555ABC);
   static const Color sfaSendOtpBlue = Color(0xFF87D5F2);
 
   // Background & Surfaces
@@ -27,13 +25,11 @@ class AppColors {
   static const Color fieldBackground = Color(0xFFF1F5F9);
 
   // Specific UI Elements
-  static const Color filterBlue = Color(
-    0xFF5D5FEF,
-  ); // Purple-Blue for Filter button
+  static const Color filterBlue = Color(0xFF555ABC);
   static const Color lightBlueBackground = Color(0xFFEEF2FF);
 
   // Accents
-  static const Color primary = Color(0xFF6366F1);
+  static const Color primary = Color(0xFF555ABC);
   static const Color secondary = Color(0xFF94A3B8);
   static const Color tealAccent = Color(0xFF2DD4BF);
 
@@ -55,9 +51,9 @@ class AppColors {
   static const Color metricPink = Color(0xFFD32F2F);
   static const Color metricPinkBg = Color(0xFFFDEAEA);
 
-  // Gradients
+  // Gradients matching Home Dashboard Header
   static const LinearGradient premiumGradient = LinearGradient(
-    colors: [primaryPurple, Color(0xA1709BEC)],
+    colors: [Color(0xFF17193F), Color(0xFF555ABC), Color(0xFF8B8ED3)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

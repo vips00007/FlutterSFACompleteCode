@@ -339,14 +339,14 @@ class VisitCheckInScreen extends StatelessWidget {
 
             if (!taken) {
               return DashedRect(
-                color: const Color(0xFF6A3FD6).withValues(alpha: 0.4),
+                color: const Color(0xFF555ABC).withValues(alpha: 0.4),
                 strokeWidth: 1.8,
                 gap: 6,
                 child: Container(
                   height: 105,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8F6FE),
+                    color: const Color(0xFFF4F3F9),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -355,12 +355,12 @@ class VisitCheckInScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFF0EBFC),
+                          color: Color(0xFFEFF6FF),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.camera_alt_outlined,
-                          color: Color(0xFF6A3FD6),
+                          color: Color(0xFF555ABC),
                           size: 20,
                         ),
                       ),
@@ -393,13 +393,13 @@ class VisitCheckInScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF17193F), Color(0xFF6A3FD6)],
+                  colors: [Color(0xFF17193F), Color(0xFF555ABC)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6A3FD6).withValues(alpha: 0.2),
+                    color: const Color(0xFF555ABC).withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -473,14 +473,14 @@ class VisitCheckInScreen extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF8A2BE2), Color(0xFF6A3FD6)],
+                    colors: [Color(0xFF17193F), Color(0xFF555ABC)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6A3FD6).withValues(alpha: 0.25),
+                      color: const Color(0xFF555ABC).withValues(alpha: 0.25),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -497,7 +497,7 @@ class VisitCheckInScreen extends StatelessWidget {
                       ),
                       child: Icon(
                         taken ? Icons.refresh_rounded : Icons.camera_alt_rounded,
-                        color: const Color(0xFF6A3FD6),
+                        color: const Color(0xFF555ABC),
                         size: 13,
                       ),
                     ),

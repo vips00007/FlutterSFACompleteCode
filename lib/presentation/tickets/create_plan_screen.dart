@@ -15,8 +15,8 @@ class CreatePlanScreen extends StatelessWidget {
   static const Color txColor = Color(0xFF17193F);
   static const Color mutColor = Color(0xFF6B6F93);
   static const Color bdColor = Color(0xFFDCDBEA);
-  static const Color priColor = Color(0xFF6A3FD6);
-  static const Color pri2Color = Color(0xFFF0EBFC);
+  static const Color priColor = Color(0xFF555ABC);
+  static const Color pri2Color = Color(0xFFEFF6FF);
   static const Color okColor = Color(0xFF1B9A6C);
   static const Color okbColor = Color(0xFFE8F6F0);
   static const Color waColor = Color(0xFFD97706);

@@ -21,8 +21,8 @@ class _TicketCardState extends State<TicketCard> {
   bool _isExpanded = false;
 
   // Color palette matching Add Outlet theme & prototype redesign
-  static const Color blueColor = Color(0xFF6A3FD6);
-  static const Color blue50Color = Color(0xFFF0EBFC);
+  static const Color blueColor = Color(0xFF555ABC);
+  static const Color blue50Color = Color(0xFFEFF6FF);
   static const Color inkColor = Color(0xFF17193F);
   static const Color slateColor = Color(0xFF6B6F93);
   static const Color lineColor = Color(0xFFDCDBEA);
@@ -261,14 +261,14 @@ class _TicketCardState extends State<TicketCard> {
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF8A2BE2), Color(0xFF6A3FD6)],
+                        colors: [Color(0xFF17193F), Color(0xFF555ABC)],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF6A3FD6).withValues(alpha: 0.25),
+                          color: const Color(0xFF555ABC).withValues(alpha: 0.25),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -285,7 +285,7 @@ class _TicketCardState extends State<TicketCard> {
                           ),
                           child: const Icon(
                             Icons.play_arrow_rounded,
-                            color: Color(0xFF6A3FD6),
+                            color: Color(0xFF555ABC),
                             size: 11,
                           ),
                         ),

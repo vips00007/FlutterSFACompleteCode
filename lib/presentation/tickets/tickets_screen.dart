@@ -13,9 +13,9 @@ class TicketsScreen extends StatelessWidget {
   const TicketsScreen({super.key});
 
   // Color constants matching Add Outlet screen & prototype redesign
-  static const Color blueColor = Color(0xFF6A3FD6);
-  static const Color blue50Color = Color(0xFFF0EBFC);
-  static const Color blue100Color = Color(0xFFD6C8F8);
+  static const Color blueColor = Color(0xFF555ABC);
+  static const Color blue50Color = Color(0xFFEFF6FF);
+  static const Color blue100Color = Color(0xFF8B8ED3);
   static const Color inkColor = Color(0xFF17193F);
   static const Color slateColor = Color(0xFF6B6F93);
   static const Color lineColor = Color(0xFFDCDBEA);
@@ -71,19 +71,14 @@ class TicketsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // 2. Custom Segmented Pill Tab Bar (.seg) - Compact & Overflow Free
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Container(
-                  padding: const EdgeInsets.all(3),
+              Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Container(padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     color: blue50Color,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(color: blue100Color, width: 1),
                   ),
-                  child: Obx(
-                    () => Row(
+                  child: Obx(() => Row(
                       children: [
                         Expanded(
                           child: _buildSegTab(
@@ -94,8 +89,7 @@ class TicketsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 2),
-                        Expanded(
-                          child: _buildSegTab(
+                        Expanded(child: _buildSegTab(
                             title: 'Unplanned',
                             badge: '${viewModel.unplannedTickets.length} customers',
                             isSelected: viewModel.selectedTabIndex.value == 1,
@@ -109,10 +103,8 @@ class TicketsScreen extends StatelessWidget {
               ),
 
               // 3. Search Bar & Filter Button (.sr)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                child: Row(
-                  children: [
+              Padding(padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: Row(children: [
                     Expanded(
                       child: Container(
                         height: 48,

@@ -227,7 +227,7 @@ class ApplyLeaveScreen extends StatelessWidget {
                       ),
                     ),
                     Obx(() => viewModel.attachmentName.value.isEmpty 
-                      ? const Icon(Icons.add, color: Color(0xFF8A2BE2), size: 20)
+                      ? const Icon(Icons.add, color: Color(0xFF555ABC), size: 20)
                       : GestureDetector(
                           onTap: () => viewModel.removeAttachment(),
                           child: const Icon(Icons.close, color: Colors.red, size: 20),
@@ -271,7 +271,7 @@ class ApplyLeaveScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       const Text(
                         '3 days',
-                        style: TextStyle(color: Color(0xFF8A2BE2), fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(color: Color(0xFF555ABC), fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ],
                   ),
@@ -286,7 +286,7 @@ class ApplyLeaveScreen extends StatelessWidget {
               child: Obx(() => ElevatedButton(
                 onPressed: viewModel.isLoading.value ? null : () => viewModel.submit(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8A2BE2),
+                  backgroundColor: const Color(0xFF555ABC),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   elevation: 0,
@@ -314,15 +314,15 @@ class ApplyLeaveScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFF3E8FF) : Colors.white,
+            color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isSelected ? const Color(0xFF8A2BE2) : Colors.grey.shade300),
+            border: Border.all(color: isSelected ? const Color(0xFF555ABC) : Colors.grey.shade300),
           ),
           alignment: Alignment.center,
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? const Color(0xFF8A2BE2) : Colors.grey,
+              color: isSelected ? const Color(0xFF555ABC) : Colors.grey,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 12,
             ),

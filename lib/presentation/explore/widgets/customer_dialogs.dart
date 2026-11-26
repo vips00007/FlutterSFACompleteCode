@@ -136,7 +136,7 @@ void showCustomerSuccessDialog({
                 height: 44,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6A3FD6),
+                    backgroundColor: const Color(0xFF555ABC),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

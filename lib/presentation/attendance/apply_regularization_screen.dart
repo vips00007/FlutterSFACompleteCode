@@ -194,7 +194,7 @@ class ApplyRegularizationScreen extends StatelessWidget {
               child: Obx(() => ElevatedButton(
                 onPressed: viewModel.isLoading.value ? null : () => viewModel.submitRequest(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8A2BE2),
+                  backgroundColor: const Color(0xFF555ABC),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

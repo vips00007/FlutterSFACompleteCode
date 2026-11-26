@@ -755,7 +755,7 @@ class _TopWavePainter extends CustomPainter {
         ..shader = LinearGradient(
           colors: [
             const Color(0xFF673AB7).withValues(alpha: 0.3),
-            const Color(0xFF8A2BE2).withValues(alpha: 0.1),
+            const Color(0xFF555ABC).withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

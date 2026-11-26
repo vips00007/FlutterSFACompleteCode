@@ -170,7 +170,7 @@ class OutletPreviewBottomSheet extends StatelessWidget {
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: HtmlColors.ok,
+                            backgroundColor: HtmlColors.pri,
                             foregroundColor: Colors.white,
                             elevation: 1,
                             padding: const EdgeInsets.symmetric(horizontal: 8),

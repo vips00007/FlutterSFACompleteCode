@@ -1,6 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../core/colors/app_colors.dart';
 import '../../core/utils/shared_prefs_manager.dart';
 import '../../domain/entities/outlet.dart';
 import '../favorites/favorites_viewmodel.dart';
@@ -15,6 +15,16 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  // Color Constants matching My Profile Screen (ProfileScreen)
+  static const Color primaryBlue = Color(0xFF555ABC);
+  static const Color primaryDarkBlue = Color(0xFF17193F);
+  static const Color primaryLightBlue = Color(0xFF8B8ED3);
+  static const Color bgColor = Color(0xFFF4F3F9);
+  static const Color cardColor = Colors.white;
+  static const Color inkColor = Color(0xFF17193F);
+  static const Color slateColor = Color(0xFF6B6F93);
+  static const Color lineColor = Color(0xFFDCDBEA);
+
   bool _isSubmitted = false;
   // Controllers
   late final TextEditingController _distributorNameController;
@@ -27,14 +37,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final savedName = SharedPrefsManager.getName() ?? SharedPrefsManager.getSavedUsername() ?? '';
-    final savedMobile = SharedPrefsManager.getMobile() ?? (SharedPrefsManager.getSavedUsername()?.contains('@') == false ? SharedPrefsManager.getSavedUsername() : '') ?? '';
-    final savedEmail = SharedPrefsManager.getEmail() ?? (SharedPrefsManager.getSavedUsername()?.contains('@') == true ? SharedPrefsManager.getSavedUsername() : '') ?? '';
-    final savedCompany = SharedPrefsManager.getCompanyCode() ?? 'ABC Distributors';
+    final savedName =
+        SharedPrefsManager.getName() ?? SharedPrefsManager.getSavedUsername() ?? '';
+    final savedMobile = SharedPrefsManager.getMobile() ??
+        (SharedPrefsManager.getSavedUsername()?.contains('@') == false
+            ? SharedPrefsManager.getSavedUsername()
+            : '') ??
+        '';
+    final savedEmail = SharedPrefsManager.getEmail() ??
+        (SharedPrefsManager.getSavedUsername()?.contains('@') == true
+            ? SharedPrefsManager.getSavedUsername()
+            : '') ??
+        '';
+    final savedCompany = SharedPrefsManager.getCompanyCode() ?? 'LUMAN';
 
     _distributorNameController = TextEditingController(text: savedCompany);
-    _ownerNameController = TextEditingController(text: savedName);
-    _mobileController = TextEditingController(text: savedMobile);
+    _ownerNameController = TextEditingController(text: savedName.isNotEmpty ? savedName : 'Golu Yadav');
+    _mobileController = TextEditingController(text: savedMobile.isNotEmpty ? savedMobile : '7725860819');
     _emailController = TextEditingController(text: savedEmail);
     _areaController = TextEditingController(text: 'Bhopal North · Beat 4');
     _gstController = TextEditingController(text: '23AABCSO231F1Z5');
@@ -117,131 +136,302 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildEditFormView() {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        titleSpacing: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary, size: 16),
-              onPressed: () => Get.back(),
-            ),
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Edit profile',
-              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            Text(
-              'Update profile details',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: ElevatedButton(
-              onPressed: _submitForm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                elevation: 0,
-              ),
-              child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-        shape: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
-      ),
+      backgroundColor: bgColor,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTopCard(),
-            const SizedBox(height: 16),
-            _buildInfoBanner(),
-            const SizedBox(height: 16),
-            _buildForm(),
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.only(left: 4),
-              child: Text(
-                "GST number can't be edited here",
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-            )
+            _buildHeroAndNoticeSection(),
+            _buildPersonalDetailsCard(),
+            _buildWorkDetailsCard(),
+            _buildSaveButton(),
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTopCard() {
+  Widget _buildHeroAndNoticeSection() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 32),
+          child: _buildHeroHeader(),
+        ),
+        Positioned(
+          left: 12,
+          right: 12,
+          bottom: 0,
+          child: _buildNoticeBanner(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroHeader() {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final name = _ownerNameController.text.trim().isNotEmpty
+        ? _ownerNameController.text.trim()
+        : 'Golu Yadav';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'G';
+    final company = _distributorNameController.text.trim().isNotEmpty
+        ? _distributorNameController.text.trim()
+        : 'LUMAN';
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.primaryPurple,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 24),
+        gradient: const LinearGradient(
+          colors: [primaryDarkBlue, primaryBlue, primaryLightBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryBlue.withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Background Glow Circles
+          Positioned(
+            right: -40,
+            top: -50,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -30,
+            bottom: -40,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(14, statusBarHeight + 10, 14, 48),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _ownerNameController.text.isNotEmpty ? _ownerNameController.text : 'User Profile',
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                // Top Action Bar
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: () => Get.back(),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'EDIT PROFILE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.90),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: _submitForm,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: 36,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.check_rounded,
+                              color: primaryBlue,
+                              size: 16,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Done',
+                              style: TextStyle(
+                                color: primaryBlue,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _distributorNameController.text,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.circle, color: Color(0xFF00A650), size: 8),
-                SizedBox(width: 4),
-                Text(
-                  'Active',
-                  style: TextStyle(color: Color(0xFF00A650), fontSize: 12, fontWeight: FontWeight.bold),
+                const SizedBox(height: 16),
+                // Compact Profile Header Row (Without "Update profile details" text)
+                Row(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: SweepGradient(
+                              colors: [
+                                Color(0xFFFFD166),
+                                Color(0xFF60A5FA),
+                                Color(0xFF93C5FD),
+                                Color(0xFFFFD166),
+                              ],
+                            ),
+                          ),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF171B78),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: const Icon(
+                              Icons.edit_rounded,
+                              color: primaryBlue,
+                              size: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Color(0xFF5DF2A6),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    const Text(
+                                      'Active',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.domain_rounded,
+                                      color: Colors.white,
+                                      size: 13,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      company,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -251,37 +441,63 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildInfoBanner() {
+  Widget _buildNoticeBanner() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5EEFF),
-        borderRadius: BorderRadius.circular(12),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: lineColor),
+        boxShadow: [
+          BoxShadow(
+            color: inkColor.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF59F00),
+                  Color(0xFFFFD24A),
+                ],
+              ),
             ),
-            child: const Icon(Icons.access_time, color: AppColors.primaryPurple, size: 16),
+            child: const Icon(
+              Icons.access_time_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
                   'Changes go to the company for approval',
-                  style: TextStyle(color: AppColors.primaryPurple, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(
+                    color: primaryBlue,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
                 ),
-                SizedBox(height: 2),
+                SizedBox(height: 1),
                 Text(
                   'Updates stay pending until approved.',
-                  style: TextStyle(color: Color(0xFF7A6B9B), fontSize: 12),
+                  style: TextStyle(
+                    color: slateColor,
+                    fontSize: 11.5,
+                  ),
                 ),
               ],
             ),
@@ -291,130 +507,178 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildPersonalDetailsCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: lineColor),
+        boxShadow: [
+          BoxShadow(
+            color: inkColor.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInputGroup(
+          _buildSectionHeader('PERSONAL DETAILS'),
+          const SizedBox(height: 10),
+          _buildInputField(
             label: 'Full Name',
-            icon: Icons.person_outline,
+            icon: Icons.person_outline_rounded,
             controller: _ownerNameController,
-            isFocused: true,
+            hintText: 'Enter full name',
           ),
-          const SizedBox(height: 16),
-          _buildMobileInputGroup(),
-          const SizedBox(height: 16),
-          _buildInputGroup(
+          const SizedBox(height: 10),
+          _buildMobileInputField(),
+          const SizedBox(height: 10),
+          _buildInputField(
             label: 'Email Address',
             icon: Icons.email_outlined,
             controller: _emailController,
+            hintText: 'name@company.com',
+            keyboardType: TextInputType.emailAddress,
           ),
-          const SizedBox(height: 16),
-          _buildInputGroup(
-            label: 'Distributor / Company Code',
-            icon: Icons.domain,
-            controller: _distributorNameController,
-          ),
-          const SizedBox(height: 16),
-          _buildInputGroup(
-            label: 'Area / Beat',
-            icon: Icons.location_on_outlined,
-            controller: _areaController,
-          ),
-          const SizedBox(height: 16),
-          _buildGstInputGroup(),
         ],
       ),
     );
   }
 
-  Widget _buildInputGroup({
-    required String label,
-    required IconData icon,
-    required TextEditingController controller,
-    bool isFocused = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildWorkDetailsCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: lineColor),
+        boxShadow: [
+          BoxShadow(
+            color: inkColor.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader('WORK DETAILS'),
+          const SizedBox(height: 10),
+          _buildInputField(
+            label: 'Distributor / Company Code',
+            icon: Icons.domain_rounded,
+            controller: _distributorNameController,
+            hintText: 'Company Code',
+          ),
+          const SizedBox(height: 10),
+          _buildInputField(
+            label: 'Area / Beat',
+            icon: Icons.location_on_outlined,
+            controller: _areaController,
+            hintText: 'Area / Beat location',
+          ),
+          const SizedBox(height: 10),
+          _buildLockedGstField(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Row(
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isFocused ? AppColors.primaryPurple : AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+        Container(
+          width: 3,
+          height: 12,
+          decoration: BoxDecoration(
+            color: primaryBlue,
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: isFocused ? AppColors.primaryPurple : AppColors.textSecondary),
-            contentPadding: const EdgeInsets.symmetric(vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: isFocused ? AppColors.primaryPurple : Colors.grey.shade300, width: isFocused ? 2 : 1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: isFocused ? AppColors.primaryPurple : Colors.grey.shade300, width: isFocused ? 2 : 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primaryPurple, width: 2),
-            ),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: const TextStyle(
+            color: primaryBlue,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMobileInputGroup() {
+  Widget _buildInputField({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    String? hintText,
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Mobile Number',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 4),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: slateColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
-        const SizedBox(height: 8),
         Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            color: const Color(0xFFFAF9FF),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: lineColor, width: 1),
           ),
           child: Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
-                    const SizedBox(width: 8),
-                    const Text('+91', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(width: 8),
-                    Container(width: 1, height: 20, color: Colors.grey.shade300),
-                  ],
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  icon,
+                  color: primaryBlue,
+                  size: 16,
                 ),
               ),
+              const SizedBox(width: 10),
               Expanded(
                 child: TextField(
-                  controller: _mobileController,
-                  keyboardType: TextInputType.phone,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                  decoration: const InputDecoration(
+                  controller: controller,
+                  keyboardType: keyboardType,
+                  style: const TextStyle(
+                    color: inkColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
                     border: InputBorder.none,
-                    hintText: '98xxxxxxxx',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(vertical: 14),
+                    hintText: hintText,
+                    hintStyle: const TextStyle(
+                      color: slateColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
                   ),
                 ),
               ),
@@ -425,213 +689,518 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildGstInputGroup() {
+  Widget _buildMobileInputField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'GST number',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+        const Padding(
+          padding: EdgeInsets.only(left: 2, bottom: 4),
+          child: Text(
+            'Mobile Number',
+            style: TextStyle(
+              color: slateColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
-        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFFAF9FF),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: lineColor, width: 1),
           ),
           child: Row(
             children: [
-              const Icon(Icons.receipt_long_outlined, color: AppColors.textSecondary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _gstController.text,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(
+                  Icons.phone_outlined,
+                  color: primaryBlue,
+                  size: 16,
                 ),
               ),
+              const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.only(right: 10),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    right: BorderSide(
+                      color: lineColor,
+                      width: 1,
+                    ),
+                  ),
                 ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.lock_outline, color: AppColors.textSecondary, size: 12),
-                    SizedBox(width: 4),
-                    Text('Locked', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
-                  ],
+                child: const Text(
+                  '+91',
+                  style: TextStyle(
+                    color: inkColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              )
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _mobileController,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(
+                    color: inkColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintText: '7725860819',
+                    hintStyle: TextStyle(
+                      color: slateColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLockedGstField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 2, bottom: 4),
+          child: Text(
+            'GST Number',
+            style: TextStyle(
+              color: slateColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        CustomPaint(
+          painter: _DashedBorderPainter(
+            color: lineColor,
+            radius: 14,
+            strokeWidth: 1,
+          ),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F3F9),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_outlined,
+                    color: primaryBlue,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _gstController.text,
+                    style: const TextStyle(
+                      color: slateColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        color: slateColor,
+                        size: 13,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Locked',
+                        style: TextStyle(
+                          color: slateColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 2),
+          child: Row(
+            children: const [
+              Icon(
+                Icons.info_outline_rounded,
+                color: slateColor,
+                size: 13,
+              ),
+              SizedBox(width: 5),
+              Text(
+                "GST number can't be edited here",
+                style: TextStyle(
+                  color: slateColor,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primaryDarkBlue,
+            primaryBlue,
+            primaryLightBlue,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryBlue.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _submitForm,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.check_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Save Changes',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildSubmittedView() {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        titleSpacing: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary, size: 16),
-              onPressed: () => Get.back(),
-            ),
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Edit profile',
-              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            Text(
-              'Update profile details',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-          ],
-        ),
-        shape: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
-      ),
+      backgroundColor: bgColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryPurple,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.2),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.check, color: Colors.white, size: 40),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Sent for approval',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Your profile changes were saved and sent for approval.\nUpdates will reflect across your application.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'SUBMITTED CHANGES',
-                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Mobile', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                        Text(
-                          '+91 ${_mobileController.text}',
-                          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    if (_emailController.text.isNotEmpty) ...[
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Divider(height: 1),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Email', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                          Text(
-                            _emailController.text,
-                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0F000000),
+                            blurRadius: 10,
                           ),
                         ],
                       ),
-                    ],
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(height: 1),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: inkColor,
+                        size: 18,
+                      ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Status', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E1),
-                            borderRadius: BorderRadius.circular(20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Edit profile',
+                    style: TextStyle(
+                      color: inkColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [primaryDarkBlue, primaryBlue],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryBlue.withValues(alpha: 0.30),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.access_time, color: Color(0xFFF57F17), size: 14),
-                              SizedBox(width: 4),
+                        ],
+                      ),
+                      child: const Icon(Icons.check_rounded, color: Colors.white, size: 36),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Sent for approval',
+                      style: TextStyle(
+                        color: inkColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Your profile changes were saved and sent for approval.\nUpdates will reflect across your application.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: slateColor,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: lineColor),
+                        boxShadow: [
+                          BoxShadow(
+                            color: inkColor.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'SUBMITTED CHANGES',
+                            style: TextStyle(
+                              color: primaryBlue,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Name', style: TextStyle(color: slateColor, fontSize: 13)),
                               Text(
-                                'Pending approval',
-                                style: TextStyle(color: Color(0xFFF57F17), fontWeight: FontWeight.bold, fontSize: 12),
+                                _ownerNameController.text,
+                                style: const TextStyle(color: inkColor, fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Divider(color: lineColor, height: 1),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Mobile', style: TextStyle(color: slateColor, fontSize: 13)),
+                              Text(
+                                '+91 ${_mobileController.text}',
+                                style: const TextStyle(color: inkColor, fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                          if (_emailController.text.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 10),
+                              child: Divider(color: lineColor, height: 1),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Email', style: TextStyle(color: slateColor, fontSize: 13)),
+                                Text(
+                                  _emailController.text,
+                                  style: const TextStyle(color: inkColor, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ],
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Divider(color: lineColor, height: 1),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Status', style: TextStyle(color: slateColor, fontSize: 13)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF8E1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.access_time_rounded, color: Color(0xFFF57F17), size: 13),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Pending approval',
+                                      style: TextStyle(color: Color(0xFFF57F17), fontWeight: FontWeight.bold, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Spacer(),
-              SizedBox(
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Container(
                 width: double.infinity,
-                height: 50,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [primaryDarkBlue, primaryBlue],
+                  ),
+                ),
                 child: ElevatedButton(
                   onPressed: () => Get.back(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Back to profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: const Text('Back to profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+
+  _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+    this.strokeWidth = 1.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(radius),
+    );
+    final Path path = Path()..addRRect(rrect);
+
+    final Path dashPath = Path();
+    const double dashWidth = 5.0;
+    const double dashSpace = 3.0;
+
+    for (final PathMetric metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final double len = (distance + dashWidth < metric.length)
+            ? dashWidth
+            : metric.length - distance;
+        dashPath.addPath(metric.extractPath(distance, distance + len), Offset.zero);
+        distance += dashWidth + dashSpace;
+      }
+    }
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.radius != radius;
   }
 }

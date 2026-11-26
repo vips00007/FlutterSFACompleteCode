@@ -12,6 +12,13 @@ class HomeTabContent extends StatefulWidget {
 
 class _HomeTabContentState extends State<HomeTabContent>
     with SingleTickerProviderStateMixin {
+  // Color Constants matching My Profile Screen (ProfileScreen)
+  static const Color primaryBlue = Color(0xFF555ABC);
+  static const Color primaryDarkBlue = Color(0xFF17193F);
+  static const Color primaryLightBlue = Color(0xFF8B8ED3);
+  static const Color softBlueBg = Color(0xFFEFF6FF);
+  static const Color lineColor = Color(0xFFDCDBEA);
+
   late AnimationController _rocketAnimationController;
 
   @override
@@ -35,7 +42,7 @@ class _HomeTabContentState extends State<HomeTabContent>
 
     return RefreshIndicator(
       onRefresh: viewModel.refreshHome,
-      color: const Color(0xFF8A2BE2),
+      color: primaryBlue,
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -76,25 +83,25 @@ class _HomeTabContentState extends State<HomeTabContent>
               _buildQuickActionCard(
                 'Travel Plan',
                 Icons.location_on_outlined,
-                const Color(0xFF8A2BE2),
+                primaryBlue,
                 null,
               ),
               _buildQuickActionCard(
                 'New Order',
                 Icons.inventory_2_outlined,
-                const Color(0xFF6D28D9),
+                primaryDarkBlue,
                 2,
               ),
               _buildQuickActionCard(
                 'Collect',
                 Icons.attach_money_rounded,
-                const Color(0xFF8A2BE2),
+                primaryBlue,
                 5,
               ),
               _buildQuickActionCard(
                 'Reports',
                 Icons.description_outlined,
-                const Color(0xFF6D28D9),
+                primaryDarkBlue,
                 null,
                 onTap: () => Get.toNamed(RoutesName.reports_view),
               ),
@@ -140,17 +147,17 @@ class _HomeTabContentState extends State<HomeTabContent>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFDECE9FA),
+                      color: softBlueBg,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    child: Icon(icon, color: const Color(0xFF6D28D9), size: 24),
+                    child: Icon(icon, color: primaryBlue, size: 24),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -234,17 +241,17 @@ class _HomeTabContentState extends State<HomeTabContent>
       final isStarted = status == 'CHECKED_IN' || status == 'MARKED';
 
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -255,57 +262,58 @@ class _HomeTabContentState extends State<HomeTabContent>
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: isStarted || isCompleted
                           ? const Color(0xFF00C853)
-                          : Colors.grey,
+                          : Colors.grey.shade400,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.check,
                       color: Colors.white,
-                      size: 20,
+                      size: 16,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Wrap(
                           crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 8,
+                          spacing: 6,
                           children: [
                             Text(
                               title,
                               style: const TextStyle(
-                                color: Color(0xFF8A2BE2),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                color: primaryBlue,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
                               ),
                             ),
                             if (timeText.isNotEmpty)
                               Text(
                                 timeText,
                                 style: const TextStyle(
-                                  color: Color(0xFF8A2BE2),
-                                  fontSize: 13,
+                                  color: primaryBlue,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
-                            const Icon(Icons.access_time, color: Colors.grey, size: 14),
+                            const Icon(Icons.access_time_rounded, color: Colors.grey, size: 13),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 subtitle,
                                 style: const TextStyle(
                                   color: Colors.grey,
-                                  fontSize: 12,
+                                  fontSize: 11.5,
                                   fontWeight: FontWeight.w500,
                                 ),
                                 maxLines: 1,
@@ -320,42 +328,55 @@ class _HomeTabContentState extends State<HomeTabContent>
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            GestureDetector(
+            const SizedBox(width: 10),
+            InkWell(
               onTap: isLoading ? null : action,
+              borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? Colors.grey.shade400
-                      : (isCheckIn ? const Color(0xFF8A2BE2) : const Color(0xFFD32F2F)),
+                      ? Colors.grey.shade300
+                      : (isCheckIn ? primaryBlue : const Color(0xFFDC2626)),
                   borderRadius: BorderRadius.circular(10),
+                  boxShadow: isCompleted
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: (isCheckIn ? primaryBlue : const Color(0xFFDC2626))
+                                .withValues(alpha: 0.22),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: isLoading
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         child: CircularProgressIndicator(
                           color: Colors.white,
                           strokeWidth: 2,
                         ),
                       )
                     : Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           if (!isCompleted) ...[
-                            const Icon(
-                              Icons.logout_rounded,
+                            Icon(
+                              isCheckIn ? Icons.play_arrow_rounded : Icons.logout_rounded,
                               color: Colors.white,
-                              size: 16,
+                              size: 15,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 4),
                           ],
                           Text(
                             buttonLabel,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                            style: TextStyle(
+                              color: isCompleted ? Colors.grey.shade700 : Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
                             ),
                           ),
                         ],
@@ -384,7 +405,7 @@ class _HomeTabContentState extends State<HomeTabContent>
               Text(
                 'View all >',
                 style: TextStyle(
-                  color: Color(0xFF8A2BE2),
+                  color: primaryBlue,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -406,7 +427,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 '1,50,000',
                 '3 Orders',
                 '2 Pending',
-                const Color(0xFF8A2BE2),
+                primaryBlue,
               ),
               _buildBusinessCard(
                 'Retailer',
@@ -415,7 +436,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 '1,00,000',
                 '9 Orders',
                 '6 Pending',
-                const Color(0xFF8A2BE2),
+                primaryBlue,
               ),
             ],
           ),
@@ -457,10 +478,11 @@ class _HomeTabContentState extends State<HomeTabContent>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: softBlueBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.store_mall_directory_outlined,
+                child: Icon(
+                  Icons.store_mall_directory_outlined,
                   color: color,
                   size: 20,
                 ),
@@ -536,9 +558,9 @@ class _HomeTabContentState extends State<HomeTabContent>
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFCF9FF),
+        color: const Color(0xFFF4F3F9),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF3ECFF)),
+        border: Border.all(color: lineColor),
       ),
       child: Column(
         children: [
@@ -546,13 +568,13 @@ class _HomeTabContentState extends State<HomeTabContent>
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8A2BE2).withValues(alpha: 0.1),
+                decoration: const BoxDecoration(
+                  color: softBlueBg,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.map_outlined,
-                  color: Color(0xFF8A2BE2),
+                  color: primaryBlue,
                   size: 20,
                 ),
               ),
@@ -565,7 +587,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF4C1D95),
+                      color: primaryDarkBlue,
                     ),
                   ),
                   Text(
@@ -589,7 +611,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                       const Text(
                         'Start now',
                         style: TextStyle(
-                          color: Color(0xFF8A2BE2),
+                          color: primaryBlue,
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),
@@ -602,7 +624,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                             child: _buildJourneyMetric(
                               'Plan',
                               '50',
-                              const Color(0xFF4C1D95),
+                              primaryDarkBlue,
                             ),
                           ),
                           Expanded(
@@ -616,7 +638,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                             child: _buildJourneyMetric(
                               'Prod',
                               '20',
-                              const Color(0xFF8A2BE2),
+                              primaryBlue,
                             ),
                           ),
                           Expanded(
@@ -782,13 +804,13 @@ class _HomeTabContentState extends State<HomeTabContent>
                   children: [
                     Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6D28D9).withValues(alpha: 0.1),
+                      decoration: const BoxDecoration(
+                        color: softBlueBg,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.track_changes_outlined,
-                        color: Color(0xFF6D28D9),
+                        color: primaryBlue,
                         size: 20,
                       ),
                     ),
@@ -802,7 +824,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF4C1D95),
+                              color: primaryDarkBlue,
                             ),
                           ),
                           Text(
@@ -834,7 +856,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     Icon(
                       Icons.calendar_today_rounded,
                       size: 14,
-                      color: Color(0xFF6366F1),
+                      color: primaryBlue,
                     ),
                     SizedBox(width: 6),
                     Text(
@@ -864,7 +886,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                       strokeWidth: 10,
                       backgroundColor: Colors.grey.shade100,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF6D28D9),
+                        primaryBlue,
                       ),
                     ),
                   ),
@@ -898,7 +920,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     _buildTargetRow(
                       'TARGET',
                       '2,80,000',
-                      const Color(0xFF6D28D9),
+                      primaryBlue,
                       '+2.1%',
                     ),
                     const SizedBox(height: 8),
@@ -961,7 +983,6 @@ class _HomeTabContentState extends State<HomeTabContent>
   }
 
   Widget _buildUnplannedVisits(HomeViewModel viewModel) {
-    // Basic placeholder UI matching the screenshot
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       padding: const EdgeInsets.all(20),
@@ -1017,13 +1038,13 @@ class _HomeTabContentState extends State<HomeTabContent>
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border.all(color: const Color(0xFF8A2BE2)),
+                  border: Border.all(color: primaryBlue),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'Unplanned',
                   style: TextStyle(
-                    color: Color(0xFF8A2BE2),
+                    color: primaryBlue,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1047,7 +1068,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                   '5',
                   'Prod.',
                   Icons.track_changes,
-                  color: const Color(0xFF8A2BE2),
+                  color: primaryBlue,
                 ),
               ),
               Expanded(
@@ -1059,7 +1080,11 @@ class _HomeTabContentState extends State<HomeTabContent>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF8A2BE2),
+              gradient: const LinearGradient(
+                colors: [primaryDarkBlue, primaryBlue],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -1120,7 +1145,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                   child: const Text(
                     'Details >',
                     style: TextStyle(
-                      color: Color(0xFF8A2BE2),
+                      color: primaryBlue,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1177,7 +1202,7 @@ class _HomeTabContentState extends State<HomeTabContent>
               Text(
                 'Details >',
                 style: TextStyle(
-                  color: Color(0xFF8A2BE2),
+                  color: primaryBlue,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1204,14 +1229,12 @@ class _HomeTabContentState extends State<HomeTabContent>
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF8A2BE2,
-                            ).withValues(alpha: 0.1),
+                            color: softBlueBg,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
                             Icons.business,
-                            color: Color(0xFF8A2BE2),
+                            color: primaryBlue,
                             size: 20,
                           ),
                         ),
@@ -1222,7 +1245,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: Color(0xFF4C1D95),
+                              color: primaryDarkBlue,
                             ),
                           ),
                         ),
@@ -1234,7 +1257,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      color: Color(0xFF4C1D95),
+                      color: primaryDarkBlue,
                     ),
                   ),
                 ],
@@ -1244,7 +1267,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 value: 0.3,
                 backgroundColor: Colors.grey.shade200,
                 valueColor: const AlwaysStoppedAnimation<Color>(
-                  Color(0xFF4C1D95),
+                  primaryDarkBlue,
                 ),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
@@ -1263,7 +1286,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                     child: _buildJourneyMetric(
                       'Prod',
                       '3',
-                      const Color(0xFF8A2BE2),
+                      primaryBlue,
                     ),
                   ),
                   Expanded(
@@ -1319,12 +1342,12 @@ class _HomeTabContentState extends State<HomeTabContent>
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF9F5FF),
+                      color: softBlueBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.emoji_events,
-                      color: Color(0xFF8A2BE2),
+                      color: primaryBlue,
                       size: 16,
                     ),
                   ),
@@ -1349,12 +1372,12 @@ class _HomeTabContentState extends State<HomeTabContent>
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF9F5FF),
+                      color: softBlueBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.bar_chart,
-                      color: Color(0xFF8A2BE2),
+                      color: primaryBlue,
                       size: 16,
                     ),
                   ),
@@ -1395,7 +1418,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                       strokeCap: StrokeCap.round,
                       backgroundColor: Colors.grey.shade100,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF8A2BE2),
+                        primaryBlue,
                       ),
                     ),
                   ),
@@ -1407,7 +1430,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E1033),
+                          color: primaryDarkBlue,
                         ),
                       ),
                       Container(
@@ -1459,7 +1482,7 @@ class _HomeTabContentState extends State<HomeTabContent>
                 Icon(
                   icon,
                   size: 14,
-                  color: const Color(0xFF8A2BE2),
+                  color: primaryBlue,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -1486,7 +1509,7 @@ class _HomeTabContentState extends State<HomeTabContent>
         LinearProgressIndicator(
           value: value,
           backgroundColor: Colors.grey.shade100,
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8A2BE2)),
+          valueColor: const AlwaysStoppedAnimation<Color>(primaryBlue),
           minHeight: 6,
           borderRadius: BorderRadius.circular(8),
         ),

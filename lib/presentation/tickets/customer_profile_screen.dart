@@ -163,11 +163,11 @@ class CustomerProfileScreen extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: const BoxDecoration(
-              color: Color(0xFF8A2BE2),
+              color: Color(0xFF555ABC),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Color(0x408A2BE2),
+                  color: Color(0x40555ABC),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),

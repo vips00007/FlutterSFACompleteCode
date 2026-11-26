@@ -38,10 +38,10 @@ class AttendanceCalendarScreen extends StatelessWidget {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3E8FF),
+              color: const Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.group_outlined, color: Color(0xFF8A2BE2), size: 24),
+            child: const Icon(Icons.group_outlined, color: Color(0xFF555ABC), size: 24),
           ),
         ],
       ),

@@ -517,7 +517,7 @@ class AddOutletViewModel extends GetxController {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF8A2BE2), size: 28),
+              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF555ABC), size: 28),
               title: const Text('Take Photo (Camera)', style: TextStyle(fontWeight: FontWeight.w600)),
               onTap: () {
                 Get.back();
@@ -526,7 +526,7 @@ class AddOutletViewModel extends GetxController {
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF8A2BE2), size: 28),
+              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF555ABC), size: 28),
               title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
               onTap: () {
                 Get.back();

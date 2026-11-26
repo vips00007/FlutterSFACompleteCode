@@ -13,7 +13,9 @@ class HtmlColors {
   static const Color ink = Color(0xFF17193F);
   static const Color mut = Color(0xFF6B6F93);
   static const Color line = Color(0xFFDCDBEA);
-  static const Color pri = Color(0xFF6A3FD6);
+  static const Color pri = Color(0xFF555ABC);
+  static const Color priDark = Color(0xFF17193F);
+  static const Color priLight = Color(0xFF8B8ED3);
   static const Color acc = Color(0xFFFF9F1C);
   static const Color bad = Color(0xFFD62839);
   static const Color ok = Color(0xFF1B9A6C);
@@ -89,14 +91,25 @@ class _AddOutletScreenState extends State<AddOutletScreen> {
         padding: EdgeInsets.fromLTRB(14, hasAvatar ? 16 : 12, 14, 12),
         constraints: BoxConstraints(minHeight: hasAvatar ? 140 : 60),
         decoration: BoxDecoration(
-          color: HtmlColors.pri,
+          gradient: hasAvatar
+              ? null
+              : const LinearGradient(
+                  colors: [
+                    HtmlColors.priDark,
+                    HtmlColors.pri,
+                    HtmlColors.priLight,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          color: hasAvatar ? HtmlColors.pri : null,
           borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(18),
-            bottomRight: Radius.circular(18),
+            bottomLeft: Radius.circular(24),
+            bottomRight: Radius.circular(24),
           ),
           boxShadow: [
             BoxShadow(
-              color: HtmlColors.pri.withValues(alpha: 0.18),
+              color: HtmlColors.pri.withValues(alpha: 0.22),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),

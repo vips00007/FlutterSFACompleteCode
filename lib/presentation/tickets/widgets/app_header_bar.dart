@@ -12,7 +12,9 @@ class AppHeaderBar extends StatelessWidget {
     this.trailing,
   });
 
-  static const Color primaryPurple = Color(0xFF6A3FD6);
+  static const Color primaryPurple = Color(0xFF555ABC);
+  static const Color primaryDarkBlue = Color(0xFF17193F);
+  static const Color primaryLightBlue = Color(0xFF8B8ED3);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +22,11 @@ class AppHeaderBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
-        color: primaryPurple,
+        gradient: const LinearGradient(
+          colors: [primaryDarkBlue, primaryPurple, primaryLightBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),

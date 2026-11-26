@@ -267,7 +267,7 @@ class _ShopCameraPreviewScreenState extends State<ShopCameraPreviewScreen>
                 ElevatedButton(
                   onPressed: _initializeCamera,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8A2BE2),
+                    backgroundColor: const Color(0xFF555ABC),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
@@ -386,7 +386,7 @@ class _ShopCameraPreviewScreenState extends State<ShopCameraPreviewScreen>
               child: ElevatedButton(
                 onPressed: _confirmPhoto,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8A2BE2),
+                  backgroundColor: const Color(0xFF555ABC),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

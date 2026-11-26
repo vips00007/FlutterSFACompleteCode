@@ -6,7 +6,7 @@ import '../../data/models/reports_models.dart';
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
-  static const Color primaryPurple = Color(0xFF8A2BE2);
+  static const Color primaryPurple = Color(0xFF555ABC);
   static const Color primaryGreen = Color(0xFF00A86B);
 
   @override

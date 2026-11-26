@@ -218,10 +218,10 @@ class AttendanceRegularizationScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF3E8FF),
+            color: const Color(0xFFEFF6FF),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: const Color(0xFF8A2BE2), size: 24),
+          child: Icon(icon, color: const Color(0xFF555ABC), size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(

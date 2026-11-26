@@ -18,7 +18,7 @@ class OtpVerificationScreen extends StatelessWidget {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF8A2BE2), Colors.white],
+            colors: [Color(0xFF555ABC), Colors.white],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.0, 0.7],
