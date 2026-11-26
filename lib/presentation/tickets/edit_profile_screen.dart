@@ -150,7 +150,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
   }
-
+/////////thi=
   Widget _buildHeroAndNoticeSection() {
     return Stack(
       clipBehavior: Clip.none,
